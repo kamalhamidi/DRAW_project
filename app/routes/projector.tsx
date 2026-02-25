@@ -40,6 +40,7 @@ export default function ProjectorView() {
 
   const [hydrated, setHydrated] = useState(false);
   const [bgAnimation, setBgAnimation] = useState<"none" | "slide" | "zoom" | "fade">("slide");
+  const [projectorLayout, setProjectorLayout] = useState<"classic" | "stadium">("classic");
 
   useEffect(() => {
     setHydrated(true);
@@ -48,7 +49,7 @@ export default function ProjectorView() {
     const channel = new BroadcastChannel("draw_sync");
 
     const handleMessage = (event: MessageEvent) => {
-      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation } = event.data;
+      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout } = event.data;
       setDrawState({
         pots: pots || [],
         groups: groups || [],
@@ -56,8 +57,10 @@ export default function ProjectorView() {
         showProjectorPots: showProjectorPots !== undefined ? showProjectorPots : true,
       });
       if (bgAnimation !== undefined) {
-        console.log("[projector] received bgAnimation via BroadcastChannel:", bgAnimation);
         setBgAnimation(bgAnimation);
+      }
+      if (projectorLayout !== undefined) {
+        setProjectorLayout(projectorLayout);
       }
     };
 
@@ -72,10 +75,8 @@ export default function ProjectorView() {
 
   useEffect(() => {
     // Apply background animation
-    console.log("[projector] applying bgAnimation:", bgAnimation, "current body classes:", document.body.className);
     document.body.classList.remove("bg-slide", "bg-zoom", "bg-fade", "bg-none");
     document.body.classList.add(`bg-${bgAnimation}`);
-    console.log("[projector] body classes after apply:", document.body.className);
   }, [bgAnimation]);
 
   if (!hydrated) {
@@ -109,8 +110,9 @@ export default function ProjectorView() {
     },
   };
 
-  return (
-    <div className="projector-container">
+  // ============ CLASSIC LAYOUT ============
+  const renderClassicLayout = () => (
+    <>
       {/* Projector Header */}
       <motion.header
         className="projector-header"
@@ -316,6 +318,228 @@ export default function ProjectorView() {
           </motion.div>
         )}
       </div>
+    </>
+  );
+
+  // ============ STADIUM LAYOUT ============
+  const renderStadiumLayout = () => {
+    return (
+      <>
+        {/* Stadium Header — full-width top bar */}
+        <motion.div
+          className="stadium-header"
+          initial={{ opacity: 0, y: -40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <div className="stadium-header-inner">
+            <h1 className="stadium-title">Tournament Draw</h1>
+            <div className="stadium-progress">
+              <span className="stadium-progress-text">
+                {allTeamsAssigned
+                  ? "✅ DRAW COMPLETE"
+                  : `${assignedTeams} / ${totalTeams} TEAMS ASSIGNED`}
+              </span>
+              <div className="stadium-progress-bar">
+                <motion.div
+                  className="stadium-progress-fill"
+                  initial={{ width: 0 }}
+                  animate={{ width: totalTeams > 0 ? `${(assignedTeams / totalTeams) * 100}%` : "0%" }}
+                  transition={{ duration: 0.6, ease: "easeOut" }}
+                />
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Selected Team Spotlight */}
+        <AnimatePresence mode="wait">
+          {selectedTeam && (
+            <motion.div
+              key="stadium-spotlight"
+              className="stadium-spotlight"
+              initial={{ opacity: 0, scale: 0.8, y: -30 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: -30 }}
+              transition={{ type: "spring", stiffness: 200, damping: 15 }}
+            >
+              <div className="stadium-spotlight-glow" />
+              <div className="stadium-spotlight-content">
+                <span className="stadium-spotlight-flag">{selectedTeam.countryFlag || "🏴"}</span>
+                <div className="stadium-spotlight-info">
+                  <span className="stadium-spotlight-label">SELECTED</span>
+                  <span className="stadium-spotlight-name">{selectedTeam.name}</span>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Main Content — Side by Side */}
+        <div className="stadium-content">
+          {/* Left: Groups */}
+          <motion.div
+            className="stadium-groups-panel"
+            initial={{ opacity: 0, x: -40 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <div className="stadium-panel-header green">
+              <h2>Groups</h2>
+            </div>
+            {groups.length > 0 ? (
+              <div className="stadium-groups-grid">
+                {groups.map((group, index) => {
+                  const filledSlots = group.teams.filter((t) => t !== null).length;
+                  const isGroupComplete = filledSlots === group.capacity;
+
+                  return (
+                    <motion.div
+                      key={group.id}
+                      className={`stadium-group-card ${isGroupComplete ? "complete" : ""}`}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      <div className="stadium-group-top">
+                        <h3 className="stadium-group-name">{group.name}</h3>
+                        <span className={`stadium-group-badge ${isGroupComplete ? "complete" : ""}`}>
+                          {filledSlots}/{group.capacity}
+                        </span>
+                      </div>
+                      <div className="stadium-group-slots">
+                        {group.teams.map((team, slotIndex) => (
+                          <motion.div
+                            key={slotIndex}
+                            className={`stadium-slot ${team ? "filled" : "empty"}`}
+                            layout
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: slotIndex * 0.05 }}
+                          >
+                            {team ? (
+                              <motion.div
+                                className="stadium-slot-team"
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ type: "spring", stiffness: 300 }}
+                              >
+                                <span className="stadium-slot-number">{slotIndex + 1}</span>
+                                <span className="stadium-slot-flag">{team.countryFlag || "🏴"}</span>
+                                <span className="stadium-slot-name">{team.name}</span>
+                              </motion.div>
+                            ) : (
+                              <div className="stadium-slot-empty">
+                                <span className="stadium-slot-number">{slotIndex + 1}</span>
+                                <span className="stadium-slot-dash">—</span>
+                              </div>
+                            )}
+                          </motion.div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="stadium-empty-panel">
+                <p>Groups will appear here once created</p>
+              </div>
+            )}
+          </motion.div>
+
+          {/* Right: Pots */}
+          <AnimatePresence mode="wait">
+            {drawState.showProjectorPots && pots.length > 0 && (
+              <motion.div
+                className="stadium-pots-panel"
+                initial={{ opacity: 0, x: 40 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 40 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+              >
+                <div className="stadium-panel-header red">
+                  <h2>Pots</h2>
+                </div>
+                <div className="stadium-pots-list">
+                  {pots.map((pot, potIndex) => (
+                    <motion.div
+                      key={pot.id}
+                      className="stadium-pot-card"
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: potIndex * 0.1 }}
+                    >
+                      <h4 className="stadium-pot-name">{pot.name}</h4>
+                      <div className="stadium-pot-teams">
+                        {pot.teams.map((team) => (
+                          <motion.div
+                            key={team.id}
+                            className={`stadium-pot-pill ${selectedTeam?.id === team.id ? "selected" : ""} ${team.assigned ? "assigned" : ""}`}
+                            layout
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.5 }}
+                            whileHover={{ scale: team.assigned ? 1 : 1.05 }}
+                          >
+                            <span className="pill-flag">{team.countryFlag || "🏴"}</span>
+                            <span className="pill-name">{team.name}</span>
+                          </motion.div>
+                        ))}
+                        {pot.teams.length === 0 && (
+                          <span className="stadium-pot-done">All assigned ✓</span>
+                        )}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Empty State */}
+        {pots.length === 0 && groups.length === 0 && (
+          <motion.div
+            className="stadium-empty-state"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="stadium-empty-icon">🏟</div>
+            <h2>Waiting for draw to start...</h2>
+            <p>The stadium view will light up once the tournament draw begins.</p>
+          </motion.div>
+        )}
+      </>
+    );
+  };
+
+  return (
+    <div className={`projector-container ${projectorLayout === "stadium" ? "stadium-mode" : ""}`}>
+      <AnimatePresence mode="wait">
+        {projectorLayout === "classic" ? (
+          <motion.div
+            key="classic"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            {renderClassicLayout()}
+          </motion.div>
+        ) : (
+          <motion.div
+            key="stadium"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            {renderStadiumLayout()}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Sync Indicator */}
       <motion.div
