@@ -16,6 +16,8 @@ export default function TournamentManager() {
     selectTeam,
     assignTeamToSlot,
     removeTeamFromSlot,
+    removeTeamFromPot,
+    deletePot,
     resetTournament,
   } = useTournamentStore();
 
@@ -38,6 +40,7 @@ export default function TournamentManager() {
   const [hydrated, setHydrated] = useState(false);
   const [showProjectorPots, setShowProjectorPots] = useState(true);
   const [bgAnimation, setBgAnimation] = useState<"none" | "slide" | "zoom" | "fade">("slide");
+  const [projectorLayout, setProjectorLayout] = useState<"classic" | "stadium">("classic");
 
   // Broadcast Channel for projector sync
   const broadcastChannelRef = React.useRef<BroadcastChannel | null>(null);
@@ -70,9 +73,10 @@ export default function TournamentManager() {
         selectedTeam,
         showProjectorPots,
         bgAnimation,
+        projectorLayout,
       });
     }
-  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation]);
+  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout]);
 
   const handleCreatePot = (e: React.FormEvent) => {
     e.preventDefault();
@@ -360,12 +364,40 @@ export default function TournamentManager() {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.1 }}
                           >
-                            <h3 className="pot-title">{pot.name}</h3>
+                            <div className="pot-card-header">
+                              <h3 className="pot-title">{pot.name}</h3>
+                              <motion.button
+                                className="btn-delete-pot"
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={() => {
+                                  if (window.confirm(`Delete entire "${pot.name}" and all its teams?`)) {
+                                    deletePot(pot.id);
+                                  }
+                                }}
+                                title={`Delete ${pot.name}`}
+                              >
+                                🗑
+                              </motion.button>
+                            </div>
                             <div className="teams-list">
                               {pot.teams.map((team) => (
                                 <div key={team.id} className="team-card">
                                   <span className="team-flag">{team.countryFlag || "🏴"}</span>
                                   <span className="team-name-text">{team.name}</span>
+                                  <motion.button
+                                    className="team-remove-btn"
+                                    whileHover={{ scale: 1.2 }}
+                                    whileTap={{ scale: 0.9 }}
+                                    onClick={() => {
+                                      if (window.confirm(`Remove "${team.name}" from ${pot.name}?`)) {
+                                        removeTeamFromPot(pot.id, team.id);
+                                      }
+                                    }}
+                                    title={`Remove ${team.name}`}
+                                  >
+                                    ✕
+                                  </motion.button>
                                 </div>
                               ))}
                             </div>
@@ -608,6 +640,25 @@ export default function TournamentManager() {
                   >
                     {showProjectorPots ? "🚫 Hide Pots on Projector" : "✓ Show Pots on Projector"}
                   </motion.button>
+                  <div className="layout-selector">
+                    <span className="layout-label">Projector Layout:</span>
+                    <motion.button
+                      className={`btn-layout ${projectorLayout === "classic" ? "active" : ""}`}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setProjectorLayout("classic")}
+                    >
+                      🏛 Classic
+                    </motion.button>
+                    <motion.button
+                      className={`btn-layout ${projectorLayout === "stadium" ? "active" : ""}`}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setProjectorLayout("stadium")}
+                    >
+                      🏟 Stadium
+                    </motion.button>
+                  </div>
                 </div>
               </motion.div>
 

@@ -616,6 +616,72 @@ body.bg-none::before {
   word-break: break-word;
 }
 
+.team-card {
+  position: relative;
+}
+
+.team-remove-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid #FF3C49;
+  background: rgba(255, 60, 73, 0.2);
+  color: #FF3C49;
+  font-size: 0.75rem;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
+  line-height: 1;
+}
+
+.team-remove-btn:hover {
+  background: #FF3C49;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(255, 60, 73, 0.5);
+}
+
+.pot-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.pot-card-header .pot-title {
+  margin-bottom: 0;
+}
+
+.btn-delete-pot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #FF3C49;
+  background: rgba(255, 60, 73, 0.15);
+  color: #FF3C49;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-delete-pot:hover {
+  background: #FF3C49;
+  color: #fff;
+  box-shadow: 0 0 12px rgba(255, 60, 73, 0.5);
+}
+
 .team-card:hover {
   transform: scale(1.05) translateY(-4px);
 }
