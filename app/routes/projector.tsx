@@ -40,7 +40,7 @@ export default function ProjectorView() {
 
   const [hydrated, setHydrated] = useState(false);
   const [bgAnimation, setBgAnimation] = useState<"none" | "slide" | "zoom" | "fade">("slide");
-  const [projectorLayout, setProjectorLayout] = useState<"classic" | "stadium">("classic");
+  const [projectorLayout, setProjectorLayout] = useState<"classic" | "stadium" | "broadcast" | "gala">("classic");
 
   useEffect(() => {
     setHydrated(true);
@@ -515,10 +515,319 @@ export default function ProjectorView() {
     );
   };
 
+  // ============ BROADCAST LAYOUT ============
+  const renderBroadcastLayout = () => {
+    return (
+      <div className="broadcast-wrapper">
+        {/* Pots Section */}
+        {pots.length > 0 && drawState.showProjectorPots && (
+          <motion.div
+            className="broadcast-section broadcast-pots-section"
+            initial={{ opacity: 0, y: -30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            {pots.map((pot, index) => (
+              <motion.div
+                key={pot.id}
+                className="broadcast-card"
+                initial={{ opacity: 0, y: 25 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                {/* Floating Pill Header */}
+                <div className="broadcast-card-header red">
+                  <h3>{pot.name}</h3>
+                </div>
+                {/* Card Body */}
+                <div className="broadcast-card-body">
+                  {pot.teams.map((team) => (
+                    <motion.div
+                      key={team.id}
+                      className={`broadcast-team-row ${selectedTeam?.id === team.id ? "selected" : ""} ${team.assigned ? "assigned" : ""}`}
+                      layout
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                    >
+                      <span className="broadcast-team-flag">{team.countryFlag || "\ud83c\udff4"}</span>
+                      <span className="broadcast-team-name">{team.name}</span>
+                    </motion.div>
+                  ))}
+                  {pot.teams.length === 0 && (
+                    <div className="broadcast-empty-text">All assigned \u2713</div>
+                  )}
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+
+        {/* Groups Section */}
+        {groups.length > 0 && (
+          <motion.div
+            className="broadcast-section broadcast-groups-section"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            {groups.map((group, index) => {
+              const filledSlots = group.teams.filter((t) => t !== null).length;
+              const isGroupComplete = filledSlots === group.capacity;
+
+              return (
+                <motion.div
+                  key={group.id}
+                  className={`broadcast-card ${isGroupComplete ? "complete" : ""}`}
+                  initial={{ opacity: 0, y: 25 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  {/* Floating Pill Header */}
+                  <div className="broadcast-card-header green">
+                    <h3>{group.name}</h3>
+                  </div>
+                  {/* Card Body */}
+                  <div className="broadcast-card-body">
+                    {group.teams.map((team, slotIndex) => (
+                      <motion.div
+                        key={slotIndex}
+                        className={`broadcast-team-row ${team ? "filled" : "empty-slot"}`}
+                        layout
+                      >
+                        {team ? (
+                          <motion.div
+                            className="broadcast-slot-filled"
+                            initial={{ opacity: 0, x: -15 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ type: "spring", stiffness: 300 }}
+                          >
+                            <span className="broadcast-team-flag">{team.countryFlag || "\ud83c\udff4"}</span>
+                            <span className="broadcast-team-name">{team.name}</span>
+                          </motion.div>
+                        ) : (
+                          <span className="broadcast-slot-label">
+                            {group.name.charAt(group.name.length - 1)}{slotIndex + 1}
+                          </span>
+                        )}
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        )}
+
+        {/* Empty State */}
+        {pots.length === 0 && groups.length === 0 && (
+          <motion.div
+            className="broadcast-empty-state"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="broadcast-empty-icon">\ud83d\udcfa</div>
+            <h2>Waiting for draw to start...</h2>
+            <p>The broadcast view will display the tournament draw once it begins.</p>
+          </motion.div>
+        )}
+      </div>
+    );
+  };
+
+  // ============ GALA LAYOUT ============
+  const renderGalaLayout = () => {
+    return (
+      <div className="gala-wrapper">
+        {/* Gala Title Bar */}
+        <motion.div
+          className="gala-title-bar"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7 }}
+        >
+          <div className="gala-title-ornament">✦</div>
+          <h1 className="gala-title">Tournament Draw</h1>
+          <div className="gala-title-ornament">✦</div>
+        </motion.div>
+
+        {/* Selected Team Spotlight */}
+        <AnimatePresence mode="wait">
+          {selectedTeam ? (
+            <motion.div
+              key="gala-selected"
+              className="gala-spotlight"
+              initial={{ opacity: 0, scale: 0.85 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.85 }}
+              transition={{ type: "spring", stiffness: 150, damping: 15 }}
+            >
+              <div className="gala-spotlight-border" />
+              <div className="gala-spotlight-inner">
+                <span className="gala-spotlight-flag">{selectedTeam.countryFlag || "🏴"}</span>
+                <div className="gala-spotlight-text">
+                  <span className="gala-spotlight-sub">Now Drawing</span>
+                  <span className="gala-spotlight-name">{selectedTeam.name}</span>
+                </div>
+                <span className="gala-spotlight-flag">{selectedTeam.countryFlag || "🏴"}</span>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="gala-waiting"
+              className="gala-spotlight gala-spotlight-idle"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <div className="gala-spotlight-inner">
+                <span className="gala-spotlight-waiting">
+                  {allTeamsAssigned
+                    ? "✨ Draw Complete — All Teams Assigned! ✨"
+                    : `Awaiting Selection • ${assignedTeams}/${totalTeams} Assigned`}
+                </span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Decorative Divider */}
+        <div className="gala-divider">
+          <span className="gala-divider-line" />
+          <span className="gala-divider-diamond">◇</span>
+          <span className="gala-divider-line" />
+        </div>
+
+        {/* Two-Panel Content */}
+        <div className="gala-content">
+          {/* Groups Panel */}
+          <div className="gala-panel gala-groups-panel">
+            {groups.length > 0 ? (
+              <div className="gala-groups-list">
+                {groups.map((group, index) => {
+                  const filledSlots = group.teams.filter((t) => t !== null).length;
+                  const isGroupComplete = filledSlots === group.capacity;
+
+                  return (
+                    <motion.div
+                      key={group.id}
+                      className={`gala-group-card ${isGroupComplete ? "complete" : ""}`}
+                      initial={{ opacity: 0, x: -30 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.12 }}
+                    >
+                      <div className="gala-group-header">
+                        <h3>{group.name}</h3>
+                        <span className={`gala-group-count ${isGroupComplete ? "done" : ""}`}>
+                          {filledSlots}/{group.capacity}
+                        </span>
+                      </div>
+                      <div className="gala-group-rows">
+                        {group.teams.map((team, slotIndex) => (
+                          <motion.div
+                            key={slotIndex}
+                            className={`gala-row ${team ? "filled" : "empty"}`}
+                            layout
+                          >
+                            <span className="gala-row-num">{slotIndex + 1}</span>
+                            {team ? (
+                              <motion.div
+                                className="gala-row-team"
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ type: "spring", stiffness: 250 }}
+                              >
+                                <span className="gala-row-flag">{team.countryFlag || "🏴"}</span>
+                                <span className="gala-row-name">{team.name}</span>
+                              </motion.div>
+                            ) : (
+                              <span className="gala-row-empty">—</span>
+                            )}
+                          </motion.div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="gala-empty-panel">
+                <p>Groups will appear once created</p>
+              </div>
+            )}
+          </div>
+
+          {/* Pots Panel */}
+          <AnimatePresence>
+            {drawState.showProjectorPots && pots.length > 0 && (
+              <motion.div
+                className="gala-panel gala-pots-panel"
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 30 }}
+                transition={{ duration: 0.4 }}
+              >
+                {pots.map((pot, potIndex) => (
+                  <motion.div
+                    key={pot.id}
+                    className="gala-pot-card"
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: potIndex * 0.1 }}
+                  >
+                    <div className="gala-pot-header">
+                      <h4>{pot.name}</h4>
+                    </div>
+                    <div className="gala-pot-teams">
+                      {pot.teams.map((team) => (
+                        <motion.div
+                          key={team.id}
+                          className={`gala-pot-team ${selectedTeam?.id === team.id ? "active" : ""} ${team.assigned ? "used" : ""}`}
+                          layout
+                        >
+                          <span className="gala-pot-flag">{team.countryFlag || "🏴"}</span>
+                          <span className="gala-pot-name">{team.name}</span>
+                        </motion.div>
+                      ))}
+                      {pot.teams.length === 0 && (
+                        <span className="gala-pot-done">All assigned ✓</span>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Empty State */}
+        {pots.length === 0 && groups.length === 0 && (
+          <motion.div
+            className="gala-empty-state"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <div className="gala-empty-star">✨</div>
+            <h2>The Stage Is Set</h2>
+            <p>Waiting for the tournament draw to begin…</p>
+          </motion.div>
+        )}
+      </div>
+    );
+  };
+
+  // Determine container class
+  const containerClass = [
+    "projector-container",
+    projectorLayout === "stadium" ? "stadium-mode" : "",
+    projectorLayout === "broadcast" ? "broadcast-mode" : "",
+    projectorLayout === "gala" ? "gala-mode" : "",
+  ].filter(Boolean).join(" ");
+
   return (
-    <div className={`projector-container ${projectorLayout === "stadium" ? "stadium-mode" : ""}`}>
+    <div className={containerClass}>
       <AnimatePresence mode="wait">
-        {projectorLayout === "classic" ? (
+        {projectorLayout === "classic" && (
           <motion.div
             key="classic"
             initial={{ opacity: 0 }}
@@ -528,7 +837,8 @@ export default function ProjectorView() {
           >
             {renderClassicLayout()}
           </motion.div>
-        ) : (
+        )}
+        {projectorLayout === "stadium" && (
           <motion.div
             key="stadium"
             initial={{ opacity: 0 }}
@@ -537,6 +847,28 @@ export default function ProjectorView() {
             transition={{ duration: 0.4 }}
           >
             {renderStadiumLayout()}
+          </motion.div>
+        )}
+        {projectorLayout === "broadcast" && (
+          <motion.div
+            key="broadcast"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            {renderBroadcastLayout()}
+          </motion.div>
+        )}
+        {projectorLayout === "gala" && (
+          <motion.div
+            key="gala"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            {renderGalaLayout()}
           </motion.div>
         )}
       </AnimatePresence>

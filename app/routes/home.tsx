@@ -40,7 +40,7 @@ export default function TournamentManager() {
   const [hydrated, setHydrated] = useState(false);
   const [showProjectorPots, setShowProjectorPots] = useState(true);
   const [bgAnimation, setBgAnimation] = useState<"none" | "slide" | "zoom" | "fade">("slide");
-  const [projectorLayout, setProjectorLayout] = useState<"classic" | "stadium">("classic");
+  const [projectorLayout, setProjectorLayout] = useState<"classic" | "stadium" | "broadcast" | "gala">("classic");
 
   // Broadcast Channel for projector sync
   const broadcastChannelRef = React.useRef<BroadcastChannel | null>(null);
@@ -657,6 +657,22 @@ export default function TournamentManager() {
                       onClick={() => setProjectorLayout("stadium")}
                     >
                       🏟 Stadium
+                    </motion.button>
+                    <motion.button
+                      className={`btn-layout ${projectorLayout === "broadcast" ? "active" : ""}`}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setProjectorLayout("broadcast")}
+                    >
+                      📺 Broadcast
+                    </motion.button>
+                    <motion.button
+                      className={`btn-layout ${projectorLayout === "gala" ? "active" : ""}`}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setProjectorLayout("gala")}
+                    >
+                      ✨ Gala
                     </motion.button>
                   </div>
                 </div>
