@@ -40,7 +40,7 @@ export default function ProjectorView() {
 
   const [hydrated, setHydrated] = useState(false);
   const [bgAnimation, setBgAnimation] = useState<"none" | "slide" | "zoom" | "fade">("slide");
-  const [projectorLayout, setProjectorLayout] = useState<"classic" | "stadium" | "broadcast" | "gala">("classic");
+  const [projectorLayout, setProjectorLayout] = useState<"classic" | "stadium" | "broadcast" | "gala" | "neon">("classic");
 
   useEffect(() => {
     setHydrated(true);
@@ -816,12 +816,224 @@ export default function ProjectorView() {
     );
   };
 
+  // ============ NEON LAYOUT ============
+  const renderNeonLayout = () => {
+    return (
+      <div className="neon-wrapper">
+        {/* Grid overlay for cyberpunk feel */}
+        <div className="neon-grid-overlay" />
+
+        {/* Top Bar */}
+        <motion.div
+          className="neon-topbar"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="neon-topbar-left">
+            <span className="neon-logo">⚡</span>
+            <h1 className="neon-title">DRAW</h1>
+          </div>
+          <div className="neon-topbar-right">
+            <div className="neon-ticker">
+              <span className="neon-ticker-label">STATUS</span>
+              <span className={`neon-ticker-value ${allTeamsAssigned ? "complete" : ""}`}>
+                {allTeamsAssigned ? "COMPLETE" : `${assignedTeams}/${totalTeams}`}
+              </span>
+            </div>
+            <div className="neon-progress-ring">
+              <svg viewBox="0 0 36 36" className="neon-ring-svg">
+                <path
+                  className="neon-ring-bg"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+                <motion.path
+                  className="neon-ring-fill"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  initial={{ strokeDasharray: "0, 100" }}
+                  animate={{
+                    strokeDasharray: totalTeams > 0
+                      ? `${(assignedTeams / totalTeams) * 100}, 100`
+                      : "0, 100"
+                  }}
+                  transition={{ duration: 0.8 }}
+                />
+              </svg>
+              <span className="neon-ring-text">
+                {totalTeams > 0 ? Math.round((assignedTeams / totalTeams) * 100) : 0}%
+              </span>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Selected Team */}
+        <AnimatePresence mode="wait">
+          {selectedTeam ? (
+            <motion.div
+              key="neon-active"
+              className="neon-selected"
+              initial={{ opacity: 0, scale: 0.9, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: -10 }}
+              transition={{ type: "spring", stiffness: 200, damping: 15 }}
+            >
+              <div className="neon-selected-glow" />
+              <span className="neon-selected-flag">{selectedTeam.countryFlag || "🏴"}</span>
+              <span className="neon-selected-name">{selectedTeam.name}</span>
+              <span className="neon-selected-flag">{selectedTeam.countryFlag || "🏴"}</span>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="neon-idle"
+              className="neon-selected neon-selected-idle"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <span className="neon-idle-text">
+                {allTeamsAssigned ? "// DRAW COMPLETE //" : "// AWAITING SELECTION //"}
+              </span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Groups — Grid Cards */}
+        {groups.length > 0 && (
+          <motion.div
+            className="neon-groups"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <div className="neon-section-label">
+              <span className="neon-section-line" />
+              <span className="neon-section-tag">GROUPS</span>
+              <span className="neon-section-line" />
+            </div>
+            <div className="neon-groups-grid">
+              {groups.map((group, index) => {
+                const filledSlots = group.teams.filter((t) => t !== null).length;
+                const isComplete = filledSlots === group.capacity;
+
+                return (
+                  <motion.div
+                    key={group.id}
+                    className={`neon-group-card ${isComplete ? "complete" : ""}`}
+                    initial={{ opacity: 0, y: 25 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <div className="neon-group-card-header">
+                      <h3>{group.name}</h3>
+                      <span className={`neon-group-badge ${isComplete ? "done" : ""}`}>
+                        {filledSlots}/{group.capacity}
+                      </span>
+                    </div>
+                    <div className="neon-group-card-scanline" />
+                    <div className="neon-group-rows">
+                      {group.teams.map((team, slotIndex) => (
+                        <motion.div
+                          key={slotIndex}
+                          className={`neon-group-row ${team ? "filled" : "empty"}`}
+                          layout
+                        >
+                          <span className="neon-row-index">{String(slotIndex + 1).padStart(2, '0')}</span>
+                          {team ? (
+                            <motion.div
+                              className="neon-row-team"
+                              initial={{ opacity: 0, x: -15 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ type: "spring", stiffness: 300 }}
+                            >
+                              <span className="neon-row-flag">{team.countryFlag || "\ud83c\udff4"}</span>
+                              <span className="neon-row-name">{team.name}</span>
+                            </motion.div>
+                          ) : (
+                            <span className="neon-row-dash">\u2501\u2501</span>
+                          )}
+                        </motion.div>
+                      ))}
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Pots — Structured Cards */}
+        <AnimatePresence>
+          {drawState.showProjectorPots && pots.length > 0 && (
+            <motion.div
+              className="neon-pots"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ delay: 0.3 }}
+            >
+              <div className="neon-section-label">
+                <span className="neon-section-line magenta" />
+                <span className="neon-section-tag magenta">POTS</span>
+                <span className="neon-section-line magenta" />
+              </div>
+              <div className="neon-pots-grid">
+                {pots.map((pot, potIndex) => (
+                  <motion.div
+                    key={pot.id}
+                    className="neon-pot-card"
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: potIndex * 0.1 }}
+                  >
+                    <div className="neon-pot-card-header">
+                      <h4>{pot.name}</h4>
+                      <span className="neon-pot-count">{pot.teams.length}</span>
+                    </div>
+                    <div className="neon-pot-card-body">
+                      {pot.teams.map((team) => (
+                        <motion.div
+                          key={team.id}
+                          className={`neon-pot-team-row ${selectedTeam?.id === team.id ? "active" : ""} ${team.assigned ? "used" : ""}`}
+                          layout
+                        >
+                          <span className="neon-pot-row-flag">{team.countryFlag || "\ud83c\udff4"}</span>
+                          <span className="neon-pot-row-name">{team.name}</span>
+                        </motion.div>
+                      ))}
+                      {pot.teams.length === 0 && (
+                        <div className="neon-pot-card-done">\u2713 ALL ASSIGNED</div>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Empty State */}
+        {pots.length === 0 && groups.length === 0 && (
+          <motion.div
+            className="neon-empty"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <div className="neon-empty-icon">⚡</div>
+            <h2>// SYSTEM READY //</h2>
+            <p>Initializing draw sequence…</p>
+          </motion.div>
+        )}
+      </div>
+    );
+  };
+
   // Determine container class
   const containerClass = [
     "projector-container",
     projectorLayout === "stadium" ? "stadium-mode" : "",
     projectorLayout === "broadcast" ? "broadcast-mode" : "",
     projectorLayout === "gala" ? "gala-mode" : "",
+    projectorLayout === "neon" ? "neon-mode" : "",
   ].filter(Boolean).join(" ");
 
   return (
@@ -869,6 +1081,17 @@ export default function ProjectorView() {
             transition={{ duration: 0.4 }}
           >
             {renderGalaLayout()}
+          </motion.div>
+        )}
+        {projectorLayout === "neon" && (
+          <motion.div
+            key="neon"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            {renderNeonLayout()}
           </motion.div>
         )}
       </AnimatePresence>
