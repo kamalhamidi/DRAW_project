@@ -1907,8 +1907,8 @@ body.bg-none::before {
 }
 
 .broadcast-wrapper {
-  width: 88%;
-  max-width: 1600px;
+  width: 96%;
+  max-width: 1900px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -1920,8 +1920,8 @@ body.bg-none::before {
 .broadcast-section {
   display: flex;
   justify-content: center;
-  gap: 50px;
-  flex-wrap: wrap;
+  gap: 30px;
+  flex-wrap: nowrap;
   width: 100%;
 }
 
@@ -1936,7 +1936,7 @@ body.bg-none::before {
 /* ---- Broadcast Card ---- */
 .broadcast-card {
   position: relative;
-  width: 340px;
+  flex: 0 0 340px;
   padding: 30px;
   padding-top: 40px;
   /* extra room for floating header */
@@ -2091,11 +2091,11 @@ body.bg-none::before {
 /* ---- Broadcast Responsive ---- */
 @media (max-width: 1024px) {
   .broadcast-section {
-    gap: 35px;
+    gap: 20px;
   }
 
   .broadcast-card {
-    width: 300px;
+    max-width: 300px;
   }
 
   .broadcast-groups-section {
@@ -2105,17 +2105,16 @@ body.bg-none::before {
 
 @media (max-width: 640px) {
   .broadcast-wrapper {
-    width: 92%;
+    width: 95%;
     padding: 50px 0 40px;
   }
 
   .broadcast-section {
-    gap: 30px;
+    gap: 15px;
   }
 
   .broadcast-card {
-    width: 100%;
-    max-width: 380px;
+    max-width: none;
   }
 
   .broadcast-groups-section {
