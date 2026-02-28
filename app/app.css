@@ -979,9 +979,6 @@ body.bg-none::before {
   color: #fff;
   padding: 2rem;
   overflow-y: auto;
-  background-image: url("/public/bg.png");
-  background-size: cover;
-  background-repeat: no-repeat;
   position: relative;
 }
 
