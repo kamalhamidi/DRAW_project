@@ -105,7 +105,8 @@ body.bg-none::before {
   min-height: 100vh;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   color: #fff;
-  padding: 2rem;
+  padding: 0;
+  padding-top: 70px; /* navbar height */
   overflow-y: auto;
 }
 
@@ -118,121 +119,325 @@ body.bg-none::before {
   color: #fff;
 }
 
-/* Header */
-.tournament-header {
-  max-width: 1400px;
-  margin: 0 auto 3rem;
-  text-align: center;
+/* ===== NAVBAR ===== */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: rgba(15, 10, 30, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.tournament-title {
-  font-family: 'DM Sans', 'Inter', sans-serif;
-  font-size: clamp(2.5rem, 5vw, 4rem);
-  font-weight: 900;
-  color: #fff;
-  margin-bottom: 0.5rem;
-  letter-spacing: -0.02em;
-  text-transform: uppercase;
-}
-
-.header-buttons {
-  margin-top: 2rem;
+.navbar-inner {
+  max-width: 1800px;
+  margin: 0 auto;
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  height: 64px;
   gap: 1rem;
-  justify-content: center;
-  flex-wrap: wrap;
-  align-items: center;
 }
 
-.bg-animation-selector {
+/* Brand */
+.navbar-brand {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.6rem;
+  flex-shrink: 0;
 }
 
-.animation-label {
-  color: #fff;
-  font-weight: 600;
+.navbar-logo {
+  font-size: 1.5rem;
 }
 
-.animation-select {
-  padding: 0.5rem 1rem;
-  border: 2px solid #6CBD45;
-  border-radius: 10px;
-  background: #0f172a;
-  color: #fff;
-  font-weight: 600;
-  cursor: pointer;
-  font-size: 0.9rem;
-}
-
-.animation-select:hover {
-  border-color: #8ce565;
-}
-
-.animation-select option {
-  background: #0f172a;
+.navbar-title {
+  font-family: 'DM Sans', 'Inter', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   color: #fff;
 }
 
-.btn-setup,
-.btn-draw,
-.btn-reset {
-  padding: 0.75rem 2rem;
+/* Tabs */
+.navbar-tabs {
+  display: flex;
+  gap: 0.35rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.navbar-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1.25rem;
   border: none;
-  border-radius: 25px;
-  cursor: pointer;
-  font-size: 1rem;
+  border-radius: 10px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.85rem;
   font-weight: 700;
   text-transform: uppercase;
-  transition: all 0.3s ease;
+  letter-spacing: 0.03em;
+  cursor: pointer;
   font-family: 'Inter', sans-serif;
+  transition: all 0.25s ease;
+  position: relative;
 }
 
-.btn-setup {
-  background: transparent;
-  border: 2px solid #FF3C49;
-  color: #fff;
+.navbar-tab .tab-icon {
+  font-size: 1rem;
 }
 
-.btn-setup.active {
+.navbar-tab .tab-badge {
+  font-size: 0.65rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 8px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.navbar-tab .tab-badge.red {
   background: #FF3C49;
-}
-
-.btn-draw {
-  background: transparent;
-  border: 2px solid #0AFD09;
   color: #fff;
 }
 
-.btn-draw.active {
+.navbar-tab .tab-badge.green {
   background: #0AFD09;
-  color: #560A8F;
+  color: #0f172a;
 }
 
-.btn-draw:disabled {
-  opacity: 0.5;
+.navbar-tab.active {
+  background: rgba(130, 0, 197, 0.6);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(130, 0, 197, 0.3);
+}
+
+.navbar-tab.disabled {
+  opacity: 0.35;
   cursor: not-allowed;
 }
 
-.btn-reset {
+.navbar-tab:not(.active):not(.disabled):hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Actions */
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.navbar-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
   background: transparent;
-  border: 2px solid #FF3C49;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.25s ease;
+  text-transform: uppercase;
+}
+
+.navbar-btn:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.navbar-btn-projector {
+  border-color: #0AFD09;
+  color: #0AFD09;
+}
+
+.navbar-btn-projector:hover {
+  background: rgba(10, 253, 9, 0.1);
+  border-color: #0AFD09;
+  color: #0AFD09;
+}
+
+.navbar-btn-settings {
+  font-size: 1.1rem;
+  padding: 0.45rem 0.7rem;
+}
+
+.navbar-btn-settings.active {
+  background: rgba(130, 0, 197, 0.4);
+  border-color: #8200C5;
+  color: #fff;
+}
+
+.navbar-btn-reset {
+  font-size: 1.1rem;
+  padding: 0.45rem 0.7rem;
+  border-color: #FF3C49;
   color: #FF3C49;
 }
 
-.btn-projector {
-  padding: 0.75rem 2rem;
-  border: none;
-  border-radius: 25px;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 700;
+.navbar-btn-reset:hover {
+  background: rgba(255, 60, 73, 0.1);
+  border-color: #FF3C49;
+  color: #FF3C49;
+}
+
+/* Projector Settings Panel */
+.projector-settings-panel {
+  overflow: hidden;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.settings-panel-inner {
+  max-width: 1800px;
+  margin: 0 auto;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: flex-end;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.settings-label {
+  font-size: 0.65rem;
+  font-weight: 800;
   text-transform: uppercase;
-  transition: all 0.3s ease;
-  font-family: 'Inter', sans-serif;
-  background: linear-gradient(135deg, #6CBD45 0%, #0AFD09 100%);
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.settings-input {
+  padding: 0.45rem 0.85rem;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
   color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  outline: none;
+  font-family: 'Inter', sans-serif;
+  min-width: 200px;
+  transition: border-color 0.2s;
+}
+
+.settings-input:focus {
+  border-color: #8200C5;
+}
+
+.settings-layout-btns {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.settings-layout-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.4rem 0.75rem;
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.2s;
+}
+
+.settings-layout-btn.active {
+  background: rgba(130, 0, 197, 0.5);
+  border-color: #8200C5;
+  color: #fff;
+}
+
+.settings-layout-btn:not(.active):hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.settings-toggle {
+  padding: 0.4rem 1rem;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  background: transparent;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.2s;
+}
+
+.settings-toggle.on {
+  border-color: #0AFD09;
+  color: #0AFD09;
+}
+
+.settings-toggle.off {
+  border-color: #FF3C49;
+  color: #FF3C49;
+}
+
+/* Progress Bar */
+.progress-bar-container {
+  width: 100%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #8200C5, #0AFD09);
+  border-radius: 0 2px 2px 0;
+}
+
+/* Responsive Navbar */
+@media (max-width: 900px) {
+  .navbar-inner {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 0.75rem 1rem;
+    gap: 0.5rem;
+  }
+  .navbar-brand {
+    order: 1;
+  }
+  .navbar-actions {
+    order: 2;
+  }
+  .navbar-tabs {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+  }
+  .tournament-container {
+    padding-top: 110px;
+  }
+  .settings-panel-inner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
 }
 
 .draw-control-buttons {
@@ -266,6 +471,7 @@ body.bg-none::before {
 .tournament-content {
   max-width: 90%;
   margin: 0 auto;
+  padding: 2rem;
 }
 
 /* Step Headers */

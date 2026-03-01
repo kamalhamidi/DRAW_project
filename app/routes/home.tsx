@@ -42,6 +42,7 @@ export default function TournamentManager() {
   const [bgAnimation, setBgAnimation] = useState<"none" | "slide" | "zoom" | "fade">("slide");
   const [projectorLayout, setProjectorLayout] = useState<"classic" | "stadium" | "broadcast" | "gala" | "neon">("classic");
   const [projectorTitle, setProjectorTitle] = useState("Tournament Draw");
+  const [showProjectorSettings, setShowProjectorSettings] = useState(false);
 
   // Broadcast Channel for projector sync
   const broadcastChannelRef = React.useRef<BroadcastChannel | null>(null);
@@ -138,76 +139,184 @@ export default function TournamentManager() {
 
   return (
     <div className="tournament-container">
-      {/* Header */}
-      <motion.header
-        className="tournament-header"
-        initial={{ opacity: 0, y: -20 }}
+      {/* ===== NAVBAR ===== */}
+      <motion.nav
+        className="navbar"
+        initial={{ opacity: 0, y: -40 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
       >
-        <motion.h1
-          className="tournament-title"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          Tournament Draw
-        </motion.h1>
-
-        <motion.div
-          className="header-buttons"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.6 }}
-        >
-          <motion.button
-            className={`btn-setup ${currentPhase === "setup" ? "active" : ""}`}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setCurrentPhase("setup")}
-          >
-            Setup Tournament
-          </motion.button>
-          <motion.button
-            className={`btn-draw ${currentPhase === "draw" ? "active" : ""}`}
-            whileHover={{ scale: groups.length > 0 ? 1.05 : 1 }}
-            whileTap={{ scale: groups.length > 0 ? 0.95 : 1 }}
-            onClick={() => setCurrentPhase("draw")}
-            disabled={groups.length === 0}
-          >
-            Perform Draw
-          </motion.button>
-          <motion.button
-            className="btn-reset"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={resetTournament}
-          >
-            Reset All
-          </motion.button>
-          <motion.button
-            className="btn-projector"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => window.open("/projector", "projector", "width=1600,height=900")}
-          >
-            🎬 Open Projector
-          </motion.button>
-          <div className="bg-animation-selector">
-            <label className="animation-label">Background: </label>
-            <select
-              className="animation-select"
-              value={bgAnimation}
-              onChange={(e) => setBgAnimation(e.target.value as "none" | "slide" | "zoom" | "fade")}
-            >
-              <option value="none">None</option>
-              <option value="slide">Slide</option>
-              <option value="zoom">Zoom</option>
-              <option value="fade">Fade</option>
-            </select>
+        <div className="navbar-inner">
+          {/* Left: Brand */}
+          <div className="navbar-brand">
+            <span className="navbar-logo">⚽</span>
+            <span className="navbar-title">Tournament Draw</span>
           </div>
-        </motion.div>
-      </motion.header>
+
+          {/* Center: Navigation Tabs */}
+          <div className="navbar-tabs">
+            <motion.button
+              className={`navbar-tab ${currentPhase === "setup" ? "active" : ""}`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setCurrentPhase("setup")}
+            >
+              <span className="tab-icon">🛠</span>
+              <span className="tab-text">Setup</span>
+              {!potsFinalized && pots.length > 0 && (
+                <span className="tab-badge red">{pots.length}</span>
+              )}
+            </motion.button>
+            <motion.button
+              className={`navbar-tab ${currentPhase === "draw" ? "active" : ""} ${groups.length === 0 ? "disabled" : ""}`}
+              whileHover={{ scale: groups.length > 0 ? 1.05 : 1 }}
+              whileTap={{ scale: groups.length > 0 ? 0.95 : 1 }}
+              onClick={() => groups.length > 0 && setCurrentPhase("draw")}
+            >
+              <span className="tab-icon">🎯</span>
+              <span className="tab-text">Draw</span>
+              {assignedTeams > 0 && (
+                <span className="tab-badge green">{assignedTeams}/{totalTeams}</span>
+              )}
+            </motion.button>
+          </div>
+
+          {/* Right: Actions */}
+          <div className="navbar-actions">
+            <motion.button
+              className="navbar-btn navbar-btn-projector"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => window.open("/projector", "projector", "width=1600,height=900")}
+              title="Open Projector Window"
+            >
+              🎬 Projector
+            </motion.button>
+            <motion.button
+              className={`navbar-btn navbar-btn-settings ${showProjectorSettings ? "active" : ""}`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowProjectorSettings(!showProjectorSettings)}
+              title="Projector Settings"
+            >
+              ⚙️
+            </motion.button>
+            <motion.button
+              className="navbar-btn navbar-btn-reset"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                if (window.confirm("Reset everything? This will clear all pots, groups, and assignments.")) {
+                  resetTournament();
+                }
+              }}
+              title="Reset Tournament"
+            >
+              ↺
+            </motion.button>
+          </div>
+        </div>
+
+        {/* Projector Settings Panel (slides down) */}
+        <AnimatePresence>
+          {showProjectorSettings && (
+            <motion.div
+              className="projector-settings-panel"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <div className="settings-panel-inner">
+                {/* Title */}
+                <div className="settings-group">
+                  <label className="settings-label">Projector Title</label>
+                  <input
+                    type="text"
+                    className="settings-input"
+                    value={projectorTitle}
+                    onChange={(e) => setProjectorTitle(e.target.value)}
+                    placeholder="Enter title..."
+                  />
+                </div>
+
+                {/* Layout */}
+                <div className="settings-group">
+                  <label className="settings-label">Layout</label>
+                  <div className="settings-layout-btns">
+                    {([
+                      { key: "classic", icon: "🏛", label: "Classic" },
+                      { key: "stadium", icon: "🏟", label: "Stadium" },
+                      { key: "broadcast", icon: "📺", label: "Broadcast" },
+                      { key: "gala", icon: "✨", label: "Gala" },
+                      { key: "neon", icon: "⚡", label: "Neon" },
+                    ] as const).map((layout) => (
+                      <motion.button
+                        key={layout.key}
+                        className={`settings-layout-btn ${projectorLayout === layout.key ? "active" : ""}`}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setProjectorLayout(layout.key)}
+                      >
+                        <span>{layout.icon}</span>
+                        <span>{layout.label}</span>
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Background Animation */}
+                <div className="settings-group">
+                  <label className="settings-label">Background</label>
+                  <div className="settings-layout-btns">
+                    {([
+                      { key: "none", label: "None" },
+                      { key: "slide", label: "Slide" },
+                      { key: "zoom", label: "Zoom" },
+                      { key: "fade", label: "Fade" },
+                    ] as const).map((bg) => (
+                      <motion.button
+                        key={bg.key}
+                        className={`settings-layout-btn ${bgAnimation === bg.key ? "active" : ""}`}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setBgAnimation(bg.key)}
+                      >
+                        {bg.label}
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Show/Hide Pots */}
+                <div className="settings-group">
+                  <label className="settings-label">Pots Visibility</label>
+                  <motion.button
+                    className={`settings-toggle ${showProjectorPots ? "on" : "off"}`}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setShowProjectorPots(!showProjectorPots)}
+                  >
+                    {showProjectorPots ? "✓ Pots Visible" : "🚫 Pots Hidden"}
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.nav>
+
+      {/* Progress Bar */}
+      {totalTeams > 0 && (
+        <div className="progress-bar-container">
+          <motion.div
+            className="progress-bar-fill"
+            initial={{ width: 0 }}
+            animate={{ width: totalTeams > 0 ? `${(assignedTeams / totalTeams) * 100}%` : "0%" }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+          />
+        </div>
+      )}
 
       <div className="tournament-content">
         <AnimatePresence mode="wait">
@@ -634,68 +743,17 @@ export default function TournamentManager() {
                     : `${assignedTeams}/${totalTeams} teams assigned`}
                 </p>
                 <div className="draw-control-buttons">
-                  <motion.button
-                    className="btn-toggle-projector-pots"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setShowProjectorPots(!showProjectorPots)}
-                  >
-                    {showProjectorPots ? "🚫 Hide Pots on Projector" : "✓ Show Pots on Projector"}
-                  </motion.button>
-                  <div className="projector-title-input">
-                    <label className="layout-label">Title:</label>
-                    <input
-                      type="text"
-                      className="animation-select"
-                      value={projectorTitle}
-                      onChange={(e) => setProjectorTitle(e.target.value)}
-                      placeholder="Enter projector title..."
-                      style={{ minWidth: '220px' }}
-                    />
-                  </div>
-                  <div className="layout-selector">
-                    <span className="layout-label">Projector Layout:</span>
+                  {selectedTeam && (
                     <motion.button
-                      className={`btn-layout ${projectorLayout === "classic" ? "active" : ""}`}
+                      className="btn-toggle-projector-pots"
+                      style={{ borderColor: '#0AFD09', color: '#0AFD09' }}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => setProjectorLayout("classic")}
+                      onClick={() => selectTeam(null)}
                     >
-                      🏛 Classic
+                      ✕ Deselect Team
                     </motion.button>
-                    <motion.button
-                      className={`btn-layout ${projectorLayout === "stadium" ? "active" : ""}`}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setProjectorLayout("stadium")}
-                    >
-                      🏟 Stadium
-                    </motion.button>
-                    <motion.button
-                      className={`btn-layout ${projectorLayout === "broadcast" ? "active" : ""}`}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setProjectorLayout("broadcast")}
-                    >
-                      📺 Broadcast
-                    </motion.button>
-                    <motion.button
-                      className={`btn-layout ${projectorLayout === "gala" ? "active" : ""}`}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setProjectorLayout("gala")}
-                    >
-                      ✨ Gala
-                    </motion.button>
-                    <motion.button
-                      className={`btn-layout ${projectorLayout === "neon" ? "active" : ""}`}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setProjectorLayout("neon")}
-                    >
-                      ⚡ Neon
-                    </motion.button>
-                  </div>
+                  )}
                 </div>
               </motion.div>
 
