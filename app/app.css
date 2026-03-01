@@ -1639,6 +1639,14 @@ body.bg-none::before {
   min-height: 200px;
 }
 
+/* Center groups when pots are hidden */
+.stadium-groups-panel:only-child {
+  grid-column: 1 / -1;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
 .stadium-groups-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -2296,6 +2304,14 @@ body.bg-none::before {
   gap: 2.5rem;
   width: 100%;
   align-items: start;
+}
+
+/* Center groups when pots are hidden */
+.gala-content > .gala-panel:only-child {
+  grid-column: 1 / -1;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 /* ---- Groups Panel ---- */
