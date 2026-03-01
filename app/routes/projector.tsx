@@ -44,6 +44,7 @@ export default function ProjectorView() {
   const [projectorLayout, setProjectorLayout] = useState<"classic" | "stadium" | "broadcast" | "gala" | "neon">("broadcast");
   const [projectorTitle, setProjectorTitle] = useState("Tournament Draw");
   const [bgImage, setBgImage] = useState<string>("/bg.png");
+  const [competitionLogo, setCompetitionLogo] = useState<string>("");
 
   useEffect(() => {
     setHydrated(true);
@@ -52,7 +53,7 @@ export default function ProjectorView() {
     const channel = new BroadcastChannel("draw_sync");
 
     const handleMessage = (event: MessageEvent) => {
-      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette } = event.data;
+      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo } = event.data;
       setDrawState({
         pots: pots || [],
         groups: groups || [],
@@ -70,6 +71,9 @@ export default function ProjectorView() {
       }
       if (bgImage !== undefined) {
         setBgImage(bgImage);
+      }
+      if (competitionLogo !== undefined) {
+        setCompetitionLogo(competitionLogo);
       }
       // Apply color palette from the home page
       if (colorPalette) {
@@ -139,14 +143,18 @@ export default function ProjectorView() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <motion.h1
-          className="projector-title"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          {projectorTitle}
-        </motion.h1>
+        <div className="projector-title-row">
+          {competitionLogo && <img src={competitionLogo} alt="" className="projector-logo" />}
+          <motion.h1
+            className="projector-title"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            {projectorTitle}
+          </motion.h1>
+          {competitionLogo && <img src={competitionLogo} alt="" className="projector-logo" />}
+        </div>
 
         <motion.div
           className="projector-status"
@@ -352,6 +360,7 @@ export default function ProjectorView() {
           transition={{ duration: 0.6 }}
         >
           <div className="stadium-header-inner">
+            {competitionLogo && <img src={competitionLogo} alt="" className="projector-logo" />}
             <h1 className="stadium-title">{projectorTitle}</h1>
             <div className="stadium-progress">
               <span className="stadium-progress-text">
@@ -538,6 +547,12 @@ export default function ProjectorView() {
   const renderBroadcastLayout = () => {
     return (
       <div className="broadcast-wrapper">
+        {/* Competition Logo */}
+        {competitionLogo && (
+          <div className="broadcast-logo-container">
+            <img src={competitionLogo} alt="" className="projector-logo broadcast-logo" />
+          </div>
+        )}
         {/* Pots Section */}
         {pots.length > 0 && drawState.showProjectorPots && (
           <motion.div
@@ -666,7 +681,9 @@ export default function ProjectorView() {
           transition={{ duration: 0.7 }}
         >
           <div className="gala-title-ornament">✦</div>
+          {competitionLogo && <img src={competitionLogo} alt="" className="projector-logo gala-logo" />}
           <h1 className="gala-title">{projectorTitle}</h1>
+          {competitionLogo && <img src={competitionLogo} alt="" className="projector-logo gala-logo" />}
           <div className="gala-title-ornament">✦</div>
         </motion.div>
 
@@ -850,7 +867,7 @@ export default function ProjectorView() {
           transition={{ duration: 0.5 }}
         >
           <div className="neon-topbar-left">
-            <span className="neon-logo">⚡</span>
+            {competitionLogo ? <img src={competitionLogo} alt="" className="projector-logo neon-logo-img" /> : <span className="neon-logo">⚡</span>}
             <h1 className="neon-title">{projectorTitle}</h1>
           </div>
           <div className="neon-topbar-right">

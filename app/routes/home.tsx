@@ -45,6 +45,7 @@ export default function TournamentManager() {
   const [projectorTitle, setProjectorTitle] = useState("Tournament Draw");
   const [showProjectorSettings, setShowProjectorSettings] = useState(false);
   const [bgImage, setBgImage] = useState<string>("/bg.png");
+  const [competitionLogo, setCompetitionLogo] = useState<string>("");
   const [colorMode, setColorMode] = useState<"auto" | "manual">("manual");
   const [colorPalette, setColorPalette] = useState<ColorPalette | null>(null);
   const [manualPalette, setManualPalette] = useState<ColorPalette>({
@@ -113,9 +114,10 @@ export default function TournamentManager() {
         projectorTitle,
         bgImage,
         colorPalette,
+        competitionLogo,
       });
     }
-  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette]);
+  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo]);
 
   const handleCreatePot = (e: React.FormEvent) => {
     e.preventDefault();
@@ -306,6 +308,41 @@ export default function TournamentManager() {
                     onChange={(e) => setProjectorTitle(e.target.value)}
                     placeholder="Enter title..."
                   />
+                </div>
+
+                {/* Competition Logo */}
+                <div className="settings-group">
+                  <label className="settings-label">Competition Logo</label>
+                  <div className="settings-bg-picker">
+                    {competitionLogo && (
+                      <img src={competitionLogo} alt="Logo" className="settings-logo-preview" />
+                    )}
+                    <label className="settings-file-btn">
+                      🏆 {competitionLogo ? "Change" : "Upload"}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const url = URL.createObjectURL(file);
+                            setCompetitionLogo(url);
+                          }
+                        }}
+                      />
+                    </label>
+                    {competitionLogo && (
+                      <motion.button
+                        className="settings-layout-btn"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setCompetitionLogo("")}
+                      >
+                        ✕ Remove
+                      </motion.button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Layout */}
