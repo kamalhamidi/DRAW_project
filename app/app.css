@@ -296,6 +296,17 @@ body.bg-none::before {
   color: #FF3C49;
 }
 
+.navbar-btn-test {
+  border-color: #FFB800;
+  color: #FFB800;
+}
+
+.navbar-btn-test:hover {
+  background: rgba(255, 184, 0, 0.1);
+  border-color: #FFB800;
+  color: #FFB800;
+}
+
 /* Projector Settings Panel */
 .projector-settings-panel {
   overflow: hidden;

@@ -112,6 +112,25 @@ export default function TournamentManager() {
   );
   const allTeamsAssigned = totalTeams > 0 && totalTeams === assignedTeams;
 
+  const loadTestData = () => {
+    resetTournament();
+    const testPots = [
+      { name: "Pot 1", teams: ["Egypt", "Morocco", "Senegal", "Nigeria"], codes: ["EG", "MA", "SN", "NG"], flags: ["🇪🇬", "🇲🇦", "🇸🇳", "🇳🇬"] },
+      { name: "Pot 2", teams: ["Cameroon", "Algeria", "Tunisia", "Ivory Coast"], codes: ["CM", "DZ", "TN", "CI"], flags: ["🇨🇲", "🇩🇿", "🇹🇳", "🇨🇮"] },
+      { name: "Pot 3", teams: ["Ghana", "Mali", "South Africa", "DR Congo"], codes: ["GH", "ML", "ZA", "CD"], flags: ["🇬🇭", "🇲🇱", "🇿🇦", "🇨🇩"] },
+      { name: "Pot 4", teams: ["Guinea", "Gabon", "Cape Verde", "Mozambique"], codes: ["GN", "GA", "CV", "MZ"], flags: ["🇬🇳", "🇬🇦", "🇨🇻", "🇲🇿"] },
+    ];
+    testPots.forEach((pot) => {
+      const countries = pot.teams.map((_, i) => ({ code: pot.codes[i], flag: pot.flags[i] }));
+      addPotWithTeams(pot.name, pot.teams, countries);
+    });
+    setTimeout(() => {
+      finalizePots();
+      createGroups(4, 4);
+      setCurrentPhase("draw");
+    }, 100);
+  };
+
   // Animation variants
   const slideInVariants = {
     hidden: { opacity: 0, x: -30 },
@@ -183,6 +202,15 @@ export default function TournamentManager() {
 
           {/* Right: Actions */}
           <div className="navbar-actions">
+            <motion.button
+              className="navbar-btn navbar-btn-test"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={loadTestData}
+              title="Load test data: 4 pots × 4 teams + 4 groups"
+            >
+              🧪 Test
+            </motion.button>
             <motion.button
               className="navbar-btn navbar-btn-projector"
               whileHover={{ scale: 1.05 }}
