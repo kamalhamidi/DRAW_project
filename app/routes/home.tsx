@@ -41,6 +41,7 @@ export default function TournamentManager() {
   const [showProjectorPots, setShowProjectorPots] = useState(true);
   const [bgAnimation, setBgAnimation] = useState<"none" | "slide" | "zoom" | "fade">("slide");
   const [projectorLayout, setProjectorLayout] = useState<"classic" | "stadium" | "broadcast" | "gala" | "neon">("classic");
+  const [projectorTitle, setProjectorTitle] = useState("Tournament Draw");
 
   // Broadcast Channel for projector sync
   const broadcastChannelRef = React.useRef<BroadcastChannel | null>(null);
@@ -74,9 +75,10 @@ export default function TournamentManager() {
         showProjectorPots,
         bgAnimation,
         projectorLayout,
+        projectorTitle,
       });
     }
-  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout]);
+  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle]);
 
   const handleCreatePot = (e: React.FormEvent) => {
     e.preventDefault();
@@ -640,6 +642,17 @@ export default function TournamentManager() {
                   >
                     {showProjectorPots ? "🚫 Hide Pots on Projector" : "✓ Show Pots on Projector"}
                   </motion.button>
+                  <div className="projector-title-input">
+                    <label className="layout-label">Title:</label>
+                    <input
+                      type="text"
+                      className="animation-select"
+                      value={projectorTitle}
+                      onChange={(e) => setProjectorTitle(e.target.value)}
+                      placeholder="Enter projector title..."
+                      style={{ minWidth: '220px' }}
+                    />
+                  </div>
                   <div className="layout-selector">
                     <span className="layout-label">Projector Layout:</span>
                     <motion.button

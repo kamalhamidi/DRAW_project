@@ -41,6 +41,7 @@ export default function ProjectorView() {
   const [hydrated, setHydrated] = useState(false);
   const [bgAnimation, setBgAnimation] = useState<"none" | "slide" | "zoom" | "fade">("slide");
   const [projectorLayout, setProjectorLayout] = useState<"classic" | "stadium" | "broadcast" | "gala" | "neon">("classic");
+  const [projectorTitle, setProjectorTitle] = useState("Tournament Draw");
 
   useEffect(() => {
     setHydrated(true);
@@ -49,7 +50,7 @@ export default function ProjectorView() {
     const channel = new BroadcastChannel("draw_sync");
 
     const handleMessage = (event: MessageEvent) => {
-      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout } = event.data;
+      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle } = event.data;
       setDrawState({
         pots: pots || [],
         groups: groups || [],
@@ -61,6 +62,9 @@ export default function ProjectorView() {
       }
       if (projectorLayout !== undefined) {
         setProjectorLayout(projectorLayout);
+      }
+      if (projectorTitle !== undefined) {
+        setProjectorTitle(projectorTitle);
       }
     };
 
@@ -126,7 +130,7 @@ export default function ProjectorView() {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          Tournament Draw - Live Display
+          {projectorTitle}
         </motion.h1>
 
         <motion.div
@@ -333,7 +337,7 @@ export default function ProjectorView() {
           transition={{ duration: 0.6 }}
         >
           <div className="stadium-header-inner">
-            <h1 className="stadium-title">Tournament Draw</h1>
+            <h1 className="stadium-title">{projectorTitle}</h1>
             <div className="stadium-progress">
               <span className="stadium-progress-text">
                 {allTeamsAssigned
@@ -647,7 +651,7 @@ export default function ProjectorView() {
           transition={{ duration: 0.7 }}
         >
           <div className="gala-title-ornament">✦</div>
-          <h1 className="gala-title">Tournament Draw</h1>
+          <h1 className="gala-title">{projectorTitle}</h1>
           <div className="gala-title-ornament">✦</div>
         </motion.div>
 
@@ -832,7 +836,7 @@ export default function ProjectorView() {
         >
           <div className="neon-topbar-left">
             <span className="neon-logo">⚡</span>
-            <h1 className="neon-title">DRAW</h1>
+            <h1 className="neon-title">{projectorTitle}</h1>
           </div>
           <div className="neon-topbar-right">
             <div className="neon-ticker">
