@@ -40,8 +40,9 @@ export default function ProjectorView() {
 
   const [hydrated, setHydrated] = useState(false);
   const [bgAnimation, setBgAnimation] = useState<"none" | "slide" | "zoom" | "fade">("slide");
-  const [projectorLayout, setProjectorLayout] = useState<"classic" | "stadium" | "broadcast" | "gala" | "neon">("classic");
+  const [projectorLayout, setProjectorLayout] = useState<"classic" | "stadium" | "broadcast" | "gala" | "neon">("broadcast");
   const [projectorTitle, setProjectorTitle] = useState("Tournament Draw");
+  const [bgImage, setBgImage] = useState<string>("/bg.png");
 
   useEffect(() => {
     setHydrated(true);
@@ -50,7 +51,7 @@ export default function ProjectorView() {
     const channel = new BroadcastChannel("draw_sync");
 
     const handleMessage = (event: MessageEvent) => {
-      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle } = event.data;
+      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage } = event.data;
       setDrawState({
         pots: pots || [],
         groups: groups || [],
@@ -65,6 +66,9 @@ export default function ProjectorView() {
       }
       if (projectorTitle !== undefined) {
         setProjectorTitle(projectorTitle);
+      }
+      if (bgImage !== undefined) {
+        setBgImage(bgImage);
       }
     };
 
@@ -82,6 +86,10 @@ export default function ProjectorView() {
     document.body.classList.remove("bg-slide", "bg-zoom", "bg-fade", "bg-none");
     document.body.classList.add(`bg-${bgAnimation}`);
   }, [bgAnimation]);
+
+  useEffect(() => {
+    document.documentElement.style.setProperty("--bg-image", `url("${bgImage}")`);
+  }, [bgImage]);
 
   if (!hydrated) {
     return <div className="projector-loading">Initializing Projector...</div>;

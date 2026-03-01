@@ -26,7 +26,7 @@ body::before {
   width: 100%;
   height: 100%;
   z-index: -1;
-  background-image: url("/bg.png");
+  background-image: var(--bg-image, url("/bg.png"));
   background-size: cover;
   background-repeat: no-repeat;
   background-position: 0% 0%;
@@ -407,6 +407,33 @@ body.bg-none::before {
 .settings-toggle.off {
   border-color: #FF3C49;
   color: #FF3C49;
+}
+
+.settings-bg-picker {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.settings-file-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.4rem 0.75rem;
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.2s;
+}
+
+.settings-file-btn:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #fff;
 }
 
 /* Progress Bar */

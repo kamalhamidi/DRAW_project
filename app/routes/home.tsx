@@ -40,9 +40,10 @@ export default function TournamentManager() {
   const [hydrated, setHydrated] = useState(false);
   const [showProjectorPots, setShowProjectorPots] = useState(true);
   const [bgAnimation, setBgAnimation] = useState<"none" | "slide" | "zoom" | "fade">("slide");
-  const [projectorLayout, setProjectorLayout] = useState<"classic" | "stadium" | "broadcast" | "gala" | "neon">("classic");
+  const [projectorLayout, setProjectorLayout] = useState<"classic" | "stadium" | "broadcast" | "gala" | "neon">("broadcast");
   const [projectorTitle, setProjectorTitle] = useState("Tournament Draw");
   const [showProjectorSettings, setShowProjectorSettings] = useState(false);
+  const [bgImage, setBgImage] = useState<string>("/bg.png");
 
   // Broadcast Channel for projector sync
   const broadcastChannelRef = React.useRef<BroadcastChannel | null>(null);
@@ -54,12 +55,13 @@ export default function TournamentManager() {
   }, []);
 
   useEffect(() => {
-    // Apply background animation
-    console.log("[home] applying bgAnimation:", bgAnimation, "current body classes:", document.body.className);
     document.body.classList.remove("bg-slide", "bg-zoom", "bg-fade", "bg-none");
     document.body.classList.add(`bg-${bgAnimation}`);
-    console.log("[home] body classes after apply:", document.body.className);
   }, [bgAnimation]);
+
+  useEffect(() => {
+    document.documentElement.style.setProperty("--bg-image", `url("${bgImage}")`);
+  }, [bgImage]);
 
   useEffect(() => {
     setTeamInputs(Array(numberOfTeams).fill(""));
@@ -77,9 +79,10 @@ export default function TournamentManager() {
         bgAnimation,
         projectorLayout,
         projectorTitle,
+        bgImage,
       });
     }
-  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle]);
+  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage]);
 
   const handleCreatePot = (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,9 +123,13 @@ export default function TournamentManager() {
       { name: "Pot 3", teams: ["Ghana", "Mali", "South Africa", "DR Congo"], codes: ["GH", "ML", "ZA", "CD"], flags: ["🇬🇭", "🇲🇱", "🇿🇦", "🇨🇩"] },
       { name: "Pot 4", teams: ["Guinea", "Gabon", "Cape Verde", "Mozambique"], codes: ["GN", "GA", "CV", "MZ"], flags: ["🇬🇳", "🇬🇦", "🇨🇻", "🇲🇿"] },
     ];
-    testPots.forEach((pot) => {
+    testPots.forEach((pot, potIndex) => {
       const countries = pot.teams.map((_, i) => ({ code: pot.codes[i], flag: pot.flags[i] }));
+      // Offset each pot's timestamp to avoid ID collisions
+      const originalDateNow = Date.now;
+      Date.now = () => originalDateNow() + potIndex * 1000;
       addPotWithTeams(pot.name, pot.teams, countries);
+      Date.now = originalDateNow;
     });
     setTimeout(() => {
       finalizePots();
@@ -313,6 +320,38 @@ export default function TournamentManager() {
                         {bg.label}
                       </motion.button>
                     ))}
+                  </div>
+                </div>
+
+                {/* Background Image */}
+                <div className="settings-group">
+                  <label className="settings-label">Background Image</label>
+                  <div className="settings-bg-picker">
+                    <label className="settings-file-btn">
+                      📁 Choose Image
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const url = URL.createObjectURL(file);
+                            setBgImage(url);
+                          }
+                        }}
+                      />
+                    </label>
+                    {bgImage !== "/bg.png" && (
+                      <motion.button
+                        className="settings-layout-btn"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setBgImage("/bg.png")}
+                      >
+                        ↺ Default
+                      </motion.button>
+                    )}
                   </div>
                 </div>
 
