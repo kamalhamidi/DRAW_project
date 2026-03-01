@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { applyColorPalette, resetColorPalette, type ColorPalette } from "~/utils/extractColors";
 
 interface Team {
   id: number;
@@ -39,7 +40,7 @@ export default function ProjectorView() {
   });
 
   const [hydrated, setHydrated] = useState(false);
-  const [bgAnimation, setBgAnimation] = useState<"none" | "slide" | "zoom" | "fade">("slide");
+  const [bgAnimation, setBgAnimation] = useState<"none" | "slide" | "zoom" | "fade">("zoom");
   const [projectorLayout, setProjectorLayout] = useState<"classic" | "stadium" | "broadcast" | "gala" | "neon">("broadcast");
   const [projectorTitle, setProjectorTitle] = useState("Tournament Draw");
   const [bgImage, setBgImage] = useState<string>("/bg.png");
@@ -51,7 +52,7 @@ export default function ProjectorView() {
     const channel = new BroadcastChannel("draw_sync");
 
     const handleMessage = (event: MessageEvent) => {
-      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage } = event.data;
+      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette } = event.data;
       setDrawState({
         pots: pots || [],
         groups: groups || [],
@@ -69,6 +70,12 @@ export default function ProjectorView() {
       }
       if (bgImage !== undefined) {
         setBgImage(bgImage);
+      }
+      // Apply color palette from the home page
+      if (colorPalette) {
+        applyColorPalette(colorPalette as ColorPalette);
+      } else {
+        resetColorPalette();
       }
     };
 

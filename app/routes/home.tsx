@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTournamentStore } from "zustand/tournament-store";
 import { africaCountries } from "data/africaCountries";
+import { extractColorsFromImage, applyColorPalette, resetColorPalette, type ColorPalette } from "~/utils/extractColors";
 
 export default function TournamentManager() {
   const {
@@ -39,11 +40,21 @@ export default function TournamentManager() {
   const [currentPhase, setCurrentPhase] = useState<"setup" | "draw">("setup");
   const [hydrated, setHydrated] = useState(false);
   const [showProjectorPots, setShowProjectorPots] = useState(true);
-  const [bgAnimation, setBgAnimation] = useState<"none" | "slide" | "zoom" | "fade">("slide");
+  const [bgAnimation, setBgAnimation] = useState<"none" | "slide" | "zoom" | "fade">("zoom");
   const [projectorLayout, setProjectorLayout] = useState<"classic" | "stadium" | "broadcast" | "gala" | "neon">("broadcast");
   const [projectorTitle, setProjectorTitle] = useState("Tournament Draw");
   const [showProjectorSettings, setShowProjectorSettings] = useState(false);
   const [bgImage, setBgImage] = useState<string>("/bg.png");
+  const [colorMode, setColorMode] = useState<"auto" | "manual">("manual");
+  const [colorPalette, setColorPalette] = useState<ColorPalette | null>(null);
+  const [manualPalette, setManualPalette] = useState<ColorPalette>({
+    primary: "#8200C5",
+    primaryDark: "#560A8F",
+    accent1: "#FF3C49",
+    accent2: "#0AFD09",
+    accent2Text: "#560A8F",
+    highlight: "#6CBD45",
+  });
 
   // Broadcast Channel for projector sync
   const broadcastChannelRef = React.useRef<BroadcastChannel | null>(null);
@@ -61,7 +72,28 @@ export default function TournamentManager() {
 
   useEffect(() => {
     document.documentElement.style.setProperty("--bg-image", `url("${bgImage}")`);
-  }, [bgImage]);
+
+    // Only auto-extract when in auto mode
+    if (colorMode === "auto") {
+      extractColorsFromImage(bgImage).then((palette) => {
+        if (palette) {
+          setColorPalette(palette);
+          applyColorPalette(palette);
+        } else {
+          setColorPalette(null);
+          resetColorPalette();
+        }
+      });
+    }
+  }, [bgImage, colorMode]);
+
+  // Apply manual palette when in manual mode or when manualPalette changes
+  useEffect(() => {
+    if (colorMode === "manual") {
+      setColorPalette(manualPalette);
+      applyColorPalette(manualPalette);
+    }
+  }, [colorMode, manualPalette]);
 
   useEffect(() => {
     setTeamInputs(Array(numberOfTeams).fill(""));
@@ -80,9 +112,10 @@ export default function TournamentManager() {
         projectorLayout,
         projectorTitle,
         bgImage,
+        colorPalette,
       });
     }
-  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage]);
+  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette]);
 
   const handleCreatePot = (e: React.FormEvent) => {
     e.preventDefault();
@@ -354,6 +387,58 @@ export default function TournamentManager() {
                     )}
                   </div>
                 </div>
+
+                {/* Color Mode */}
+                <div className="settings-group">
+                  <label className="settings-label">Colors</label>
+                  <div className="settings-layout-btns">
+                    <motion.button
+                      className={`settings-layout-btn ${colorMode === "auto" ? "active" : ""}`}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setColorMode("auto")}
+                    >
+                      🎨 Auto
+                    </motion.button>
+                    <motion.button
+                      className={`settings-layout-btn ${colorMode === "manual" ? "active" : ""}`}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setColorMode("manual")}
+                    >
+                      ✏️ Manual
+                    </motion.button>
+                  </div>
+                </div>
+
+                {/* Manual Color Pickers */}
+                {colorMode === "manual" && (
+                  <div className="settings-group">
+                    <label className="settings-label">Theme Colors</label>
+                    <div className="settings-color-grid">
+                      {([
+                        { key: "primary" as const, label: "Primary" },
+                        { key: "primaryDark" as const, label: "Dark" },
+                        { key: "accent1" as const, label: "Accent 1" },
+                        { key: "accent2" as const, label: "Accent 2" },
+                        { key: "highlight" as const, label: "Highlight" },
+                        { key: "accent2Text" as const, label: "A2 Text" },
+                      ]).map((c) => (
+                        <label key={c.key} className="settings-color-item">
+                          <input
+                            type="color"
+                            className="settings-color-input"
+                            value={manualPalette[c.key]}
+                            onChange={(e) =>
+                              setManualPalette((prev) => ({ ...prev, [c.key]: e.target.value }))
+                            }
+                          />
+                          <span className="settings-color-label">{c.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Show/Hide Pots */}
                 <div className="settings-group">
