@@ -1883,6 +1883,10 @@ body.bg-none::before {
   gap: 2rem;
 }
 
+.stadium-header-inner.centered-logo {
+  justify-content: center;
+}
+
 .stadium-title {
   font-family: 'DM Sans', 'Inter', sans-serif;
   font-size: clamp(2rem, 4vw, 3rem);
@@ -3054,6 +3058,11 @@ body.bg-none::before {
   display: flex;
   align-items: center;
   gap: 1rem;
+}
+
+.neon-topbar-left.centered-logo {
+  flex: 1;
+  justify-content: center;
 }
 
 .neon-logo {

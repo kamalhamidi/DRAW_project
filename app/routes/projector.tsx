@@ -389,24 +389,9 @@ export default function ProjectorView() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <div className="stadium-header-inner">
+          <div className={`stadium-header-inner ${!projectorTitle.trim() && competitionLogo ? 'centered-logo' : ''}`}>
             {competitionLogo && <img src={competitionLogo} alt="" className="projector-logo" style={{ height: `${logoSize}px` }} />}
-            <h1 className="stadium-title">{projectorTitle}</h1>
-            <div className="stadium-progress">
-              <span className="stadium-progress-text">
-                {allTeamsAssigned
-                  ? "✅ DRAW COMPLETE"
-                  : `${assignedTeams} / ${totalTeams} TEAMS ASSIGNED`}
-              </span>
-              <div className="stadium-progress-bar">
-                <motion.div
-                  className="stadium-progress-fill"
-                  initial={{ width: 0 }}
-                  animate={{ width: totalTeams > 0 ? `${(assignedTeams / totalTeams) * 100}%` : "0%" }}
-                  transition={{ duration: 0.6, ease: "easeOut" }}
-                />
-              </div>
-            </div>
+            {projectorTitle.trim() && <h1 className="stadium-title">{projectorTitle}</h1>}
           </div>
         </motion.div>
 
@@ -937,39 +922,9 @@ export default function ProjectorView() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="neon-topbar-left">
+          <div className={`neon-topbar-left ${!projectorTitle.trim() && competitionLogo ? 'centered-logo' : ''}`}>
             {competitionLogo ? <img src={competitionLogo} alt="" className="projector-logo neon-logo-img" style={{ height: `${logoSize}px` }} /> : <span className="neon-logo">⚡</span>}
-            <h1 className="neon-title">{projectorTitle}</h1>
-          </div>
-          <div className="neon-topbar-right">
-            <div className="neon-ticker">
-              <span className="neon-ticker-label">STATUS</span>
-              <span className={`neon-ticker-value ${allTeamsAssigned ? "complete" : ""}`}>
-                {allTeamsAssigned ? "COMPLETE" : `${assignedTeams}/${totalTeams}`}
-              </span>
-            </div>
-            <div className="neon-progress-ring">
-              <svg viewBox="0 0 36 36" className="neon-ring-svg">
-                <path
-                  className="neon-ring-bg"
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                />
-                <motion.path
-                  className="neon-ring-fill"
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                  initial={{ strokeDasharray: "0, 100" }}
-                  animate={{
-                    strokeDasharray: totalTeams > 0
-                      ? `${(assignedTeams / totalTeams) * 100}, 100`
-                      : "0, 100"
-                  }}
-                  transition={{ duration: 0.8 }}
-                />
-              </svg>
-              <span className="neon-ring-text">
-                {totalTeams > 0 ? Math.round((assignedTeams / totalTeams) * 100) : 0}%
-              </span>
-            </div>
+            {projectorTitle.trim() && <h1 className="neon-title">{projectorTitle}</h1>}
           </div>
         </motion.div>
 
