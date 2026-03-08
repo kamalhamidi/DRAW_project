@@ -2377,7 +2377,16 @@ body.bg-none::before {
 }
 
 .broadcast-team-row.assigned {
-  opacity: 0.3;
+  opacity: 0.4;
+  pointer-events: none;
+  filter: grayscale(0.6);
+  cursor: not-allowed;
+  background: transparent;
+  border: none;
+}
+
+.broadcast-team-row.assigned .broadcast-team-name {
+  color: rgba(255, 255, 255, 0.65);
 }
 
 .broadcast-team-row.empty-slot {

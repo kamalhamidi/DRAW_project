@@ -107,6 +107,12 @@ export default function ProjectorView() {
   }
 
   const { pots, groups, selectedTeam } = drawState;
+  const assignedTeamIds = new Set<number>();
+  groups.forEach((group) => {
+    group.teams.forEach((team) => {
+      if (team) assignedTeamIds.add(team.id);
+    });
+  });
   const totalTeams = pots.reduce((acc, pot) => acc + pot.teams.length, 0);
   const assignedTeams = groups.reduce(
     (acc, group) => acc + group.teams.filter((t) => t !== null).length,
@@ -575,18 +581,23 @@ export default function ProjectorView() {
                 </div>
                 {/* Card Body */}
                 <div className="broadcast-card-body">
-                  {pot.teams.map((team) => (
-                    <motion.div
-                      key={team.id}
-                      className={`broadcast-team-row ${selectedTeam?.id === team.id ? "selected" : ""} ${team.assigned ? "assigned" : ""}`}
-                      layout
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                    >
-                      <span className="broadcast-team-flag">{team.countryFlag || "\ud83c\udff4"}</span>
-                      <span className="broadcast-team-name">{team.name}</span>
-                    </motion.div>
-                  ))}
+                  {pot.teams.map((team) => {
+                    const isAssigned = team.assigned || assignedTeamIds.has(team.id);
+
+                    return (
+                      <motion.div
+                        key={team.id}
+                        className={`broadcast-team-row ${selectedTeam?.id === team.id ? "selected" : ""} ${isAssigned ? "assigned" : ""}`}
+                        layout
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        aria-disabled={isAssigned}
+                      >
+                        <span className="broadcast-team-flag">{team.countryFlag || "\ud83c\udff4"}</span>
+                        <span className="broadcast-team-name">{team.name}</span>
+                      </motion.div>
+                    );
+                  })}
                   {pot.teams.length === 0 && (
                     <div className="broadcast-empty-text">All assigned \u2713</div>
                   )}
