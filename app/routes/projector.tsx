@@ -45,6 +45,7 @@ export default function ProjectorView() {
   const [projectorTitle, setProjectorTitle] = useState("Tournament Draw");
   const [bgImage, setBgImage] = useState<string>("/bg.png");
   const [competitionLogo, setCompetitionLogo] = useState<string>("");
+  const [logoSize, setLogoSize] = useState<number>(70);
   const [footerText, setFooterText] = useState<string>("");
   const [footerSize, setFooterSize] = useState<number>(1.1);
 
@@ -55,7 +56,7 @@ export default function ProjectorView() {
     const channel = new BroadcastChannel("draw_sync");
 
     const handleMessage = (event: MessageEvent) => {
-      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, footerText, footerSize } = event.data;
+      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize } = event.data;
       setDrawState({
         pots: pots || [],
         groups: groups || [],
@@ -76,6 +77,9 @@ export default function ProjectorView() {
       }
       if (competitionLogo !== undefined) {
         setCompetitionLogo(competitionLogo);
+      }
+      if (logoSize !== undefined) {
+        setLogoSize(logoSize);
       }
       if (footerText !== undefined) {
         setFooterText(footerText);
@@ -158,7 +162,7 @@ export default function ProjectorView() {
         transition={{ duration: 0.6 }}
       >
         <div className="projector-title-row">
-          {competitionLogo && <img src={competitionLogo} alt="" className="projector-logo" />}
+          {competitionLogo && <img src={competitionLogo} alt="" className="projector-logo" style={{ height: `${logoSize}px` }} />}
           <motion.h1
             className="projector-title"
             initial={{ opacity: 0, scale: 0.9 }}
@@ -167,7 +171,7 @@ export default function ProjectorView() {
           >
             {projectorTitle}
           </motion.h1>
-          {competitionLogo && <img src={competitionLogo} alt="" className="projector-logo" />}
+          {competitionLogo && <img src={competitionLogo} alt="" className="projector-logo" style={{ height: `${logoSize}px` }} />}
         </div>
 
         <motion.div
@@ -386,7 +390,7 @@ export default function ProjectorView() {
           transition={{ duration: 0.6 }}
         >
           <div className="stadium-header-inner">
-            {competitionLogo && <img src={competitionLogo} alt="" className="projector-logo" />}
+            {competitionLogo && <img src={competitionLogo} alt="" className="projector-logo" style={{ height: `${logoSize}px` }} />}
             <h1 className="stadium-title">{projectorTitle}</h1>
             <div className="stadium-progress">
               <span className="stadium-progress-text">
@@ -588,7 +592,7 @@ export default function ProjectorView() {
         {/* Competition Logo */}
         {competitionLogo && (
           <div className="broadcast-logo-container">
-            <img src={competitionLogo} alt="" className="projector-logo broadcast-logo" />
+            <img src={competitionLogo} alt="" className="projector-logo broadcast-logo" style={{ height: `${logoSize}px` }} />
           </div>
         )}
         {/* Pots Section */}
@@ -736,9 +740,9 @@ export default function ProjectorView() {
           transition={{ duration: 0.7 }}
         >
           <div className="gala-title-ornament">✦</div>
-          {competitionLogo && <img src={competitionLogo} alt="" className="projector-logo gala-logo" />}
+          {competitionLogo && <img src={competitionLogo} alt="" className="projector-logo gala-logo" style={{ height: `${logoSize}px` }} />}
           <h1 className="gala-title">{projectorTitle}</h1>
-          {competitionLogo && <img src={competitionLogo} alt="" className="projector-logo gala-logo" />}
+          {competitionLogo && <img src={competitionLogo} alt="" className="projector-logo gala-logo" style={{ height: `${logoSize}px` }} />}
           <div className="gala-title-ornament">✦</div>
         </motion.div>
 
@@ -934,7 +938,7 @@ export default function ProjectorView() {
           transition={{ duration: 0.5 }}
         >
           <div className="neon-topbar-left">
-            {competitionLogo ? <img src={competitionLogo} alt="" className="projector-logo neon-logo-img" /> : <span className="neon-logo">⚡</span>}
+            {competitionLogo ? <img src={competitionLogo} alt="" className="projector-logo neon-logo-img" style={{ height: `${logoSize}px` }} /> : <span className="neon-logo">⚡</span>}
             <h1 className="neon-title">{projectorTitle}</h1>
           </div>
           <div className="neon-topbar-right">

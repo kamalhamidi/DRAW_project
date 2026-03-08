@@ -46,6 +46,7 @@ export default function TournamentManager() {
   const [showProjectorSettings, setShowProjectorSettings] = useState(false);
   const [bgImage, setBgImage] = useState<string>("/bg.png");
   const [competitionLogo, setCompetitionLogo] = useState<string>("");
+  const [logoSize, setLogoSize] = useState<number>(70);
   const [footerText, setFooterText] = useState<string>("");
   const [footerSize, setFooterSize] = useState<number>(1.1);
   const [colorMode, setColorMode] = useState<"auto" | "manual">("manual");
@@ -117,11 +118,12 @@ export default function TournamentManager() {
         bgImage,
         colorPalette,
         competitionLogo,
+        logoSize,
         footerText,
         footerSize,
       });
     }
-  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, footerText, footerSize]);
+  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize]);
 
   const handleCreatePot = (e: React.FormEvent) => {
     e.preventDefault();
@@ -371,6 +373,20 @@ export default function TournamentManager() {
                       </motion.button>
                     )}
                   </div>
+                  {competitionLogo && (
+                    <div className="settings-footer-size">
+                      <label className="settings-label">Size: {logoSize}px</label>
+                      <input
+                        type="range"
+                        min="30"
+                        max="200"
+                        step="5"
+                        value={logoSize}
+                        onChange={(e) => setLogoSize(parseInt(e.target.value))}
+                        className="settings-range"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 {/* Layout */}
