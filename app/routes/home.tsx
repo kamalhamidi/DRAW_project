@@ -46,6 +46,8 @@ export default function TournamentManager() {
   const [showProjectorSettings, setShowProjectorSettings] = useState(false);
   const [bgImage, setBgImage] = useState<string>("/bg.png");
   const [competitionLogo, setCompetitionLogo] = useState<string>("");
+  const [footerText, setFooterText] = useState<string>("");
+  const [footerSize, setFooterSize] = useState<number>(1.1);
   const [colorMode, setColorMode] = useState<"auto" | "manual">("manual");
   const [colorPalette, setColorPalette] = useState<ColorPalette | null>(null);
   const [manualPalette, setManualPalette] = useState<ColorPalette>({
@@ -115,9 +117,11 @@ export default function TournamentManager() {
         bgImage,
         colorPalette,
         competitionLogo,
+        footerText,
+        footerSize,
       });
     }
-  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo]);
+  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, footerText, footerSize]);
 
   const handleCreatePot = (e: React.FormEvent) => {
     e.preventDefault();
@@ -308,6 +312,30 @@ export default function TournamentManager() {
                     onChange={(e) => setProjectorTitle(e.target.value)}
                     placeholder="Enter title..."
                   />
+                </div>
+
+                {/* Footer Text */}
+                <div className="settings-group">
+                  <label className="settings-label">Footer Text</label>
+                  <input
+                    type="text"
+                    className="settings-input"
+                    value={footerText}
+                    onChange={(e) => setFooterText(e.target.value)}
+                    placeholder="Enter footer text..."
+                  />
+                  <div className="settings-footer-size">
+                    <label className="settings-label">Size: {footerSize}rem</label>
+                    <input
+                      type="range"
+                      min="0.6"
+                      max="3"
+                      step="0.1"
+                      value={footerSize}
+                      onChange={(e) => setFooterSize(parseFloat(e.target.value))}
+                      className="settings-range"
+                    />
+                  </div>
                 </div>
 
                 {/* Competition Logo */}

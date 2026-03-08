@@ -45,6 +45,8 @@ export default function ProjectorView() {
   const [projectorTitle, setProjectorTitle] = useState("Tournament Draw");
   const [bgImage, setBgImage] = useState<string>("/bg.png");
   const [competitionLogo, setCompetitionLogo] = useState<string>("");
+  const [footerText, setFooterText] = useState<string>("");
+  const [footerSize, setFooterSize] = useState<number>(1.1);
 
   useEffect(() => {
     setHydrated(true);
@@ -53,7 +55,7 @@ export default function ProjectorView() {
     const channel = new BroadcastChannel("draw_sync");
 
     const handleMessage = (event: MessageEvent) => {
-      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo } = event.data;
+      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, footerText, footerSize } = event.data;
       setDrawState({
         pots: pots || [],
         groups: groups || [],
@@ -74,6 +76,12 @@ export default function ProjectorView() {
       }
       if (competitionLogo !== undefined) {
         setCompetitionLogo(competitionLogo);
+      }
+      if (footerText !== undefined) {
+        setFooterText(footerText);
+      }
+      if (footerSize !== undefined) {
+        setFooterSize(footerSize);
       }
       // Apply color palette from the home page
       if (colorPalette) {
@@ -338,6 +346,18 @@ export default function ProjectorView() {
           </motion.div>
         )}
 
+        {/* Footer Text */}
+        {footerText && (
+          <motion.div
+            className="projector-footer"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <span className="projector-footer-text" style={{ fontSize: `${footerSize}rem` }}>{footerText}</span>
+          </motion.div>
+        )}
+
         {/* Empty State */}
         {pots.length === 0 && groups.length === 0 && (
           <motion.div
@@ -532,6 +552,18 @@ export default function ProjectorView() {
           </AnimatePresence>
         </div>
 
+        {/* Footer Text */}
+        {footerText && (
+          <motion.div
+            className="projector-footer"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <span className="projector-footer-text" style={{ fontSize: `${footerSize}rem` }}>{footerText}</span>
+          </motion.div>
+        )}
+
         {/* Empty State */}
         {pots.length === 0 && groups.length === 0 && (
           <motion.div
@@ -660,6 +692,18 @@ export default function ProjectorView() {
                 </motion.div>
               );
             })}
+          </motion.div>
+        )}
+
+        {/* Footer Text */}
+        {footerText && (
+          <motion.div
+            className="projector-footer"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <span className="projector-footer-text" style={{ fontSize: `${footerSize}rem` }}>{footerText}</span>
           </motion.div>
         )}
 
@@ -846,6 +890,18 @@ export default function ProjectorView() {
             )}
           </AnimatePresence>
         </div>
+
+        {/* Footer Text */}
+        {footerText && (
+          <motion.div
+            className="projector-footer"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <span className="projector-footer-text" style={{ fontSize: `${footerSize}rem` }}>{footerText}</span>
+          </motion.div>
+        )}
 
         {/* Empty State */}
         {pots.length === 0 && groups.length === 0 && (
@@ -1057,6 +1113,18 @@ export default function ProjectorView() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Footer Text */}
+        {footerText && (
+          <motion.div
+            className="projector-footer"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <span className="projector-footer-text" style={{ fontSize: `${footerSize}rem` }}>{footerText}</span>
+          </motion.div>
+        )}
 
         {/* Empty State */}
         {pots.length === 0 && groups.length === 0 && (
