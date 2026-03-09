@@ -399,21 +399,33 @@ export default function ProjectorView() {
         <AnimatePresence mode="wait">
           {selectedTeam && (
             <motion.div
-              key="stadium-spotlight"
-              className="stadium-spotlight"
-              initial={{ opacity: 0, scale: 0.8, y: -30 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.8, y: -30 }}
-              transition={{ type: "spring", stiffness: 200, damping: 15 }}
+              key="stadium-spotlight-wrapper"
+              className="stadium-spotlight-wrapper"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
             >
-              <div className="stadium-spotlight-glow" />
-              <div className="stadium-spotlight-content">
-                <span className="stadium-spotlight-flag">{selectedTeam.countryFlag || "🏴"}</span>
-                <div className="stadium-spotlight-info">
-                  <span className="stadium-spotlight-label">SELECTED</span>
-                  <span className="stadium-spotlight-name">{selectedTeam.name}</span>
+              <motion.div
+                key="stadium-spotlight"
+                className="stadium-spotlight"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.7 }}
+                transition={{
+                  type: "spring", stiffness: 300, damping: 20,
+                  exit: { duration: 0.2, ease: "easeIn" }
+                }}
+              >
+                <div className="stadium-spotlight-glow" />
+                <div className="stadium-spotlight-content">
+                  <span className="stadium-spotlight-flag">{selectedTeam.countryFlag || "🏴"}</span>
+                  <div className="stadium-spotlight-info">
+                    <span className="stadium-spotlight-label">SELECTED</span>
+                    <span className="stadium-spotlight-name">{selectedTeam.name}</span>
+                  </div>
                 </div>
-              </div>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
