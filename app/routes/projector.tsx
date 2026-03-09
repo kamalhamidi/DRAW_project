@@ -371,12 +371,27 @@ export default function ProjectorView() {
         {pots.length === 0 && groups.length === 0 && (
           <motion.div
             className="projector-empty-state"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
           >
-            <h2>Waiting for draw to start...</h2>
-            <p>The projector will display the tournament draw once it begins.</p>
+            {competitionLogo && (
+              <motion.img
+                src={competitionLogo}
+                alt=""
+                className="empty-state-logo"
+                style={{ height: `${logoSize * 1.5}px` }}
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              />
+            )}
+            <h2>{projectorTitle || "Tournament Draw"}</h2>
+            <div className="empty-state-dots">
+              <span className="empty-dot" />
+              <span className="empty-dot" />
+              <span className="empty-dot" />
+            </div>
+            <p>Waiting for the draw to begin</p>
           </motion.div>
         )}
       </div>
@@ -581,13 +596,29 @@ export default function ProjectorView() {
         {pots.length === 0 && groups.length === 0 && (
           <motion.div
             className="stadium-empty-state"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
           >
-            <div className="stadium-empty-icon">🏟</div>
-            <h2>Waiting for draw to start...</h2>
-            <p>The stadium view will light up once the tournament draw begins.</p>
+            {competitionLogo ? (
+              <motion.img
+                src={competitionLogo}
+                alt=""
+                className="empty-state-logo"
+                style={{ height: `${logoSize * 1.5}px` }}
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              />
+            ) : (
+              <div className="stadium-empty-icon">🏟</div>
+            )}
+            <h2>{projectorTitle || "Tournament Draw"}</h2>
+            <div className="empty-state-dots">
+              <span className="empty-dot" />
+              <span className="empty-dot" />
+              <span className="empty-dot" />
+            </div>
+            <p>The stadium awaits the draw</p>
           </motion.div>
         )}
       </>
@@ -724,13 +755,29 @@ export default function ProjectorView() {
         {pots.length === 0 && groups.length === 0 && (
           <motion.div
             className="broadcast-empty-state"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
           >
-            <div className="broadcast-empty-icon">\ud83d\udcfa</div>
-            <h2>Waiting for draw to start...</h2>
-            <p>The broadcast view will display the tournament draw once it begins.</p>
+            {competitionLogo ? (
+              <motion.img
+                src={competitionLogo}
+                alt=""
+                className="empty-state-logo"
+                style={{ height: `${logoSize * 1.5}px` }}
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              />
+            ) : (
+              <div className="broadcast-empty-icon">📺</div>
+            )}
+            <h2>{projectorTitle || "Tournament Draw"}</h2>
+            <div className="empty-state-dots">
+              <span className="empty-dot" />
+              <span className="empty-dot" />
+              <span className="empty-dot" />
+            </div>
+            <p>Broadcasting will begin shortly</p>
           </motion.div>
         )}
       </div>
@@ -924,12 +971,29 @@ export default function ProjectorView() {
         {pots.length === 0 && groups.length === 0 && (
           <motion.div
             className="gala-empty-state"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
           >
-            <div className="gala-empty-star">✨</div>
-            <h2>The Stage Is Set</h2>
-            <p>Waiting for the tournament draw to begin…</p>
+            {competitionLogo ? (
+              <motion.img
+                src={competitionLogo}
+                alt=""
+                className="empty-state-logo gala-empty-logo"
+                style={{ height: `${logoSize * 1.5}px` }}
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              />
+            ) : (
+              <div className="gala-empty-star">✨</div>
+            )}
+            <h2>{projectorTitle || "The Stage Is Set"}</h2>
+            <div className="empty-state-dots gala-dots">
+              <span className="empty-dot" />
+              <span className="empty-dot" />
+              <span className="empty-dot" />
+            </div>
+            <p>Awaiting the ceremony to begin</p>
           </motion.div>
         )}
       </div>
@@ -1117,11 +1181,28 @@ export default function ProjectorView() {
         {pots.length === 0 && groups.length === 0 && (
           <motion.div
             className="neon-empty"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
           >
-            <div className="neon-empty-icon">⚡</div>
-            <h2>// SYSTEM READY //</h2>
+            {competitionLogo ? (
+              <motion.img
+                src={competitionLogo}
+                alt=""
+                className="empty-state-logo neon-empty-logo"
+                style={{ height: `${logoSize * 1.5}px` }}
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              />
+            ) : (
+              <div className="neon-empty-icon">⚡</div>
+            )}
+            <h2>{projectorTitle || "// SYSTEM READY //"}</h2>
+            <div className="empty-state-dots neon-dots">
+              <span className="empty-dot" />
+              <span className="empty-dot" />
+              <span className="empty-dot" />
+            </div>
             <p>Initializing draw sequence…</p>
           </motion.div>
         )}
