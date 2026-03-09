@@ -1949,18 +1949,18 @@ body.bg-none::before {
   border-radius: 28px;
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--color-accent-1) 20%, transparent) 0%, color-mix(in srgb, var(--color-primary) 20%, transparent) 100%);
-  border: 2px solid var(--color-accent-1);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--team-color-1) 20%, transparent) 0%, color-mix(in srgb, var(--team-color-2) 15%, transparent) 100%);
+  border: 2px solid var(--team-color-1);
   backdrop-filter: blur(14px);
   pointer-events: auto;
-  box-shadow: 0 8px 60px rgba(0, 0, 0, 0.5), 0 0 40px color-mix(in srgb, var(--color-accent-1) 25%, transparent);
+  box-shadow: 0 8px 60px rgba(0, 0, 0, 0.5), 0 0 40px color-mix(in srgb, var(--team-color-1) 30%, transparent);
 }
 
 .stadium-spotlight-glow {
   position: absolute;
   inset: -2px;
-  border-radius: 22px;
-  background: linear-gradient(135deg, var(--color-accent-1), var(--color-primary), var(--color-accent-1));
+  border-radius: 30px;
+  background: linear-gradient(135deg, var(--team-color-1), var(--team-color-2), var(--team-color-1));
   background-size: 200% 200%;
   animation: spotlightGlow 3s ease infinite;
   z-index: -1;
@@ -2003,7 +2003,7 @@ body.bg-none::before {
 .stadium-spotlight-label {
   font-size: 1rem;
   font-weight: 700;
-  color: var(--color-accent-1);
+  color: var(--team-color-1);
   text-transform: uppercase;
   letter-spacing: 0.18em;
 }
@@ -2632,21 +2632,39 @@ body.bg-none::before {
 }
 
 /* ---- Spotlight ---- */
+.gala-spotlight-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+
 .gala-spotlight {
-  width: 100%;
   max-width: 900px;
   position: relative;
-  border-radius: 20px;
+  border-radius: 28px;
   overflow: hidden;
-  margin-bottom: 1.5rem;
+  padding: 2.5rem 4rem;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--team-color-1) 15%, transparent) 0%, color-mix(in srgb, var(--team-color-2) 12%, rgba(30, 15, 55, 0.5)) 100%);
+  backdrop-filter: blur(14px);
+  pointer-events: auto;
+  box-shadow: 0 8px 60px rgba(0, 0, 0, 0.5), 0 0 40px color-mix(in srgb, var(--team-color-1) 25%, transparent);
 }
 
 .gala-spotlight-border {
   position: absolute;
   inset: 0;
-  border-radius: 20px;
+  border-radius: 28px;
   border: 2px solid transparent;
-  background: linear-gradient(135deg, #D4AF37, #F5E6A3, #D4AF37, #A8872A) border-box;
+  background: linear-gradient(135deg, var(--team-color-1), var(--team-color-2), var(--team-color-1), var(--team-color-2)) border-box;
   -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
   mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -2665,21 +2683,31 @@ body.bg-none::before {
   }
 }
 
+.gala-spotlight-glow {
+  position: absolute;
+  inset: -2px;
+  border-radius: 30px;
+  background: linear-gradient(135deg, var(--team-color-1), color-mix(in srgb, var(--team-color-2) 30%, transparent), var(--team-color-1));
+  background-size: 200% 200%;
+  animation: spotlightGlow 3s ease infinite;
+  z-index: -1;
+  opacity: 0.5;
+  filter: blur(8px);
+}
+
 .gala-spotlight-inner {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 2rem;
-  padding: 1.5rem 3rem;
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(30, 15, 55, 0.6) 100%);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  gap: 2.5rem;
+  position: relative;
+  z-index: 1;
 }
 
 .gala-spotlight-flag {
-  font-size: 4.5rem;
+  font-size: 5.5rem;
   line-height: 1;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
 }
 
 .gala-spotlight-text {
@@ -2690,32 +2718,20 @@ body.bg-none::before {
 }
 
 .gala-spotlight-sub {
-  font-size: 0.8rem;
+  font-size: 1rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.25em;
-  color: #D4AF37;
+  color: var(--team-color-1);
 }
 
 .gala-spotlight-name {
-  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
   font-weight: 900;
   color: #fff;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  text-shadow: 0 3px 15px rgba(0, 0, 0, 0.5);
-}
-
-.gala-spotlight-idle .gala-spotlight-inner {
-  padding: 1.25rem 3rem;
-}
-
-.gala-spotlight-waiting {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: rgba(212, 175, 55, 0.8);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
 }
 
 /* ---- Divider ---- */

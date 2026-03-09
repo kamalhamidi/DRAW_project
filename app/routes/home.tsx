@@ -49,6 +49,7 @@ export default function TournamentManager() {
   const [logoSize, setLogoSize] = useState<number>(70);
   const [footerText, setFooterText] = useState<string>("");
   const [footerSize, setFooterSize] = useState<number>(1.1);
+  const [showSpotlight, setShowSpotlight] = useState(true);
   const [colorMode, setColorMode] = useState<"auto" | "manual">("manual");
   const [colorPalette, setColorPalette] = useState<ColorPalette | null>(null);
   const [manualPalette, setManualPalette] = useState<ColorPalette>({
@@ -121,9 +122,10 @@ export default function TournamentManager() {
         logoSize,
         footerText,
         footerSize,
+        showSpotlight,
       });
     }
-  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize]);
+  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, showSpotlight]);
 
   const handleCreatePot = (e: React.FormEvent) => {
     e.preventDefault();
@@ -531,6 +533,19 @@ export default function TournamentManager() {
                     onClick={() => setShowProjectorPots(!showProjectorPots)}
                   >
                     {showProjectorPots ? "✓ Pots Visible" : "🚫 Pots Hidden"}
+                  </motion.button>
+                </div>
+
+                {/* Show/Hide Spotlight */}
+                <div className="settings-group">
+                  <label className="settings-label">Selected Team Spotlight</label>
+                  <motion.button
+                    className={`settings-toggle ${showSpotlight ? "on" : "off"}`}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setShowSpotlight(!showSpotlight)}
+                  >
+                    {showSpotlight ? "✓ Spotlight On" : "🚫 Spotlight Off"}
                   </motion.button>
                 </div>
               </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { applyColorPalette, resetColorPalette, type ColorPalette } from "~/utils/extractColors";
+import { getTeamColors } from "../../data/countryColors";
 
 interface Team {
   id: number;
@@ -48,6 +49,7 @@ export default function ProjectorView() {
   const [logoSize, setLogoSize] = useState<number>(70);
   const [footerText, setFooterText] = useState<string>("");
   const [footerSize, setFooterSize] = useState<number>(1.1);
+  const [showSpotlight, setShowSpotlight] = useState(true);
 
   useEffect(() => {
     setHydrated(true);
@@ -56,7 +58,7 @@ export default function ProjectorView() {
     const channel = new BroadcastChannel("draw_sync");
 
     const handleMessage = (event: MessageEvent) => {
-      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize } = event.data;
+      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, showSpotlight } = event.data;
       setDrawState({
         pots: pots || [],
         groups: groups || [],
@@ -86,6 +88,9 @@ export default function ProjectorView() {
       }
       if (footerSize !== undefined) {
         setFooterSize(footerSize);
+      }
+      if (showSpotlight !== undefined) {
+        setShowSpotlight(showSpotlight);
       }
       // Apply color palette from the home page
       if (colorPalette) {
@@ -397,7 +402,9 @@ export default function ProjectorView() {
 
         {/* Selected Team Spotlight */}
         <AnimatePresence mode="wait">
-          {selectedTeam && (
+          {showSpotlight && selectedTeam && (() => {
+            const [tc1, tc2] = getTeamColors(selectedTeam.countryCode);
+            return (
             <motion.div
               key="stadium-spotlight-wrapper"
               className="stadium-spotlight-wrapper"
@@ -416,6 +423,10 @@ export default function ProjectorView() {
                   type: "spring", stiffness: 300, damping: 20,
                   exit: { duration: 0.2, ease: "easeIn" }
                 }}
+                style={{
+                  "--team-color-1": tc1,
+                  "--team-color-2": tc2,
+                } as React.CSSProperties}
               >
                 <div className="stadium-spotlight-glow" />
                 <div className="stadium-spotlight-content">
@@ -427,7 +438,8 @@ export default function ProjectorView() {
                 </div>
               </motion.div>
             </motion.div>
-          )}
+            );
+          })()}
         </AnimatePresence>
 
         {/* Main Content — Side by Side */}
@@ -745,42 +757,46 @@ export default function ProjectorView() {
 
         {/* Selected Team Spotlight */}
         <AnimatePresence mode="wait">
-          {selectedTeam ? (
+          {showSpotlight && selectedTeam && (() => {
+            const [tc1, tc2] = getTeamColors(selectedTeam.countryCode);
+            return (
             <motion.div
-              key="gala-selected"
-              className="gala-spotlight"
-              initial={{ opacity: 0, scale: 0.85 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.85 }}
-              transition={{ type: "spring", stiffness: 150, damping: 15 }}
-            >
-              <div className="gala-spotlight-border" />
-              <div className="gala-spotlight-inner">
-                <span className="gala-spotlight-flag">{selectedTeam.countryFlag || "🏴"}</span>
-                <div className="gala-spotlight-text">
-                  <span className="gala-spotlight-sub">Now Drawing</span>
-                  <span className="gala-spotlight-name">{selectedTeam.name}</span>
-                </div>
-                <span className="gala-spotlight-flag">{selectedTeam.countryFlag || "🏴"}</span>
-              </div>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="gala-waiting"
-              className="gala-spotlight gala-spotlight-idle"
+              key="gala-spotlight-wrapper"
+              className="gala-spotlight-wrapper"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
             >
-              <div className="gala-spotlight-inner">
-                <span className="gala-spotlight-waiting">
-                  {allTeamsAssigned
-                    ? "✨ Draw Complete — All Teams Assigned! ✨"
-                    : `Awaiting Selection • ${assignedTeams}/${totalTeams} Assigned`}
-                </span>
-              </div>
+              <motion.div
+                key="gala-selected"
+                className="gala-spotlight"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.7 }}
+                transition={{
+                  type: "spring", stiffness: 300, damping: 20,
+                  exit: { duration: 0.2, ease: "easeIn" }
+                }}
+                style={{
+                  "--team-color-1": tc1,
+                  "--team-color-2": tc2,
+                } as React.CSSProperties}
+              >
+                <div className="gala-spotlight-border" />
+                <div className="gala-spotlight-glow" />
+                <div className="gala-spotlight-inner">
+                  <span className="gala-spotlight-flag">{selectedTeam.countryFlag || "🏴"}</span>
+                  <div className="gala-spotlight-text">
+                    <span className="gala-spotlight-sub">SELECTED</span>
+                    <span className="gala-spotlight-name">{selectedTeam.name}</span>
+                  </div>
+                  <span className="gala-spotlight-flag">{selectedTeam.countryFlag || "🏴"}</span>
+                </div>
+              </motion.div>
             </motion.div>
-          )}
+            );
+          })()}
         </AnimatePresence>
 
         {/* Decorative Divider */}
