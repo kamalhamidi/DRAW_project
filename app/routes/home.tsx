@@ -1,8 +1,31 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTournamentStore } from "zustand/tournament-store";
 import { africaCountries } from "data/africaCountries";
 import { extractColorsFromImage, applyColorPalette, resetColorPalette, type ColorPalette } from "~/utils/extractColors";
+
+interface SavedTournament {
+  id: string;
+  name: string;
+  savedAt: string;
+  pots: any[];
+  groups: any[];
+  potsFinalized: boolean;
+  bgAnimation: string;
+  projectorLayout: string;
+  projectorTitle: string;
+  bgImage: string;
+  competitionLogo: string;
+  logoSize: number;
+  footerText: string;
+  footerSize: number;
+  showSpotlight: boolean;
+  showProjectorPots: boolean;
+  colorMode: string;
+  manualPalette: ColorPalette;
+  numberOfGroups: number;
+  teamsPerGroup: number;
+}
 
 export default function TournamentManager() {
   const {
@@ -60,6 +83,124 @@ export default function TournamentManager() {
     accent2Text: "#560A8F",
     highlight: "#6CBD45",
   });
+
+  // Save/Load state
+  const [savedTournaments, setSavedTournaments] = useState<SavedTournament[]>([]);
+  const [showSavePanel, setShowSavePanel] = useState(false);
+  const [saveName, setSaveName] = useState("");
+
+  // Restore all settings from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("saved-tournaments");
+    if (saved) {
+      try { setSavedTournaments(JSON.parse(saved)); } catch { }
+    }
+    const settings = localStorage.getItem("tournament-settings");
+    if (settings) {
+      try {
+        const s = JSON.parse(settings);
+        if (s.showProjectorPots !== undefined) setShowProjectorPots(s.showProjectorPots);
+        if (s.bgAnimation) setBgAnimation(s.bgAnimation);
+        if (s.projectorLayout) setProjectorLayout(s.projectorLayout);
+        if (s.projectorTitle !== undefined) setProjectorTitle(s.projectorTitle);
+        if (s.bgImage) setBgImage(s.bgImage);
+        if (s.competitionLogo !== undefined) setCompetitionLogo(s.competitionLogo);
+        if (s.logoSize !== undefined) setLogoSize(s.logoSize);
+        if (s.footerText !== undefined) setFooterText(s.footerText);
+        if (s.footerSize !== undefined) setFooterSize(s.footerSize);
+        if (s.showSpotlight !== undefined) setShowSpotlight(s.showSpotlight);
+        if (s.colorMode) setColorMode(s.colorMode);
+        if (s.manualPalette) setManualPalette(s.manualPalette);
+        if (s.currentPhase) setCurrentPhase(s.currentPhase);
+      } catch { }
+    }
+  }, []);
+
+  // Auto-save settings to localStorage whenever they change
+  useEffect(() => {
+    if (!hydrated) return;
+    const settings = {
+      showProjectorPots,
+      bgAnimation,
+      projectorLayout,
+      projectorTitle,
+      bgImage,
+      competitionLogo,
+      logoSize,
+      footerText,
+      footerSize,
+      showSpotlight,
+      colorMode,
+      manualPalette,
+      currentPhase,
+    };
+    localStorage.setItem("tournament-settings", JSON.stringify(settings));
+  }, [hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, showSpotlight, colorMode, manualPalette, currentPhase]);
+
+  const saveTournament = useCallback(() => {
+    if (!saveName.trim()) return;
+    const preset: SavedTournament = {
+      id: Date.now().toString(),
+      name: saveName.trim(),
+      savedAt: new Date().toISOString(),
+      pots,
+      groups,
+      potsFinalized,
+      bgAnimation,
+      projectorLayout,
+      projectorTitle,
+      bgImage,
+      competitionLogo,
+      logoSize,
+      footerText,
+      footerSize,
+      showSpotlight,
+      showProjectorPots,
+      colorMode,
+      manualPalette,
+      numberOfGroups,
+      teamsPerGroup,
+    };
+    const updated = [...savedTournaments, preset];
+    setSavedTournaments(updated);
+    localStorage.setItem("saved-tournaments", JSON.stringify(updated));
+    setSaveName("");
+  }, [saveName, pots, groups, potsFinalized, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, showSpotlight, showProjectorPots, colorMode, manualPalette, numberOfGroups, teamsPerGroup, savedTournaments]);
+
+  const loadTournament = useCallback((preset: SavedTournament) => {
+    if (!window.confirm(`Load "${preset.name}"? This will replace your current tournament.`)) return;
+    // Reset store and repopulate
+    resetTournament();
+    // We need to set the zustand store directly
+    useTournamentStore.setState({
+      pots: preset.pots,
+      groups: preset.groups,
+      potsFinalized: preset.potsFinalized,
+      selectedTeam: null,
+    });
+    setBgAnimation(preset.bgAnimation as any);
+    setProjectorLayout(preset.projectorLayout as any);
+    setProjectorTitle(preset.projectorTitle);
+    setBgImage(preset.bgImage);
+    setCompetitionLogo(preset.competitionLogo);
+    setLogoSize(preset.logoSize);
+    setFooterText(preset.footerText);
+    setFooterSize(preset.footerSize);
+    setShowSpotlight(preset.showSpotlight);
+    setShowProjectorPots(preset.showProjectorPots);
+    setColorMode(preset.colorMode as any);
+    setManualPalette(preset.manualPalette);
+    setNumberOfGroups(preset.numberOfGroups);
+    setTeamsPerGroup(preset.teamsPerGroup);
+    setCurrentPhase(preset.potsFinalized ? "draw" : "setup");
+    setShowSavePanel(false);
+  }, [resetTournament]);
+
+  const deleteSavedTournament = useCallback((id: string) => {
+    const updated = savedTournaments.filter(t => t.id !== id);
+    setSavedTournaments(updated);
+    localStorage.setItem("saved-tournaments", JSON.stringify(updated));
+  }, [savedTournaments]);
 
   // Broadcast Channel for projector sync
   const broadcastChannelRef = React.useRef<BroadcastChannel | null>(null);
@@ -280,6 +421,15 @@ export default function TournamentManager() {
               ⚙️
             </motion.button>
             <motion.button
+              className={`navbar-btn navbar-btn-save ${showSavePanel ? "active" : ""}`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowSavePanel(!showSavePanel)}
+              title="Save / Load Tournament"
+            >
+              💾
+            </motion.button>
+            <motion.button
               className="navbar-btn navbar-btn-reset"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -358,8 +508,12 @@ export default function TournamentManager() {
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            const url = URL.createObjectURL(file);
-                            setCompetitionLogo(url);
+                            const reader = new FileReader();
+                            reader.onload = (ev) => {
+                              const dataUrl = ev.target?.result as string;
+                              if (dataUrl) setCompetitionLogo(dataUrl);
+                            };
+                            reader.readAsDataURL(file);
                           }
                         }}
                       />
@@ -452,8 +606,12 @@ export default function TournamentManager() {
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            const url = URL.createObjectURL(file);
-                            setBgImage(url);
+                            const reader = new FileReader();
+                            reader.onload = (ev) => {
+                              const dataUrl = ev.target?.result as string;
+                              if (dataUrl) setBgImage(dataUrl);
+                            };
+                            reader.readAsDataURL(file);
                           }
                         }}
                       />
@@ -547,6 +705,84 @@ export default function TournamentManager() {
                   >
                     {showSpotlight ? "✓ Spotlight On" : "🚫 Spotlight Off"}
                   </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Save / Load Panel */}
+        <AnimatePresence>
+          {showSavePanel && (
+            <motion.div
+              className="save-panel"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <div className="save-panel-inner">
+                {/* Save Current */}
+                <div className="save-section">
+                  <h3 className="save-section-title">💾 Save Current Tournament</h3>
+                  <div className="save-form">
+                    <input
+                      type="text"
+                      className="settings-input save-name-input"
+                      value={saveName}
+                      onChange={(e) => setSaveName(e.target.value)}
+                      placeholder="Tournament name..."
+                      onKeyDown={(e) => e.key === "Enter" && saveTournament()}
+                    />
+                    <motion.button
+                      className="save-btn save-btn-confirm"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={saveTournament}
+                      disabled={!saveName.trim()}
+                    >
+                      Save
+                    </motion.button>
+                  </div>
+                </div>
+
+                {/* Saved List */}
+                <div className="save-section">
+                  <h3 className="save-section-title">📂 Saved Tournaments ({savedTournaments.length})</h3>
+                  {savedTournaments.length === 0 ? (
+                    <p className="save-empty">No saved tournaments yet</p>
+                  ) : (
+                    <div className="save-list">
+                      {savedTournaments.map((t) => (
+                        <div key={t.id} className="save-item">
+                          <div className="save-item-info">
+                            <span className="save-item-name">{t.name}</span>
+                            <span className="save-item-meta">
+                              {t.pots.length} pots · {t.groups.length} groups · {new Date(t.savedAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                          <div className="save-item-actions">
+                            <motion.button
+                              className="save-btn save-btn-load"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => loadTournament(t)}
+                            >
+                              Load
+                            </motion.button>
+                            <motion.button
+                              className="save-btn save-btn-delete"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => deleteSavedTournament(t.id)}
+                            >
+                              ✕
+                            </motion.button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </motion.div>
