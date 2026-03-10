@@ -2661,19 +2661,18 @@ body.bg-none::before {
 }
 
 .broadcast-team-row.assigned {
-  opacity: 1;
-  pointer-events: none;
-  cursor: not-allowed;
-  background: rgba(255, 255, 255, 0.1);
+  background: transparent;
+  box-shadow: none;
+  border: none;
+  outline: none;
 }
 
 .broadcast-team-row.assigned .broadcast-team-name {
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.35);
 }
 
 .broadcast-team-row.assigned .broadcast-team-flag {
-  opacity: 0.45;
-  filter: grayscale(1);
+  opacity: 0.35;
 }
 
 .broadcast-team-row.empty-slot {

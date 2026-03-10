@@ -1509,7 +1509,7 @@ export default function ProjectorView() {
         transition={{ delay: 0.8 }}
       >
         <span className="sync-dot"></span>
-        <span className="sync-text">Live Sync Active</span>
+        <span className="sync-text">Live Sync Active </span>
       </motion.div>
     </div>
   );
