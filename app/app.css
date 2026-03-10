@@ -3714,3 +3714,467 @@ body.bg-none::before {
     gap: 1rem;
   }
 }
+
+/* ===== CINEMATIC LAYOUT STYLES ===== */
+
+.projector-container.cinematic-mode {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.projector-container.cinematic-mode > div {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.cine-wrapper {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0;
+  overflow: hidden;
+}
+
+.cine-wrapper > *:not(.cine-grain):not(.cine-bokeh):not(.cine-bar) {
+  position: relative;
+  z-index: 2;
+}
+
+/* ---- Film Grain ---- */
+.cine-grain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 200;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 128px;
+  animation: cineGrain 0.3s steps(3) infinite;
+}
+
+@keyframes cineGrain {
+  0%, 100% { transform: translate(0, 0); }
+  33% { transform: translate(-1px, 1px); }
+  66% { transform: translate(1px, -1px); }
+}
+
+/* ---- Letterbox Bars ---- */
+.cine-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  height: 4vh;
+  background: #000;
+  z-index: 150;
+  pointer-events: none;
+}
+
+.cine-bar-top { top: 0; }
+.cine-bar-bottom { bottom: 0; }
+
+/* ---- Bokeh Orbs ---- */
+.cine-bokeh {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.cine-orb {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 190, 80, 0.25) 0%, transparent 70%);
+  filter: blur(2px);
+  animation: cineOrbDrift linear infinite;
+}
+
+.cine-orb-1 { width: 200px; height: 200px; top: 8%;  left: 3%;  animation-duration: 20s; }
+.cine-orb-2 { width: 90px;  height: 90px;  top: 65%; left: 82%; animation-duration: 24s; animation-delay: -4s; }
+.cine-orb-3 { width: 260px; height: 260px; top: 72%; left: 10%; animation-duration: 28s; animation-delay: -8s; }
+.cine-orb-4 { width: 60px;  height: 60px;  top: 18%; left: 75%; animation-duration: 16s; animation-delay: -2s; }
+.cine-orb-5 { width: 150px; height: 150px; top: 45%; left: 55%; animation-duration: 22s; animation-delay: -6s; }
+.cine-orb-6 { width: 100px; height: 100px; top: 80%; left: 42%; animation-duration: 19s; animation-delay: -10s; }
+.cine-orb-7 { width: 180px; height: 180px; top: 3%;  left: 60%; animation-duration: 26s; animation-delay: -14s; }
+.cine-orb-8 { width: 70px;  height: 70px;  top: 50%; left: 20%; animation-duration: 17s; animation-delay: -3s; }
+
+@keyframes cineOrbDrift {
+  0%   { transform: translateY(0) translateX(0) scale(1);    opacity: 0; }
+  15%  { opacity: 0.6; }
+  50%  { transform: translateY(-60px) translateX(25px) scale(1.1); }
+  85%  { opacity: 0.6; }
+  100% { transform: translateY(-120px) translateX(-15px) scale(0.95); opacity: 0; }
+}
+
+/* ---- Brand / Header ---- */
+.cine-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 5.5vh 2rem 1.5rem;
+  text-align: center;
+  width: 100%;
+}
+
+.cine-brand-logo {
+  filter: drop-shadow(0 4px 30px rgba(255, 190, 80, 0.2));
+}
+
+.cine-brand-title {
+  font-family: 'DM Sans', 'Inter', serif;
+  font-size: clamp(1.6rem, 3.5vw, 3rem);
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  text-shadow: 0 2px 30px rgba(255, 190, 80, 0.15);
+}
+
+/* ---- Pots Strip (horizontal tabs) ---- */
+.cine-pots-strip {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 2rem;
+  width: 100%;
+  max-width: 1600px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.cine-pots-strip::-webkit-scrollbar { display: none; }
+
+.cine-pot-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.9rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 190, 80, 0.12);
+  border-radius: 40px;
+  flex-shrink: 0;
+}
+
+.cine-pot-tab-name {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 190, 80, 0.6);
+  white-space: nowrap;
+}
+
+.cine-pot-tab-teams {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.cine-pot-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.04);
+  transition: all 0.25s ease;
+}
+
+.cine-pot-pill.active {
+  background: rgba(255, 190, 80, 0.15);
+  box-shadow: 0 0 12px rgba(255, 190, 80, 0.15);
+}
+
+.cine-pot-pill.used {
+  opacity: 0.15;
+}
+
+.cine-pot-pill-flag {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.cine-pot-pill-name {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+  white-space: nowrap;
+}
+
+.cine-pot-tab-done {
+  font-size: 0.75rem;
+  color: rgba(255, 190, 80, 0.5);
+  font-weight: 700;
+}
+
+/* ---- Full-Screen Takeover (Selected Team) ---- */
+.cine-takeover {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.cine-takeover-inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 4rem 6rem;
+}
+
+.cine-takeover-glow {
+  position: absolute;
+  inset: -100px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--cine-tc1) 20%, transparent) 0%,
+    color-mix(in srgb, var(--cine-tc2) 8%, transparent) 40%,
+    transparent 70%
+  );
+  pointer-events: none;
+  animation: cineTakeGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes cineTakeGlow {
+  0%   { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(1.15); opacity: 1; }
+}
+
+.cine-takeover-flag {
+  font-size: clamp(6rem, 12vw, 10rem);
+  line-height: 1;
+  filter: drop-shadow(0 8px 40px rgba(0, 0, 0, 0.5));
+  position: relative;
+  z-index: 1;
+}
+
+.cine-takeover-name {
+  font-family: 'DM Sans', 'Inter', serif;
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  font-weight: 900;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  position: relative;
+  z-index: 1;
+  text-shadow:
+    0 4px 30px rgba(0, 0, 0, 0.5),
+    0 0 60px color-mix(in srgb, var(--cine-tc1) 30%, transparent);
+}
+
+/* ---- The Draw Board (table) ---- */
+.cine-board {
+  flex: 1;
+  width: 100%;
+  max-width: 1600px;
+  padding: 1rem 3rem 3rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.cine-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 190, 80, 0.1);
+  border-radius: 20px;
+  overflow: hidden;
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  box-shadow: 0 8px 60px rgba(0, 0, 0, 0.25);
+}
+
+.cine-table thead th {
+  padding: 1.1rem 1rem;
+  text-align: center;
+  background: linear-gradient(180deg, rgba(255, 190, 80, 0.08) 0%, rgba(255, 190, 80, 0.02) 100%);
+  border-bottom: 1px solid rgba(255, 190, 80, 0.15);
+}
+
+.cine-table thead th:not(:last-child) {
+  border-right: 1px solid rgba(255, 190, 80, 0.06);
+}
+
+.cine-table thead th.complete {
+  background: linear-gradient(180deg, rgba(255, 190, 80, 0.14) 0%, rgba(255, 190, 80, 0.04) 100%);
+}
+
+.cine-th-name {
+  display: block;
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: rgba(255, 190, 80, 0.85);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.cine-th-count {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  margin-top: 0.25rem;
+  color: rgba(255, 255, 255, 0.25);
+  letter-spacing: 0.05em;
+}
+
+.cine-th-count.done {
+  color: rgba(255, 190, 80, 0.6);
+}
+
+.cine-table tbody td {
+  padding: 0;
+  text-align: center;
+  vertical-align: middle;
+  height: 60px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.025);
+  transition: background 0.3s ease;
+}
+
+.cine-table tbody td:not(:last-child) {
+  border-right: 1px solid rgba(255, 255, 255, 0.025);
+}
+
+.cine-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.cine-table tbody td.filled {
+  background: rgba(255, 190, 80, 0.025);
+}
+
+/* ---- Table Cells ---- */
+.cine-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.5rem;
+}
+
+.cine-cell-flag {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.cine-cell-name {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 0.02em;
+}
+
+.cine-cell-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.cine-cell-num {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.08);
+}
+
+/* ---- Empty State ---- */
+.cine-empty {
+  text-align: center;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 2rem;
+}
+
+.cine-empty-icon {
+  font-size: 5rem;
+  margin-bottom: 2rem;
+  filter: drop-shadow(0 0 30px rgba(255, 190, 80, 0.3));
+}
+
+.cine-empty-logo {
+  filter: drop-shadow(0 4px 30px rgba(255, 190, 80, 0.2));
+}
+
+.cine-dots .empty-dot {
+  background: rgba(255, 190, 80, 0.5);
+  box-shadow: 0 0 8px rgba(255, 190, 80, 0.25);
+}
+
+.cine-empty h2 {
+  font-family: 'DM Sans', 'Inter', serif;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 2px 25px rgba(255, 190, 80, 0.15);
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 1024px) {
+  .cine-board {
+    padding: 1rem 1.5rem 2rem;
+  }
+
+  .cine-table thead th {
+    padding: 0.85rem 0.5rem;
+  }
+
+  .cine-th-name {
+    font-size: 0.95rem;
+  }
+
+  .cine-cell-name {
+    font-size: 0.8rem;
+  }
+
+  .cine-pots-strip {
+    padding: 0.5rem 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .cine-brand {
+    padding: 5vh 1rem 1rem;
+  }
+
+  .cine-board {
+    padding: 0.5rem 0.75rem 1.5rem;
+  }
+
+  .cine-table tbody td {
+    height: 48px;
+  }
+
+  .cine-bar {
+    height: 3vh;
+  }
+
+  .cine-takeover-inner {
+    padding: 3rem 2rem;
+  }
+}
