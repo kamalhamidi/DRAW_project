@@ -458,7 +458,7 @@ export default function ProjectorView() {
         </AnimatePresence>
 
         {/* Main Content — Side by Side */}
-        <div className="stadium-content">
+        <div className={`stadium-content ${!drawState.showProjectorPots ? 'pots-hidden' : ''}`}>
           {/* Left: Groups */}
           <motion.div
             className="stadium-groups-panel"
@@ -854,7 +854,7 @@ export default function ProjectorView() {
         </div>
 
         {/* Two-Panel Content */}
-        <div className="gala-content">
+        <div className={`gala-content ${!drawState.showProjectorPots ? 'pots-hidden' : ''}`}>
           {/* Groups Panel */}
           <div className="gala-panel gala-groups-panel">
             {groups.length > 0 ? (

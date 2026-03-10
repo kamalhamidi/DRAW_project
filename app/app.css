@@ -2064,6 +2064,12 @@ body.bg-none::before {
   min-height: 100vh;
 }
 
+.projector-container.stadium-mode > div {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
 /* Stadium Header */
 .stadium-header {
   background: linear-gradient(180deg, rgba(0, 0, 0, 0.6) 0%, transparent 100%);
@@ -2268,10 +2274,15 @@ body.bg-none::before {
 }
 
 /* Center groups when pots are hidden */
-.stadium-groups-panel:only-child {
-  grid-column: 1 / -1;
+.stadium-content.pots-hidden {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  align-content: center;
+  min-height: 0;
+}
+
+.stadium-content.pots-hidden .stadium-groups-panel {
   max-width: 1200px;
-  margin: 0 auto;
   width: 100%;
 }
 
@@ -2791,6 +2802,12 @@ body.bg-none::before {
   background: linear-gradient(170deg, rgba(10, 5, 20, 0.85) 0%, rgba(25, 10, 45, 0.75) 100%);
 }
 
+.projector-container.gala-mode > div {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
 .gala-wrapper {
   width: 90%;
   max-width: 1500px;
@@ -2974,13 +2991,19 @@ body.bg-none::before {
   gap: 2.5rem;
   width: 100%;
   align-items: start;
+  flex: 1;
 }
 
 /* Center groups when pots are hidden */
-.gala-content > .gala-panel:only-child {
-  grid-column: 1 / -1;
+.gala-content.pots-hidden {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  align-content: center;
+  flex: 1;
+}
+
+.gala-content.pots-hidden .gala-groups-panel {
   max-width: 1200px;
-  margin: 0 auto;
   width: 100%;
 }
 
