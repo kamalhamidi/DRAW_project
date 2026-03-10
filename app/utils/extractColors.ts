@@ -142,7 +142,8 @@ function kMeansClusters(pixels: RGB[], k: number, iterations = 10): RGB[] {
 
 /**
  * Extracts a color palette from an image URL using canvas.
- * Returns a promise that resolves to the palette, or null on error.
+ * Instead of using background colors directly, it finds colors that
+ * will look great ON TOP of the background (high contrast, vibrant).
  */
 export function extractColorsFromImage(imageUrl: string): Promise<ColorPalette | null> {
   return new Promise((resolve) => {
@@ -152,7 +153,6 @@ export function extractColorsFromImage(imageUrl: string): Promise<ColorPalette |
     img.onload = () => {
       try {
         const canvas = document.createElement("canvas");
-        // Sample at small resolution for performance
         const sampleSize = 80;
         canvas.width = sampleSize;
         canvas.height = sampleSize;
@@ -166,104 +166,108 @@ export function extractColorsFromImage(imageUrl: string): Promise<ColorPalette |
         const imageData = ctx.getImageData(0, 0, sampleSize, sampleSize);
         const data = imageData.data;
 
-        // Collect non-gray, non-extreme pixels
-        const pixels: RGB[] = [];
+        // Step 1: Find the average/dominant background color
+        let totalR = 0, totalG = 0, totalB = 0, count = 0;
+        const allPixels: RGB[] = [];
+
         for (let i = 0; i < data.length; i += 4) {
-          const r = data[i];
-          const g = data[i + 1];
-          const b = data[i + 2];
-          const a = data[i + 3];
-
-          // Skip transparent pixels
+          const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
           if (a < 128) continue;
-
-          // Skip near-black and near-white
-          const lum = getLuminance(r, g, b);
-          if (lum < 0.05 || lum > 0.95) continue;
-
-          // Skip very gray pixels (low saturation)
-          const max = Math.max(r, g, b);
-          const min = Math.min(r, g, b);
-          const saturation = max === 0 ? 0 : (max - min) / max;
-          if (saturation < 0.1) continue;
-
-          pixels.push({ r, g, b });
+          totalR += r; totalG += g; totalB += b; count++;
+          allPixels.push({ r, g, b });
         }
 
-        // If not enough colorful pixels, try with relaxed constraints
-        if (pixels.length < 20) {
-          for (let i = 0; i < data.length; i += 4) {
-            const r = data[i];
-            const g = data[i + 1];
-            const b = data[i + 2];
-            const lum = getLuminance(r, g, b);
-            if (lum >= 0.05 && lum <= 0.95) {
-              pixels.push({ r, g, b });
-            }
-          }
-        }
+        if (count < 10) { resolve(null); return; }
 
-        if (pixels.length < 5) {
-          resolve(null);
-          return;
-        }
+        const avgR = totalR / count;
+        const avgG = totalG / count;
+        const avgB = totalB / count;
+        const bgLuminance = getLuminance(avgR, avgG, avgB);
+        const [bgH, bgS, bgL] = rgbToHsl(avgR, avgG, avgB);
+        const isDarkBg = bgLuminance < 0.5;
 
-        // Find 6 clusters
-        const clusters = kMeansClusters(pixels, 6, 15);
+        // Step 2: Cluster all pixels
+        const clusters = kMeansClusters(allPixels, 8, 15);
 
-        // Convert to HSL and sort by saturation * lightness (vibrance)
-        const colorInfo = clusters.map((c) => {
+        // Step 3: Score each cluster color by how good it would look as a UI element on this background
+        const scored = clusters.map((c) => {
           const [h, s, l] = rgbToHsl(c.r, c.g, c.b);
-          return { rgb: c, h, s, l, vibrance: s * (1 - Math.abs(l - 50) / 50) };
+          const lum = getLuminance(c.r, c.g, c.b);
+
+          // Contrast against background (higher = better visibility)
+          const contrastRatio = Math.abs(lum - bgLuminance);
+
+          // Saturation score (vibrant colors look better as accents)
+          const satScore = s / 100;
+
+          // Hue distance from background (avoid colors too similar to bg)
+          const hueDist = Math.min(Math.abs(h - bgH), 360 - Math.abs(h - bgH)) / 180;
+
+          // Penalize colors too close to bg luminance
+          const lumDist = Math.abs(l - bgL) / 100;
+
+          // Combined score: prioritize contrast + saturation + hue variety
+          const score = (contrastRatio * 3) + (satScore * 2) + (hueDist * 1.5) + (lumDist * 1);
+
+          return { rgb: c, h, s, l, lum, score, contrastRatio };
         });
 
-        // Sort by vibrance descending (most vibrant first)
-        colorInfo.sort((a, b) => b.vibrance - a.vibrance);
+        // Sort by score (best UI colors first)
+        scored.sort((a, b) => b.score - a.score);
 
-        // Pick the most vibrant as primary
-        const primaryColor = colorInfo[0];
+        // Step 4: Pick and enhance colors for the palette
+        const pickColor = (candidates: typeof scored, excludeHues: number[] = []) => {
+          for (const c of candidates) {
+            const tooClose = excludeHues.some(
+              eh => Math.min(Math.abs(c.h - eh), 360 - Math.abs(c.h - eh)) < 30
+            );
+            if (!tooClose && c.s > 15) return c;
+          }
+          return candidates[0];
+        };
 
-        // Find a contrasting warm color for accent1 (shift hue by ~120-180)
-        let accent1 = colorInfo.find(
-          (c) =>
-            c !== primaryColor &&
-            Math.abs(c.h - primaryColor.h) > 60
-        ) || colorInfo[1] || primaryColor;
+        const primary = scored[0];
+        const accent1 = pickColor(scored.slice(1), [primary.h]);
+        const accent2 = pickColor(scored.slice(1), [primary.h, accent1.h]);
+        const highlight = pickColor(scored.slice(1), [primary.h, accent1.h, accent2.h]);
 
-        // Find another contrasting color for accent2
-        let accent2 = colorInfo.find(
-          (c) =>
-            c !== primaryColor &&
-            c !== accent1 &&
-            Math.abs(c.h - primaryColor.h) > 40 &&
-            Math.abs(c.h - accent1.h) > 40
-        ) || colorInfo[2] || colorInfo[1] || primaryColor;
+        // Step 5: Enhance colors to ensure they pop against the background
+        const enhanceForBg = (h: number, s: number, l: number): string => {
+          // Boost saturation
+          let newS = Math.min(s * 1.4, 95);
+          let newL = l;
 
-        // Generate the full palette
-        const primaryHex = rgbToHex(primaryColor.rgb.r, primaryColor.rgb.g, primaryColor.rgb.b);
+          if (isDarkBg) {
+            // On dark backgrounds, make colors brighter
+            newL = Math.max(newL, 45);
+            newL = Math.min(newL, 70);
+          } else {
+            // On light backgrounds, make colors deeper
+            newL = Math.max(newL, 30);
+            newL = Math.min(newL, 55);
+          }
+
+          // If color is still too close to bg luminance, push it further
+          const enhancedLum = newL / 100;
+          if (Math.abs(enhancedLum - bgLuminance) < 0.2) {
+            newL = isDarkBg ? Math.min(newL + 20, 75) : Math.max(newL - 20, 25);
+          }
+
+          return hslToHex(h, newS, newL);
+        };
+
+        const primaryHex = enhanceForBg(primary.h, primary.s, primary.l);
         const primaryDarkHex = hslToHex(
-          primaryColor.h,
-          Math.min(primaryColor.s * 1.1, 100),
-          Math.max(primaryColor.l * 0.6, 10)
+          primary.h,
+          Math.min(primary.s * 1.2, 95),
+          isDarkBg ? Math.max(primary.l * 0.5, 12) : Math.max(primary.l * 0.7, 15)
         );
-        const accent1Hex = rgbToHex(accent1.rgb.r, accent1.rgb.g, accent1.rgb.b);
+        const accent1Hex = enhanceForBg(accent1.h, accent1.s, accent1.l);
+        const accent2Hex = enhanceForBg(accent2.h, accent2.s, accent2.l);
+        const highlightHex = enhanceForBg(highlight.h, highlight.s, highlight.l);
 
-        // Make accent2 lighter/brighter for visibility
-        const accent2Hex = hslToHex(
-          accent2.h,
-          Math.min(accent2.s * 1.2, 100),
-          Math.min(Math.max(accent2.l, 45), 65)
-        );
-
-        const highlightHex = hslToHex(
-          accent2.h,
-          Math.min(accent2.s, 80),
-          Math.min(accent2.l * 1.2, 60)
-        );
-
-        // Determine text color for accent2 background
-        const accent2Lum = getLuminance(accent2.rgb.r, accent2.rgb.g, accent2.rgb.b);
-        const accent2TextHex = accent2Lum > 0.5 ? primaryDarkHex : "#ffffff";
+        // Text color for accent2 background
+        const accent2TextHex = isDarkBg ? primaryDarkHex : "#ffffff";
 
         resolve({
           primary: primaryHex,
