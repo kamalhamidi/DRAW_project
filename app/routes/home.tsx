@@ -64,7 +64,7 @@ export default function TournamentManager() {
   const [hydrated, setHydrated] = useState(false);
   const [showProjectorPots, setShowProjectorPots] = useState(true);
   const [bgAnimation, setBgAnimation] = useState<"none" | "slide" | "zoom" | "fade">("zoom");
-  const [projectorLayout, setProjectorLayout] = useState<"classic" | "stadium" | "broadcast" | "gala" | "neon">("broadcast");
+  const [projectorLayout, setProjectorLayout] = useState<"classic" | "stadium" | "broadcast" | "gala" | "minimal">("broadcast");
   const [projectorTitle, setProjectorTitle] = useState("Tournament Draw");
   const [showProjectorSettings, setShowProjectorSettings] = useState(false);
   const [bgImage, setBgImage] = useState<string>("/bg.png");
@@ -554,7 +554,7 @@ export default function TournamentManager() {
                       { key: "stadium", icon: "🏟", label: "Stadium" },
                       { key: "broadcast", icon: "📺", label: "Broadcast" },
                       { key: "gala", icon: "✨", label: "Gala" },
-                      { key: "neon", icon: "⚡", label: "Neon" },
+                      { key: "minimal", icon: "◈", label: "Minimal" },
                     ] as const).map((layout) => (
                       <motion.button
                         key={layout.key}

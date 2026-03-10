@@ -42,7 +42,7 @@ export default function ProjectorView() {
 
   const [hydrated, setHydrated] = useState(false);
   const [bgAnimation, setBgAnimation] = useState<"none" | "slide" | "zoom" | "fade">("zoom");
-  const [projectorLayout, setProjectorLayout] = useState<"classic" | "stadium" | "broadcast" | "gala" | "neon">("broadcast");
+  const [projectorLayout, setProjectorLayout] = useState<"classic" | "stadium" | "broadcast" | "gala" | "minimal">("broadcast");
   const [projectorTitle, setProjectorTitle] = useState("Tournament Draw");
   const [bgImage, setBgImage] = useState<string>("/bg.png");
   const [competitionLogo, setCompetitionLogo] = useState<string>("");
@@ -1000,172 +1000,165 @@ export default function ProjectorView() {
     );
   };
 
-  // ============ NEON LAYOUT ============
-  const renderNeonLayout = () => {
+  // ============ MINIMAL LAYOUT ============
+  const renderMinimalLayout = () => {
     return (
-      <div className="neon-wrapper">
-        {/* Grid overlay for cyberpunk feel */}
-        <div className="neon-grid-overlay" />
+      <div className="minimal-wrapper">
+        {/* Subtle ambient light */}
+        <div className="minimal-ambient" />
 
-        {/* Top Bar */}
-        <motion.div
-          className="neon-topbar"
+        {/* Header */}
+        <motion.header
+          className="minimal-header"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
         >
-          <div className={`neon-topbar-left ${!projectorTitle.trim() && competitionLogo ? 'centered-logo' : ''}`}>
-            {competitionLogo ? <img src={competitionLogo} alt="" className="projector-logo neon-logo-img" style={{ height: `${logoSize}px` }} /> : <span className="neon-logo">⚡</span>}
-            {projectorTitle.trim() && <h1 className="neon-title">{projectorTitle}</h1>}
+          <div className={`minimal-header-inner ${!projectorTitle.trim() && competitionLogo ? 'centered-logo' : ''}`}>
+            {competitionLogo && <img src={competitionLogo} alt="" className="projector-logo minimal-logo" style={{ height: `${logoSize}px` }} />}
+            {projectorTitle.trim() && <h1 className="minimal-title">{projectorTitle}</h1>}
           </div>
-        </motion.div>
-
-        {/* Selected Team */}
-        <AnimatePresence mode="wait">
-          {selectedTeam ? (
-            <motion.div
-              key="neon-active"
-              className="neon-selected"
-              initial={{ opacity: 0, scale: 0.9, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: -10 }}
-              transition={{ type: "spring", stiffness: 200, damping: 15 }}
-            >
-              <div className="neon-selected-glow" />
-              <span className="neon-selected-flag">{selectedTeam.countryFlag || "🏴"}</span>
-              <span className="neon-selected-name">{selectedTeam.name}</span>
-              <span className="neon-selected-flag">{selectedTeam.countryFlag || "🏴"}</span>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="neon-idle"
-              className="neon-selected neon-selected-idle"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <span className="neon-idle-text">
-                {allTeamsAssigned ? "// DRAW COMPLETE //" : "// AWAITING SELECTION //"}
+          {(pots.length > 0 || groups.length > 0) && (
+            <div className="minimal-progress">
+              <span className="minimal-progress-text">
+                {allTeamsAssigned ? "Complete" : "In Progress"}
               </span>
+              <div className="minimal-progress-bar">
+                <motion.div
+                  className="minimal-progress-fill"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${groups.length > 0 ? (groups.reduce((acc, g) => acc + g.teams.filter(t => t !== null).length, 0) / groups.reduce((acc, g) => acc + g.capacity, 0)) * 100 : 0}%` }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                />
+              </div>
+            </div>
+          )}
+        </motion.header>
+
+        {/* Selected Team Banner */}
+        <AnimatePresence mode="wait">
+          {selectedTeam && (
+            <motion.div
+              key="minimal-selected"
+              className="minimal-selected"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+            >
+              <span className="minimal-selected-flag">{selectedTeam.countryFlag || "🏴"}</span>
+              <div className="minimal-selected-info">
+                <span className="minimal-selected-label">Selected</span>
+                <span className="minimal-selected-name">{selectedTeam.name}</span>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Groups — Grid Cards */}
-        {groups.length > 0 && (
-          <motion.div
-            className="neon-groups"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            <div className="neon-section-label">
-              <span className="neon-section-line" />
-              <span className="neon-section-tag">GROUPS</span>
-              <span className="neon-section-line" />
-            </div>
-            <div className="neon-groups-grid">
-              {groups.map((group, index) => {
-                const filledSlots = group.teams.filter((t) => t !== null).length;
-                const isComplete = filledSlots === group.capacity;
-
-                return (
-                  <motion.div
-                    key={group.id}
-                    className={`neon-group-card ${isComplete ? "complete" : ""}`}
-                    initial={{ opacity: 0, y: 25 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                  >
-                    <div className="neon-group-card-header">
-                      <h3>{group.name}</h3>
-                      <span className={`neon-group-badge ${isComplete ? "done" : ""}`}>
-                        {filledSlots}/{group.capacity}
-                      </span>
-                    </div>
-                    <div className="neon-group-card-scanline" />
-                    <div className="neon-group-rows">
-                      {group.teams.map((team, slotIndex) => (
-                        <motion.div
-                          key={slotIndex}
-                          className={`neon-group-row ${team ? "filled" : "empty"}`}
-                          layout
-                        >
-                          <span className="neon-row-index">{String(slotIndex + 1).padStart(2, '0')}</span>
-                          {team ? (
-                            <motion.div
-                              className="neon-row-team"
-                              initial={{ opacity: 0, x: -15 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ type: "spring", stiffness: 300 }}
-                            >
-                              <span className="neon-row-flag">{team.countryFlag || "\ud83c\udff4"}</span>
-                              <span className="neon-row-name">{team.name}</span>
-                            </motion.div>
-                          ) : (
-                            <span className="neon-row-dash">\u2501\u2501</span>
-                          )}
-                        </motion.div>
-                      ))}
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
-
-        {/* Pots — Structured Cards */}
-        <AnimatePresence>
-          {drawState.showProjectorPots && pots.length > 0 && (
+        {/* Main Content */}
+        <div className={`minimal-content ${!drawState.showProjectorPots ? 'pots-hidden' : ''}`}>
+          {/* Groups */}
+          {groups.length > 0 && (
             <motion.div
-              className="neon-pots"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              transition={{ delay: 0.3 }}
+              className="minimal-groups"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
             >
-              <div className="neon-section-label">
-                <span className="neon-section-line magenta" />
-                <span className="neon-section-tag magenta">POTS</span>
-                <span className="neon-section-line magenta" />
+              <div className="minimal-groups-grid">
+                {groups.map((group, index) => {
+                  const filledSlots = group.teams.filter((t) => t !== null).length;
+                  const isComplete = filledSlots === group.capacity;
+
+                  return (
+                    <motion.div
+                      key={group.id}
+                      className={`minimal-group-card ${isComplete ? "complete" : ""}`}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.08, duration: 0.4 }}
+                    >
+                      <div className="minimal-group-top">
+                        <h3 className="minimal-group-name">{group.name}</h3>
+                        <span className={`minimal-group-badge ${isComplete ? "done" : ""}`}>
+                          {filledSlots}/{group.capacity}
+                        </span>
+                      </div>
+                      <div className="minimal-group-teams">
+                        {group.teams.map((team, slotIndex) => (
+                          <motion.div
+                            key={slotIndex}
+                            className={`minimal-team-row ${team ? "filled" : "empty"}`}
+                            layout
+                          >
+                            <span className="minimal-row-num">{slotIndex + 1}</span>
+                            {team ? (
+                              <motion.div
+                                className="minimal-row-team"
+                                initial={{ opacity: 0, x: -12 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.3 }}
+                              >
+                                <span className="minimal-row-flag">{team.countryFlag || "🏴"}</span>
+                                <span className="minimal-row-name">{team.name}</span>
+                              </motion.div>
+                            ) : (
+                              <span className="minimal-row-empty">—</span>
+                            )}
+                          </motion.div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </div>
-              <div className="neon-pots-grid">
+            </motion.div>
+          )}
+
+          {/* Pots */}
+          <AnimatePresence>
+            {drawState.showProjectorPots && pots.length > 0 && (
+              <motion.div
+                className="minimal-pots"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.4 }}
+              >
                 {pots.map((pot, potIndex) => (
                   <motion.div
                     key={pot.id}
-                    className="neon-pot-card"
+                    className="minimal-pot-card"
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: potIndex * 0.1 }}
+                    transition={{ delay: potIndex * 0.08 }}
                   >
-                    <div className="neon-pot-card-header">
+                    <div className="minimal-pot-header">
                       <h4>{pot.name}</h4>
-                      <span className="neon-pot-count">{pot.teams.length}</span>
                     </div>
-                    <div className="neon-pot-card-body">
+                    <div className="minimal-pot-teams">
                       {pot.teams.map((team) => (
                         <motion.div
                           key={team.id}
-                          className={`neon-pot-team-row ${selectedTeam?.id === team.id ? "active" : ""} ${team.assigned ? "used" : ""}`}
+                          className={`minimal-pot-team ${selectedTeam?.id === team.id ? "active" : ""} ${team.assigned ? "used" : ""}`}
                           layout
                         >
-                          <span className="neon-pot-row-flag">{team.countryFlag || "\ud83c\udff4"}</span>
-                          <span className="neon-pot-row-name">{team.name}</span>
+                          <span className="minimal-pot-flag">{team.countryFlag || "🏴"}</span>
+                          <span className="minimal-pot-name">{team.name}</span>
                         </motion.div>
                       ))}
                       {pot.teams.length === 0 && (
-                        <div className="neon-pot-card-done">\u2713 ALL ASSIGNED</div>
+                        <div className="minimal-pot-done">All assigned ✓</div>
                       )}
                     </div>
                   </motion.div>
                 ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
-        {/* Footer Text */}
+        {/* Footer */}
         {footerText && (
           <motion.div
             className="projector-footer"
@@ -1180,7 +1173,7 @@ export default function ProjectorView() {
         {/* Empty State */}
         {pots.length === 0 && groups.length === 0 && (
           <motion.div
-            className="neon-empty"
+            className="minimal-empty"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
@@ -1189,21 +1182,21 @@ export default function ProjectorView() {
               <motion.img
                 src={competitionLogo}
                 alt=""
-                className="empty-state-logo neon-empty-logo"
+                className="empty-state-logo minimal-empty-logo"
                 style={{ height: `${logoSize * 1.5}px` }}
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                animate={{ scale: [1, 1.03, 1] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
               />
             ) : (
-              <div className="neon-empty-icon">⚡</div>
+              <div className="minimal-empty-icon">◈</div>
             )}
-            <h2>{projectorTitle || "// SYSTEM READY //"}</h2>
-            <div className="empty-state-dots neon-dots">
+            <h2>{projectorTitle || "Tournament Draw"}</h2>
+            <div className="empty-state-dots minimal-dots">
               <span className="empty-dot" />
               <span className="empty-dot" />
               <span className="empty-dot" />
             </div>
-            <p>Initializing draw sequence…</p>
+            <p>Waiting for the draw to begin</p>
           </motion.div>
         )}
       </div>
@@ -1216,7 +1209,7 @@ export default function ProjectorView() {
     projectorLayout === "stadium" ? "stadium-mode" : "",
     projectorLayout === "broadcast" ? "broadcast-mode" : "",
     projectorLayout === "gala" ? "gala-mode" : "",
-    projectorLayout === "neon" ? "neon-mode" : "",
+    projectorLayout === "minimal" ? "minimal-mode" : "",
   ].filter(Boolean).join(" ");
 
   return (
@@ -1266,15 +1259,15 @@ export default function ProjectorView() {
             {renderGalaLayout()}
           </motion.div>
         )}
-        {projectorLayout === "neon" && (
+        {projectorLayout === "minimal" && (
           <motion.div
-            key="neon"
+            key="minimal"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
           >
-            {renderNeonLayout()}
+            {renderMinimalLayout()}
           </motion.div>
         )}
       </AnimatePresence>
