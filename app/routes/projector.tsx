@@ -1502,7 +1502,7 @@ export default function ProjectorView() {
       </AnimatePresence>
 
       {/* Sync Indicator */}
-      <motion.div
+      {/* <motion.div
         className="sync-indicator"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -1510,7 +1510,7 @@ export default function ProjectorView() {
       >
         <span className="sync-dot"></span>
         <span className="sync-text">Live Sync Active </span>
-      </motion.div>
+      </motion.div> */}
     </div>
   );
 }
