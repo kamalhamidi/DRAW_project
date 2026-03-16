@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTournamentStore } from "zustand/tournament-store";
 import { africaCountries } from "data/africaCountries";
 import { extractColorsFromImage, applyColorPalette, resetColorPalette, type ColorPalette } from "~/utils/extractColors";
+import { FlagImg } from "~/components/FlagImg";
 
 interface SavedTournament {
   id: string;
@@ -895,23 +896,30 @@ export default function TournamentManager() {
                                     }}
                                     placeholder={`Team ${index + 1}`}
                                   />
-                                  <select
-                                    className="team-country-select"
-                                    value={teamCountries[index]?.code || ""}
-                                    onChange={(e) => {
-                                      const country = africaCountries.find((c: { code: string }) => c.code === e.target.value);
-                                      const newCountries = [...teamCountries];
-                                      newCountries[index] = country ? { code: country.code, flag: country.flag } : { code: "", flag: "" };
-                                      setTeamCountries(newCountries);
-                                    }}
-                                  >
-                                    <option value="">Select Country</option>
-                                    {africaCountries.map((country: { code: string; flag: string; name: string }) => (
-                                      <option key={country.code} value={country.code}>
-                                        {country.flag} {country.name}
-                                      </option>
-                                    ))}
-                                  </select>
+                                  <div className="team-country-row">
+                                    {teamCountries[index]?.code ? (
+                                      <FlagImg code={teamCountries[index].code} size="sm" className="team-country-flag-preview" />
+                                    ) : (
+                                      <span className="team-country-flag-empty">🏳️</span>
+                                    )}
+                                    <select
+                                      className="team-country-select"
+                                      value={teamCountries[index]?.code || ""}
+                                      onChange={(e) => {
+                                        const country = africaCountries.find((c: { code: string }) => c.code === e.target.value);
+                                        const newCountries = [...teamCountries];
+                                        newCountries[index] = country ? { code: country.code, flag: country.flag } : { code: "", flag: "" };
+                                        setTeamCountries(newCountries);
+                                      }}
+                                    >
+                                      <option value="">Select Country</option>
+                                      {africaCountries.map((country: { code: string; flag: string; name: string }) => (
+                                        <option key={country.code} value={country.code}>
+                                          {country.name}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
                                 </div>
                               ))}
                             </div>
@@ -979,7 +987,7 @@ export default function TournamentManager() {
                             <div className="teams-list">
                               {pot.teams.map((team) => (
                                 <div key={team.id} className="team-card">
-                                  <span className="team-flag">{team.countryFlag || "🏴"}</span>
+                                  <FlagImg code={team.countryCode} size="sm" className="team-flag-img" />
                                   <span className="team-name-text">{team.name}</span>
                                   <motion.button
                                     className="team-remove-btn"
@@ -1211,35 +1219,48 @@ export default function TournamentManager() {
                 animate={{ opacity: 1, y: 0 }}
               >
                 <AnimatePresence mode="wait">
-                  <motion.h2
-                    key={selectedTeam ? "selected" : "unselected"}
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                  >
-                    {selectedTeam
-                      ? `Selected: ${selectedTeam.name}`
-                      : "Click a team, then click a slot"}
-                  </motion.h2>
-                </AnimatePresence>
-                <p>
-                  {allTeamsAssigned
-                    ? "✅ All teams have been assigned!"
-                    : `${assignedTeams}/${totalTeams} teams assigned`}
-                </p>
-                <div className="draw-control-buttons">
-                  {selectedTeam && (
-                    <motion.button
-                      className="btn-toggle-projector-pots"
-                      style={{ borderColor: '#0AFD09', color: '#0AFD09' }}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => selectTeam(null)}
+                  {selectedTeam ? (
+                    <motion.div
+                      key="selected"
+                      className="draw-selected-team"
+                      initial={{ opacity: 0, scale: 0.85, y: -10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.85, y: 10 }}
+                      transition={{ type: "spring", stiffness: 200, damping: 18 }}
                     >
-                      ✕ Deselect Team
-                    </motion.button>
+                      <span className="draw-selected-label">Selected</span>
+                      <div className="draw-selected-body">
+                        <FlagImg code={selectedTeam.countryCode} size="lg" className="draw-selected-flag" />
+                        <span className="draw-selected-name">{selectedTeam.name}</span>
+                        <motion.button
+                          className="draw-deselect-btn"
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => selectTeam(null)}
+                          title="Deselect"
+                        >
+                          ✕
+                        </motion.button>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="waiting"
+                      className="draw-waiting"
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                    >
+                      <span className="draw-waiting-icon">🎯</span>
+                      <span className="draw-waiting-text">Click a team, then click a slot</span>
+                    </motion.div>
                   )}
-                </div>
+                </AnimatePresence>
+                <p className="draw-progress-text">
+                  {allTeamsAssigned
+                    ? "✅ Draw Complete — All teams assigned!"
+                    : `${assignedTeams} / ${totalTeams} teams assigned`}
+                </p>
               </motion.div>
 
               <div className="draw-sections-wrapper">
@@ -1279,7 +1300,7 @@ export default function TournamentManager() {
                                 whileTap="tap"
                                 onClick={() => !team.assigned && selectTeam(team)}
                               >
-                                <span className="team-flag">{team.countryFlag || "🏴"}</span>
+                                <FlagImg code={team.countryCode} size="sm" className="team-flag-img" />
                                 <span className="team-name-text">{team.name}</span>
                               </motion.div>
                             ))}
@@ -1348,11 +1369,11 @@ export default function TournamentManager() {
                               >
                                 {team ? (
                                   <>
-                                    <span className="slot-flag">{team.countryFlag || "🏴"}</span>
-                                    <span>{team.name}</span>
+                                    <FlagImg code={team.countryCode} size="sm" className="slot-flag-img" />
+                                    <span className="slot-team-name">{team.name}</span>
                                   </>
                                 ) : (
-                                  <span>{group.name.charAt(group.name.length - 1)}{slotIndex + 1}</span>
+                                  <span className="slot-empty-label">{group.name.charAt(group.name.length - 1)}{slotIndex + 1}</span>
                                 )}
                                 {team && <span className="slot-remove">✕</span>}
                               </motion.div>
@@ -1400,7 +1421,7 @@ export default function TournamentManager() {
                                 whileTap="tap"
                                 onClick={() => !team.assigned && selectTeam(team)}
                               >
-                                <span className="team-flag">{team.countryFlag || "🏴"}</span>
+                                <FlagImg code={team.countryCode} size="sm" className="team-flag-img" />
                                 <span className="team-name-text">{team.name}</span>
                               </motion.div>
                             ))}

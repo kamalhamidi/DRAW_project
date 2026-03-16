@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { applyColorPalette, resetColorPalette, type ColorPalette } from "~/utils/extractColors";
 import { getTeamColors } from "../../data/countryColors";
+import { FlagImg } from "~/components/FlagImg";
 
 interface Team {
   id: number;
@@ -197,7 +198,7 @@ export default function ProjectorView() {
               >
                 <div className="showcase-label">SELECTED TEAM</div>
                 <div className="showcase-content">
-                  <span className="showcase-flag">{selectedTeam.countryFlag || "🏴"}</span>
+                  <FlagImg code={selectedTeam.countryCode} size="xl" className="showcase-flag" />
                   <span className="showcase-name">{selectedTeam.name}</span>
                 </div>
               </motion.div>
@@ -268,7 +269,7 @@ export default function ProjectorView() {
                             variants={teamCardVariants}
                             whileHover="hover"
                           >
-                            <span className="team-flag">{team.countryFlag || "🏴"}</span>
+                            <FlagImg code={team.countryCode} size="sm" className="team-flag" />
                             <span className="team-name">{team.name}</span>
                           </motion.div>
                         ))}
@@ -339,7 +340,7 @@ export default function ProjectorView() {
                               animate={{ opacity: 1 }}
                               transition={{ delay: 0.2 }}
                             >
-                              <span className="slot-flag">{team.countryFlag || "🏴"}</span>
+                              <FlagImg code={team.countryCode} size="sm" className="slot-flag" />
                               <span className="slot-team-name">{team.name}</span>
                             </motion.div>
                           ) : (
@@ -433,10 +434,9 @@ export default function ProjectorView() {
                 className="stadium-spotlight"
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.7 }}
+                exit={{ opacity: 0, scale: 0.7, transition: { duration: 0.2, ease: "easeIn" } }}
                 transition={{
                   type: "spring", stiffness: 300, damping: 20,
-                  exit: { duration: 0.2, ease: "easeIn" }
                 }}
                 style={{
                   "--team-color-1": tc1,
@@ -445,7 +445,7 @@ export default function ProjectorView() {
               >
                 <div className="stadium-spotlight-glow" />
                 <div className="stadium-spotlight-content">
-                  <span className="stadium-spotlight-flag">{selectedTeam.countryFlag || "🏴"}</span>
+                  <FlagImg code={selectedTeam.countryCode} size="xl" className="stadium-spotlight-flag" />
                   <div className="stadium-spotlight-info">
                     <span className="stadium-spotlight-label">SELECTED</span>
                     <span className="stadium-spotlight-name">{selectedTeam.name}</span>
@@ -507,7 +507,7 @@ export default function ProjectorView() {
                                 transition={{ type: "spring", stiffness: 300 }}
                               >
                                 <span className="stadium-slot-number">{slotIndex + 1}</span>
-                                <span className="stadium-slot-flag">{team.countryFlag || "🏴"}</span>
+                                <FlagImg code={team.countryCode} size="sm" className="stadium-slot-flag" />
                                 <span className="stadium-slot-name">{team.name}</span>
                               </motion.div>
                             ) : (
@@ -564,7 +564,7 @@ export default function ProjectorView() {
                             exit={{ opacity: 0, scale: 0.5 }}
                             whileHover={{ scale: team.assigned ? 1 : 1.05 }}
                           >
-                            <span className="pill-flag">{team.countryFlag || "🏴"}</span>
+                            <FlagImg code={team.countryCode} size="xs" className="pill-flag" />
                             <span className="pill-name">{team.name}</span>
                           </motion.div>
                         ))}
@@ -669,7 +669,7 @@ export default function ProjectorView() {
                         animate={{ opacity: 1, x: 0 }}
                         aria-disabled={isAssigned}
                       >
-                        <span className="broadcast-team-flag">{team.countryFlag || "\ud83c\udff4"}</span>
+                        <FlagImg code={team.countryCode} size="sm" className="broadcast-team-flag" />
                         <span className="broadcast-team-name">{team.name}</span>
                       </motion.div>
                     );
@@ -722,7 +722,7 @@ export default function ProjectorView() {
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ type: "spring", stiffness: 300 }}
                           >
-                            <span className="broadcast-team-flag">{team.countryFlag || "\ud83c\udff4"}</span>
+                            <FlagImg code={team.countryCode} size="sm" className="broadcast-team-flag" />
                             <span className="broadcast-team-name">{team.name}</span>
                           </motion.div>
                         ) : (
@@ -820,10 +820,9 @@ export default function ProjectorView() {
                 className="gala-spotlight"
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.7 }}
+                exit={{ opacity: 0, scale: 0.7, transition: { duration: 0.2, ease: "easeIn" } }}
                 transition={{
                   type: "spring", stiffness: 300, damping: 20,
-                  exit: { duration: 0.2, ease: "easeIn" }
                 }}
                 style={{
                   "--team-color-1": tc1,
@@ -833,12 +832,12 @@ export default function ProjectorView() {
                 <div className="gala-spotlight-border" />
                 <div className="gala-spotlight-glow" />
                 <div className="gala-spotlight-inner">
-                  <span className="gala-spotlight-flag">{selectedTeam.countryFlag || "🏴"}</span>
+                  <FlagImg code={selectedTeam.countryCode} size="xl" className="gala-spotlight-flag" />
                   <div className="gala-spotlight-text">
                     <span className="gala-spotlight-sub">SELECTED</span>
                     <span className="gala-spotlight-name">{selectedTeam.name}</span>
                   </div>
-                  <span className="gala-spotlight-flag">{selectedTeam.countryFlag || "🏴"}</span>
+                  <FlagImg code={selectedTeam.countryCode} size="xl" className="gala-spotlight-flag" />
                 </div>
               </motion.div>
             </motion.div>
@@ -892,7 +891,7 @@ export default function ProjectorView() {
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ type: "spring", stiffness: 250 }}
                               >
-                                <span className="gala-row-flag">{team.countryFlag || "🏴"}</span>
+                                <FlagImg code={team.countryCode} size="sm" className="gala-row-flag" />
                                 <span className="gala-row-name">{team.name}</span>
                               </motion.div>
                             ) : (
@@ -940,7 +939,7 @@ export default function ProjectorView() {
                           className={`gala-pot-team ${selectedTeam?.id === team.id ? "active" : ""} ${team.assigned ? "used" : ""}`}
                           layout
                         >
-                          <span className="gala-pot-flag">{team.countryFlag || "🏴"}</span>
+                          <FlagImg code={team.countryCode} size="xs" className="gala-pot-flag" />
                           <span className="gala-pot-name">{team.name}</span>
                         </motion.div>
                       ))}
@@ -1046,7 +1045,7 @@ export default function ProjectorView() {
               exit={{ opacity: 0, y: 10 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
             >
-              <span className="minimal-selected-flag">{selectedTeam.countryFlag || "🏴"}</span>
+              <FlagImg code={selectedTeam.countryCode} size="xl" className="minimal-selected-flag" />
               <div className="minimal-selected-info">
                 <span className="minimal-selected-label">Selected</span>
                 <span className="minimal-selected-name">{selectedTeam.name}</span>
@@ -1099,7 +1098,7 @@ export default function ProjectorView() {
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ duration: 0.3 }}
                               >
-                                <span className="minimal-row-flag">{team.countryFlag || "🏴"}</span>
+                                <FlagImg code={team.countryCode} size="sm" className="minimal-row-flag" />
                                 <span className="minimal-row-name">{team.name}</span>
                               </motion.div>
                             ) : (
@@ -1143,7 +1142,7 @@ export default function ProjectorView() {
                           className={`minimal-pot-team ${selectedTeam?.id === team.id ? "active" : ""} ${team.assigned ? "used" : ""}`}
                           layout
                         >
-                          <span className="minimal-pot-flag">{team.countryFlag || "🏴"}</span>
+                          <FlagImg code={team.countryCode} size="xs" className="minimal-pot-flag" />
                           <span className="minimal-pot-name">{team.name}</span>
                         </motion.div>
                       ))}
@@ -1254,7 +1253,7 @@ export default function ProjectorView() {
                         className={`cine-pot-pill ${selectedTeam?.id === team.id ? "active" : ""} ${team.assigned ? "used" : ""}`}
                         layout
                       >
-                        <span className="cine-pot-pill-flag">{team.countryFlag || "🏴"}</span>
+                        <FlagImg code={team.countryCode} size="xs" className="cine-pot-pill-flag" />
                         <span className="cine-pot-pill-name">{team.name}</span>
                       </motion.span>
                     ))}
@@ -1293,14 +1292,14 @@ export default function ProjectorView() {
                   transition={{ type: "spring", stiffness: 200, damping: 20 }}
                 >
                   <div className="cine-takeover-glow" />
-                  <motion.span
+                  <motion.div
                     className="cine-takeover-flag"
                     initial={{ scale: 0, rotate: -20 }}
                     animate={{ scale: 1, rotate: 0 }}
                     transition={{ type: "spring", stiffness: 250, damping: 15, delay: 0.1 }}
                   >
-                    {selectedTeam.countryFlag || "🏴"}
-                  </motion.span>
+                    <FlagImg code={selectedTeam.countryCode} size="xl" />
+                  </motion.div>
                   <motion.span
                     className="cine-takeover-name"
                     initial={{ opacity: 0, y: 20 }}
@@ -1352,7 +1351,7 @@ export default function ProjectorView() {
                               animate={{ opacity: 1, scale: 1 }}
                               transition={{ duration: 0.3 }}
                             >
-                              <span className="cine-cell-flag">{team.countryFlag || "🏴"}</span>
+                              <FlagImg code={team.countryCode} size="sm" className="cine-cell-flag" />
                               <span className="cine-cell-name">{team.name}</span>
                             </motion.div>
                           ) : (
