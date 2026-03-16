@@ -68,6 +68,7 @@ export default function TournamentManager() {
   const [projectorLayout, setProjectorLayout] = useState<"classic" | "stadium" | "broadcast" | "gala" | "minimal" | "cinematic">("broadcast");
   const [projectorTitle, setProjectorTitle] = useState("Tournament Draw");
   const [showProjectorSettings, setShowProjectorSettings] = useState(false);
+  const [activeSettingsSection, setActiveSettingsSection] = useState<"general" | "branding" | "visual" | "colors" | "behavior">("general");
   const [bgImage, setBgImage] = useState<string>("/bg.png");
   const [competitionLogo, setCompetitionLogo] = useState<string>("");
   const [logoSize, setLogoSize] = useState<number>(70);
@@ -416,7 +417,11 @@ export default function TournamentManager() {
               className={`navbar-btn navbar-btn-settings ${showProjectorSettings ? "active" : ""}`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => setShowProjectorSettings(!showProjectorSettings)}
+              onClick={() => {
+                const next = !showProjectorSettings;
+                setShowProjectorSettings(next);
+                if (next) setActiveSettingsSection("general");
+              }}
               title="Projector Settings"
             >
               ⚙️
@@ -456,257 +461,351 @@ export default function TournamentManager() {
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
-              <div className="settings-panel-inner">
-                {/* Title */}
-                <div className="settings-group">
-                  <label className="settings-label">Projector Title</label>
-                  <input
-                    type="text"
-                    className="settings-input"
-                    value={projectorTitle}
-                    onChange={(e) => setProjectorTitle(e.target.value)}
-                    placeholder="Enter title..."
-                  />
-                </div>
-
-                {/* Footer Text */}
-                <div className="settings-group">
-                  <label className="settings-label">Footer Text</label>
-                  <input
-                    type="text"
-                    className="settings-input"
-                    value={footerText}
-                    onChange={(e) => setFooterText(e.target.value)}
-                    placeholder="Enter footer text..."
-                  />
-                  <div className="settings-footer-size">
-                    <label className="settings-label">Size: {footerSize}rem</label>
-                    <input
-                      type="range"
-                      min="0.6"
-                      max="3"
-                      step="0.1"
-                      value={footerSize}
-                      onChange={(e) => setFooterSize(parseFloat(e.target.value))}
-                      className="settings-range"
-                    />
+              <div className="settings-panel-inner settings-panel-grid">
+                <aside className="settings-sidebar">
+                  <div className="settings-sidebar-head">
+                    <h3>Projector Settings</h3>
+                    <p>Organized by section for faster setup</p>
                   </div>
-                </div>
-
-                {/* Competition Logo */}
-                <div className="settings-group">
-                  <label className="settings-label">Competition Logo</label>
-                  <div className="settings-bg-picker">
-                    {competitionLogo && (
-                      <img src={competitionLogo} alt="Logo" className="settings-logo-preview" />
-                    )}
-                    <label className="settings-file-btn">
-                      🏆 {competitionLogo ? "Change" : "Upload"}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        style={{ display: 'none' }}
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (ev) => {
-                              const dataUrl = ev.target?.result as string;
-                              if (dataUrl) setCompetitionLogo(dataUrl);
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        }}
-                      />
-                    </label>
-                    {competitionLogo && (
-                      <motion.button
-                        className="settings-layout-btn"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => setCompetitionLogo("")}
-                      >
-                        ✕ Remove
-                      </motion.button>
-                    )}
-                  </div>
-                  {competitionLogo && (
-                    <div className="settings-footer-size">
-                      <label className="settings-label">Size: {logoSize}px</label>
-                      <input
-                        type="range"
-                        min="30"
-                        max="200"
-                        step="5"
-                        value={logoSize}
-                        onChange={(e) => setLogoSize(parseInt(e.target.value))}
-                        className="settings-range"
-                      />
-                    </div>
-                  )}
-                </div>
-
-                {/* Layout */}
-                <div className="settings-group">
-                  <label className="settings-label">Layout</label>
-                  <div className="settings-layout-btns">
+                  <div className="settings-nav-list">
                     {([
-                      { key: "classic", icon: "🏛", label: "Classic" },
-                      { key: "stadium", icon: "🏟", label: "Stadium" },
-                      { key: "broadcast", icon: "📺", label: "Broadcast" },
-                      { key: "gala", icon: "✨", label: "Gala" },
-                      { key: "minimal", icon: "◈", label: "Minimal" },
-                      { key: "cinematic", icon: "🎬", label: "Cinematic" },
-                    ] as const).map((layout) => (
-                      <motion.button
-                        key={layout.key}
-                        className={`settings-layout-btn ${projectorLayout === layout.key ? "active" : ""}`}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => setProjectorLayout(layout.key)}
+                      { key: "general", icon: "🧩", label: "General" },
+                      { key: "branding", icon: "🏆", label: "Branding" },
+                      { key: "visual", icon: "🎬", label: "Visual" },
+                      { key: "colors", icon: "🎨", label: "Colors" },
+                      { key: "behavior", icon: "⚡", label: "Behavior" },
+                    ] as const).map((item) => (
+                      <button
+                        key={item.key}
+                        className={`settings-nav-btn ${activeSettingsSection === item.key ? "active" : ""}`}
+                        onClick={() => setActiveSettingsSection(item.key)}
+                        type="button"
                       >
-                        <span>{layout.icon}</span>
-                        <span>{layout.label}</span>
-                      </motion.button>
+                        <span>{item.icon}</span>
+                        <span>{item.label}</span>
+                      </button>
                     ))}
                   </div>
-                </div>
+                </aside>
 
-                {/* Background Animation */}
-                <div className="settings-group">
-                  <label className="settings-label">Background</label>
-                  <div className="settings-layout-btns">
-                    {([
-                      { key: "none", label: "None" },
-                      { key: "slide", label: "Slide" },
-                      { key: "zoom", label: "Zoom" },
-                      { key: "fade", label: "Fade" },
-                    ] as const).map((bg) => (
-                      <motion.button
-                        key={bg.key}
-                        className={`settings-layout-btn ${bgAnimation === bg.key ? "active" : ""}`}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => setBgAnimation(bg.key)}
+                <div className="settings-content">
+                  <AnimatePresence mode="wait">
+                    {activeSettingsSection === "general" && (
+                      <motion.div
+                        key="general"
+                        className="settings-section-view"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.18 }}
                       >
-                        {bg.label}
-                      </motion.button>
-                    ))}
-                  </div>
-                </div>
+                        <div className="settings-card">
+                          <h4 className="settings-card-title">Text & Labels</h4>
+                          <div className="settings-group">
+                            <label className="settings-label">Projector Title</label>
+                            <input
+                              type="text"
+                              className="settings-input"
+                              value={projectorTitle}
+                              onChange={(e) => setProjectorTitle(e.target.value)}
+                              placeholder="Enter title..."
+                            />
+                          </div>
 
-                {/* Background Image */}
-                <div className="settings-group">
-                  <label className="settings-label">Background Image</label>
-                  <div className="settings-bg-picker">
-                    <label className="settings-file-btn">
-                      📁 Choose Image
-                      <input
-                        type="file"
-                        accept="image/*"
-                        style={{ display: 'none' }}
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (ev) => {
-                              const dataUrl = ev.target?.result as string;
-                              if (dataUrl) setBgImage(dataUrl);
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        }}
-                      />
-                    </label>
-                    {bgImage !== "/bg.png" && (
-                      <motion.button
-                        className="settings-layout-btn"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => setBgImage("/bg.png")}
-                      >
-                        ↺ Default
-                      </motion.button>
+                          <div className="settings-group">
+                            <label className="settings-label">Footer Text</label>
+                            <input
+                              type="text"
+                              className="settings-input"
+                              value={footerText}
+                              onChange={(e) => setFooterText(e.target.value)}
+                              placeholder="Enter footer text..."
+                            />
+                            <div className="settings-footer-size">
+                              <label className="settings-label">Footer Size: {footerSize}rem</label>
+                              <input
+                                type="range"
+                                min="0.6"
+                                max="3"
+                                step="0.1"
+                                value={footerSize}
+                                onChange={(e) => setFooterSize(parseFloat(e.target.value))}
+                                className="settings-range"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
                     )}
-                  </div>
-                </div>
 
-                {/* Color Mode */}
-                <div className="settings-group">
-                  <label className="settings-label">Colors</label>
-                  <div className="settings-layout-btns">
-                    <motion.button
-                      className={`settings-layout-btn ${colorMode === "auto" ? "active" : ""}`}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setColorMode("auto")}
-                    >
-                      🎨 Auto
-                    </motion.button>
-                    <motion.button
-                      className={`settings-layout-btn ${colorMode === "manual" ? "active" : ""}`}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setColorMode("manual")}
-                    >
-                      ✏️ Manual
-                    </motion.button>
-                  </div>
-                </div>
+                    {activeSettingsSection === "branding" && (
+                      <motion.div
+                        key="branding"
+                        className="settings-section-view"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.18 }}
+                      >
+                        <div className="settings-card">
+                          <h4 className="settings-card-title">Competition Logo</h4>
+                          <div className="settings-group">
+                            <label className="settings-label">Logo File</label>
+                            <div className="settings-bg-picker">
+                              {competitionLogo && (
+                                <img src={competitionLogo} alt="Logo" className="settings-logo-preview" />
+                              )}
+                              <label className="settings-file-btn">
+                                🏆 {competitionLogo ? "Change" : "Upload"}
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  style={{ display: "none" }}
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      const reader = new FileReader();
+                                      reader.onload = (ev) => {
+                                        const dataUrl = ev.target?.result as string;
+                                        if (dataUrl) setCompetitionLogo(dataUrl);
+                                      };
+                                      reader.readAsDataURL(file);
+                                    }
+                                  }}
+                                />
+                              </label>
+                              {competitionLogo && (
+                                <motion.button
+                                  className="settings-layout-btn"
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={() => setCompetitionLogo("")}
+                                >
+                                  ✕ Remove
+                                </motion.button>
+                              )}
+                            </div>
+                          </div>
 
-                {/* Manual Color Pickers */}
-                {colorMode === "manual" && (
-                  <div className="settings-group">
-                    <label className="settings-label">Theme Colors</label>
-                    <div className="settings-color-grid">
-                      {([
-                        { key: "primary" as const, label: "Primary" },
-                        { key: "primaryDark" as const, label: "Dark" },
-                        { key: "accent1" as const, label: "Accent 1" },
-                        { key: "accent2" as const, label: "Accent 2" },
-                        { key: "highlight" as const, label: "Highlight" },
-                        { key: "accent2Text" as const, label: "A2 Text" },
-                      ]).map((c) => (
-                        <label key={c.key} className="settings-color-item">
-                          <input
-                            type="color"
-                            className="settings-color-input"
-                            value={manualPalette[c.key]}
-                            onChange={(e) =>
-                              setManualPalette((prev) => ({ ...prev, [c.key]: e.target.value }))
-                            }
-                          />
-                          <span className="settings-color-label">{c.label}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                          {competitionLogo && (
+                            <div className="settings-group">
+                              <div className="settings-footer-size">
+                                <label className="settings-label">Logo Size: {logoSize}px</label>
+                                <input
+                                  type="range"
+                                  min="30"
+                                  max="200"
+                                  step="5"
+                                  value={logoSize}
+                                  onChange={(e) => setLogoSize(parseInt(e.target.value))}
+                                  className="settings-range"
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
 
-                {/* Show/Hide Pots */}
-                <div className="settings-group">
-                  <label className="settings-label">Pots Visibility</label>
-                  <motion.button
-                    className={`settings-toggle ${showProjectorPots ? "on" : "off"}`}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setShowProjectorPots(!showProjectorPots)}
-                  >
-                    {showProjectorPots ? "✓ Pots Visible" : "🚫 Pots Hidden"}
-                  </motion.button>
-                </div>
+                    {activeSettingsSection === "visual" && (
+                      <motion.div
+                        key="visual"
+                        className="settings-section-view"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.18 }}
+                      >
+                        <div className="settings-card">
+                          <h4 className="settings-card-title">Layout & Background</h4>
 
-                {/* Show/Hide Spotlight */}
-                <div className="settings-group">
-                  <label className="settings-label">Selected Team Spotlight</label>
-                  <motion.button
-                    className={`settings-toggle ${showSpotlight ? "on" : "off"}`}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setShowSpotlight(!showSpotlight)}
-                  >
-                    {showSpotlight ? "✓ Spotlight On" : "🚫 Spotlight Off"}
-                  </motion.button>
+                          <div className="settings-group">
+                            <label className="settings-label">Layout</label>
+                            <div className="settings-layout-btns settings-layout-wrap">
+                              {([
+                                { key: "classic", icon: "🏛", label: "Classic" },
+                                { key: "stadium", icon: "🏟", label: "Stadium" },
+                                { key: "broadcast", icon: "📺", label: "Broadcast" },
+                                { key: "gala", icon: "✨", label: "Gala" },
+                                { key: "minimal", icon: "◈", label: "Minimal" },
+                                { key: "cinematic", icon: "🎬", label: "Cinematic" },
+                              ] as const).map((layout) => (
+                                <motion.button
+                                  key={layout.key}
+                                  className={`settings-layout-btn ${projectorLayout === layout.key ? "active" : ""}`}
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={() => setProjectorLayout(layout.key)}
+                                >
+                                  <span>{layout.icon}</span>
+                                  <span>{layout.label}</span>
+                                </motion.button>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="settings-group">
+                            <label className="settings-label">Background Animation</label>
+                            <div className="settings-layout-btns settings-layout-wrap">
+                              {([
+                                { key: "none", label: "None" },
+                                { key: "slide", label: "Slide" },
+                                { key: "zoom", label: "Zoom" },
+                                { key: "fade", label: "Fade" },
+                              ] as const).map((bg) => (
+                                <motion.button
+                                  key={bg.key}
+                                  className={`settings-layout-btn ${bgAnimation === bg.key ? "active" : ""}`}
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={() => setBgAnimation(bg.key)}
+                                >
+                                  {bg.label}
+                                </motion.button>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="settings-group">
+                            <label className="settings-label">Background Image</label>
+                            <div className="settings-bg-picker">
+                              <label className="settings-file-btn">
+                                📁 Choose Image
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  style={{ display: "none" }}
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      const reader = new FileReader();
+                                      reader.onload = (ev) => {
+                                        const dataUrl = ev.target?.result as string;
+                                        if (dataUrl) setBgImage(dataUrl);
+                                      };
+                                      reader.readAsDataURL(file);
+                                    }
+                                  }}
+                                />
+                              </label>
+                              {bgImage !== "/bg.png" && (
+                                <motion.button
+                                  className="settings-layout-btn"
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={() => setBgImage("/bg.png")}
+                                >
+                                  ↺ Default
+                                </motion.button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {activeSettingsSection === "colors" && (
+                      <motion.div
+                        key="colors"
+                        className="settings-section-view"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.18 }}
+                      >
+                        <div className="settings-card">
+                          <h4 className="settings-card-title">Theme & Palette</h4>
+                          <div className="settings-group">
+                            <label className="settings-label">Color Mode</label>
+                            <div className="settings-layout-btns">
+                              <motion.button
+                                className={`settings-layout-btn ${colorMode === "auto" ? "active" : ""}`}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => setColorMode("auto")}
+                              >
+                                🎨 Auto
+                              </motion.button>
+                              <motion.button
+                                className={`settings-layout-btn ${colorMode === "manual" ? "active" : ""}`}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => setColorMode("manual")}
+                              >
+                                ✏️ Manual
+                              </motion.button>
+                            </div>
+                          </div>
+
+                          {colorMode === "manual" && (
+                            <div className="settings-group">
+                              <label className="settings-label">Theme Colors</label>
+                              <div className="settings-color-grid">
+                                {([
+                                  { key: "primary" as const, label: "Primary" },
+                                  { key: "primaryDark" as const, label: "Dark" },
+                                  { key: "accent1" as const, label: "Accent 1" },
+                                  { key: "accent2" as const, label: "Accent 2" },
+                                  { key: "highlight" as const, label: "Highlight" },
+                                  { key: "accent2Text" as const, label: "A2 Text" },
+                                ]).map((c) => (
+                                  <label key={c.key} className="settings-color-item">
+                                    <input
+                                      type="color"
+                                      className="settings-color-input"
+                                      value={manualPalette[c.key]}
+                                      onChange={(e) =>
+                                        setManualPalette((prev) => ({ ...prev, [c.key]: e.target.value }))
+                                      }
+                                    />
+                                    <span className="settings-color-label">{c.label}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {activeSettingsSection === "behavior" && (
+                      <motion.div
+                        key="behavior"
+                        className="settings-section-view"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.18 }}
+                      >
+                        <div className="settings-card">
+                          <h4 className="settings-card-title">Visibility Controls</h4>
+                          <div className="settings-group">
+                            <label className="settings-label">Pots Visibility</label>
+                            <motion.button
+                              className={`settings-toggle ${showProjectorPots ? "on" : "off"}`}
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => setShowProjectorPots(!showProjectorPots)}
+                            >
+                              {showProjectorPots ? "✓ Pots Visible" : "🚫 Pots Hidden"}
+                            </motion.button>
+                          </div>
+
+                          <div className="settings-group">
+                            <label className="settings-label">Selected Team Spotlight</label>
+                            <motion.button
+                              className={`settings-toggle ${showSpotlight ? "on" : "off"}`}
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => setShowSpotlight(!showSpotlight)}
+                            >
+                              {showSpotlight ? "✓ Spotlight On" : "🚫 Spotlight Off"}
+                            </motion.button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
             </motion.div>
