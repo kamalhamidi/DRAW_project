@@ -3141,8 +3141,14 @@ body.bg-none::before {
 .gala-title-bar {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 1.5rem;
   margin-bottom: 2rem;
+  width: 100%;
+}
+
+.gala-title-bar.centered-logo {
+  justify-content: center;
 }
 
 .gala-title {

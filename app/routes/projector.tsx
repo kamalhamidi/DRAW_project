@@ -794,16 +794,15 @@ export default function ProjectorView() {
       <div className="gala-wrapper">
         {/* Gala Title Bar */}
         <motion.div
-          className="gala-title-bar"
+          className={`gala-title-bar ${!projectorTitle.trim() && competitionLogo ? "centered-logo" : ""}`}
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
         >
-          <div className="gala-title-ornament">✦</div>
+          {projectorTitle.trim() && <div className="gala-title-ornament">✦</div>}
           {competitionLogo && <img src={competitionLogo} alt="" className="projector-logo gala-logo" style={{ height: `${logoSize}px` }} />}
-          <h1 className="gala-title">{projectorTitle}</h1>
-          {competitionLogo && <img src={competitionLogo} alt="" className="projector-logo gala-logo" style={{ height: `${logoSize}px` }} />}
-          <div className="gala-title-ornament">✦</div>
+          {projectorTitle.trim() && <h1 className="gala-title">{projectorTitle}</h1>}
+          {projectorTitle.trim() && <div className="gala-title-ornament">✦</div>}
         </motion.div>
 
         {/* Selected Team Spotlight */}
