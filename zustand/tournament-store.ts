@@ -8,6 +8,7 @@ interface Team {
   potId: number;
   countryCode?: string;
   countryFlag?: string;
+  customFlagImage?: string;
   assigned?: boolean;
 }
 
@@ -29,7 +30,7 @@ interface TournamentState {
   groups: Group[];
   selectedTeam: Team | null;
   potsFinalized: boolean; // Track if user finished creating pots
-  addPotWithTeams: (potName: string, teamNames: string[], countries?: { code: string; flag: string }[]) => void;
+  addPotWithTeams: (potName: string, teamNames: string[], countries?: { code: string; flag: string; customFlagImage?: string }[]) => void;
   createGroups: (numberOfGroups: number, teamsPerGroup: number) => void;
   selectTeam: (team: Team | null) => void;
   assignTeamToSlot: (groupId: number, slotIndex: number) => void;
@@ -49,7 +50,7 @@ export const useTournamentStore = create<TournamentState>()(
       selectedTeam: null,
       potsFinalized: false,
 
-      addPotWithTeams: (potName: string, teamNames: string[], countries?: { code: string; flag: string }[]) => {
+      addPotWithTeams: (potName: string, teamNames: string[], countries?: { code: string; flag: string; customFlagImage?: string }[]) => {
         const potId = Date.now();
         const teams: Team[] = teamNames.map((name, index) => ({
           id: potId + index + 1,
@@ -57,6 +58,7 @@ export const useTournamentStore = create<TournamentState>()(
           potId,
           countryCode: countries?.[index]?.code,
           countryFlag: countries?.[index]?.flag,
+          customFlagImage: countries?.[index]?.customFlagImage,
         }));
 
         set((state) => ({

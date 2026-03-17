@@ -1052,6 +1052,39 @@ body.bg-none::before {
   flex: 1;
 }
 
+.team-flag-upload-btn,
+.team-flag-remove-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.8);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  transition: all 0.18s ease;
+}
+
+.team-flag-upload-btn:hover {
+  border-color: var(--color-accent-2);
+  color: #fff;
+  background: color-mix(in srgb, var(--color-accent-2) 14%, transparent);
+}
+
+.team-flag-remove-btn {
+  border-color: color-mix(in srgb, var(--color-accent-1) 50%, transparent);
+  color: var(--color-accent-1);
+}
+
+.team-flag-remove-btn:hover {
+  background: color-mix(in srgb, var(--color-accent-1) 16%, transparent);
+  border-color: var(--color-accent-1);
+}
+
 .team-input::placeholder {
   color: rgba(255, 255, 255, 0.5);
 }
@@ -1246,9 +1279,35 @@ body.bg-none::before {
 }
 
 .flag-img {
-  display: inline-block;
+  display: block;
   border-radius: 3px;
   box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+  aspect-ratio: 3 / 2;
+}
+
+.flag-img--xs {
+  width: 30px;
+  height: 20px;
+}
+
+.flag-img--sm {
+  width: 42px;
+  height: 28px;
+}
+
+.flag-img--md {
+  width: 60px;
+  height: 40px;
+}
+
+.flag-img--lg {
+  width: 84px;
+  height: 56px;
+}
+
+.flag-img--xl {
+  width: 120px;
+  height: 80px;
 }
 
 .team-name-text {

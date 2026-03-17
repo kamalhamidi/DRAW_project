@@ -51,11 +51,11 @@ export default function TournamentManager() {
   const [potName, setPotName] = useState("");
   const [numberOfTeams, setNumberOfTeams] = useState(4);
   const [teamInputs, setTeamInputs] = useState<string[]>(["", "", "", ""]);
-  const [teamCountries, setTeamCountries] = useState<{ code: string; flag: string }[]>([
-    { code: "", flag: "" },
-    { code: "", flag: "" },
-    { code: "", flag: "" },
-    { code: "", flag: "" },
+  const [teamCountries, setTeamCountries] = useState<{ code: string; flag: string; customFlagImage?: string }[]>([
+    { code: "", flag: "", customFlagImage: "" },
+    { code: "", flag: "", customFlagImage: "" },
+    { code: "", flag: "", customFlagImage: "" },
+    { code: "", flag: "", customFlagImage: "" },
   ]);
 
   const [showGroupForm, setShowGroupForm] = useState(false);
@@ -251,7 +251,7 @@ export default function TournamentManager() {
 
   useEffect(() => {
     setTeamInputs(Array(numberOfTeams).fill(""));
-    setTeamCountries(Array(numberOfTeams).fill({ code: "", flag: "" }));
+    setTeamCountries(Array.from({ length: numberOfTeams }, () => ({ code: "", flag: "", customFlagImage: "" })));
   }, [numberOfTeams]);
 
   // Broadcast state changes to projector
@@ -291,7 +291,7 @@ export default function TournamentManager() {
 
     setPotName("");
     setTeamInputs(Array(numberOfTeams).fill(""));
-    setTeamCountries(Array(numberOfTeams).fill({ code: "", flag: "" }));
+    setTeamCountries(Array.from({ length: numberOfTeams }, () => ({ code: "", flag: "", customFlagImage: "" })));
     setShowPotForm(false);
   };
 
@@ -1018,8 +1018,8 @@ export default function TournamentManager() {
                                     placeholder={`Team ${index + 1}`}
                                   />
                                   <div className="team-country-row">
-                                    {teamCountries[index]?.code ? (
-                                      <FlagImg code={teamCountries[index].code} size="sm" className="team-country-flag-preview" />
+                                    {teamCountries[index]?.customFlagImage || teamCountries[index]?.code ? (
+                                      <FlagImg src={teamCountries[index].customFlagImage} code={teamCountries[index].code} size="sm" className="team-country-flag-preview" />
                                     ) : (
                                       <span className="team-country-flag-empty">🏳️</span>
                                     )}
@@ -1029,7 +1029,8 @@ export default function TournamentManager() {
                                       onChange={(e) => {
                                         const country = africaCountries.find((c: { code: string }) => c.code === e.target.value);
                                         const newCountries = [...teamCountries];
-                                        newCountries[index] = country ? { code: country.code, flag: country.flag } : { code: "", flag: "" };
+                                        const previousCustom = newCountries[index]?.customFlagImage;
+                                        newCountries[index] = country ? { code: country.code, flag: country.flag, customFlagImage: previousCustom } : { code: "", flag: "", customFlagImage: previousCustom };
                                         setTeamCountries(newCountries);
                                       }}
                                     >
@@ -1040,6 +1041,47 @@ export default function TournamentManager() {
                                         </option>
                                       ))}
                                     </select>
+                                    <label className="team-flag-upload-btn" title="Upload custom flag">
+                                      🖼
+                                      <input
+                                        type="file"
+                                        accept="image/*"
+                                        style={{ display: "none" }}
+                                        onChange={(e) => {
+                                          const file = e.target.files?.[0];
+                                          if (!file) return;
+                                          const reader = new FileReader();
+                                          reader.onload = (ev) => {
+                                            const dataUrl = ev.target?.result as string;
+                                            if (!dataUrl) return;
+                                            setTeamCountries((prev) => {
+                                              const next = [...prev];
+                                              const current = next[index] || { code: "", flag: "" };
+                                              next[index] = { ...current, customFlagImage: dataUrl };
+                                              return next;
+                                            });
+                                          };
+                                          reader.readAsDataURL(file);
+                                        }}
+                                      />
+                                    </label>
+                                    {teamCountries[index]?.customFlagImage && (
+                                      <button
+                                        type="button"
+                                        className="team-flag-remove-btn"
+                                        title="Remove custom flag"
+                                        onClick={() => {
+                                          setTeamCountries((prev) => {
+                                            const next = [...prev];
+                                            if (!next[index]) return prev;
+                                            next[index] = { ...next[index], customFlagImage: "" };
+                                            return next;
+                                          });
+                                        }}
+                                      >
+                                        ✕
+                                      </button>
+                                    )}
                                   </div>
                                 </div>
                               ))}
@@ -1108,7 +1150,7 @@ export default function TournamentManager() {
                             <div className="teams-list">
                               {pot.teams.map((team) => (
                                 <div key={team.id} className="team-card">
-                                  <FlagImg code={team.countryCode} size="sm" className="team-flag-img" />
+                                  <FlagImg src={team.customFlagImage} code={team.countryCode} size="sm" className="team-flag-img" />
                                   <span className="team-name-text">{team.name}</span>
                                   <motion.button
                                     className="team-remove-btn"
@@ -1351,7 +1393,7 @@ export default function TournamentManager() {
                     >
                       <span className="draw-selected-label">Selected</span>
                       <div className="draw-selected-body">
-                        <FlagImg code={selectedTeam.countryCode} size="lg" className="draw-selected-flag" />
+                        <FlagImg src={selectedTeam.customFlagImage} code={selectedTeam.countryCode} size="lg" className="draw-selected-flag" />
                         <span className="draw-selected-name">{selectedTeam.name}</span>
                         <motion.button
                           className="draw-deselect-btn"
@@ -1421,7 +1463,7 @@ export default function TournamentManager() {
                                 whileTap="tap"
                                 onClick={() => !team.assigned && selectTeam(team)}
                               >
-                                <FlagImg code={team.countryCode} size="sm" className="team-flag-img" />
+                                <FlagImg src={team.customFlagImage} code={team.countryCode} size="sm" className="team-flag-img" />
                                 <span className="team-name-text">{team.name}</span>
                               </motion.div>
                             ))}
@@ -1490,7 +1532,7 @@ export default function TournamentManager() {
                               >
                                 {team ? (
                                   <>
-                                    <FlagImg code={team.countryCode} size="sm" className="slot-flag-img" />
+                                    <FlagImg src={team.customFlagImage} code={team.countryCode} size="sm" className="slot-flag-img" />
                                     <span className="slot-team-name">{team.name}</span>
                                   </>
                                 ) : (
@@ -1542,7 +1584,7 @@ export default function TournamentManager() {
                                 whileTap="tap"
                                 onClick={() => !team.assigned && selectTeam(team)}
                               >
-                                <FlagImg code={team.countryCode} size="sm" className="team-flag-img" />
+                                <FlagImg src={team.customFlagImage} code={team.countryCode} size="sm" className="team-flag-img" />
                                 <span className="team-name-text">{team.name}</span>
                               </motion.div>
                             ))}

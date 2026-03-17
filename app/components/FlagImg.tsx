@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 
 interface FlagImgProps {
+  src?: string;
   code?: string;
   size?: "xs" | "sm" | "md" | "lg" | "xl";
   className?: string;
@@ -37,13 +38,19 @@ const localFlagMap: Record<string, string> = {
   ZM: "/flags/Zambia.png",
 };
 
-export function FlagImg({ code, size = "md", className = "", alt, style }: FlagImgProps) {
+export function FlagImg({ src, code, size = "md", className = "", alt, style }: FlagImgProps) {
   const normalizedCode = code?.toUpperCase();
   const lower = normalizedCode?.toLowerCase();
   const w = widthMap[size];
   const sources = useMemo(() => {
+    const computedSources: Array<{ src: string; srcSet?: string }> = [];
+
+    if (src) {
+      computedSources.push({ src, srcSet: undefined });
+    }
+
     if (!normalizedCode || !lower) {
-      return [] as Array<{ src: string; srcSet?: string }>;
+      return computedSources;
     }
 
     const localCodeSrc = `/flags-by-code/${lower}.png`;
@@ -51,21 +58,23 @@ export function FlagImg({ code, size = "md", className = "", alt, style }: FlagI
     const cdn1x = `https://flagcdn.com/w${w}/${lower}.png`;
     const cdn2x = `https://flagcdn.com/w${w * 2}/${lower}.png`;
 
-    return [
+    computedSources.push(
       { src: localCodeSrc, srcSet: undefined },
       ...(localSrc ? [{ src: localSrc, srcSet: undefined as string | undefined }] : []),
       { src: cdn2x, srcSet: `${cdn1x} 1x, ${cdn2x} 2x` },
-    ];
-  }, [lower, normalizedCode, w]);
+    );
+
+    return computedSources;
+  }, [src, lower, normalizedCode, w]);
   const [sourceIndex, setSourceIndex] = useState(0);
 
   useEffect(() => {
     setSourceIndex(0);
-  }, [normalizedCode, size]);
+  }, [src, normalizedCode, size]);
 
   const activeSource = sources[sourceIndex];
 
-  if (!normalizedCode || !activeSource) {
+  if (!activeSource) {
     return (
       <span
         className={`flag-placeholder ${className}`}
@@ -82,9 +91,9 @@ export function FlagImg({ code, size = "md", className = "", alt, style }: FlagI
       srcSet={activeSource.srcSet}
       width={w * 1.5}
       height={w}
-      alt={alt ?? normalizedCode}
+      alt={alt ?? normalizedCode ?? "Flag"}
       className={`flag-img flag-img--${size} ${className}`}
-      style={{ objectFit: "cover", borderRadius: "3px", flexShrink: 0, ...style }}
+      style={{ width: `${w * 1.5}px`, height: `${w}px`, objectFit: "contain", borderRadius: "3px", flexShrink: 0, ...style }}
       onError={(e) => {
         if (sourceIndex < sources.length - 1) {
           setSourceIndex((index) => index + 1);
