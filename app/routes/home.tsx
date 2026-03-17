@@ -20,6 +20,7 @@ interface SavedTournament {
   logoSize: number;
   footerText: string;
   footerSize: number;
+  teamFontScale: number;
   showSpotlight: boolean;
   showProjectorPots: boolean;
   colorMode: string;
@@ -74,6 +75,7 @@ export default function TournamentManager() {
   const [logoSize, setLogoSize] = useState<number>(70);
   const [footerText, setFooterText] = useState<string>("");
   const [footerSize, setFooterSize] = useState<number>(1.1);
+  const [teamFontScale, setTeamFontScale] = useState<number>(1);
   const [showSpotlight, setShowSpotlight] = useState(true);
   const [colorMode, setColorMode] = useState<"auto" | "manual">("manual");
   const [colorPalette, setColorPalette] = useState<ColorPalette | null>(null);
@@ -110,6 +112,7 @@ export default function TournamentManager() {
         if (s.logoSize !== undefined) setLogoSize(s.logoSize);
         if (s.footerText !== undefined) setFooterText(s.footerText);
         if (s.footerSize !== undefined) setFooterSize(s.footerSize);
+        if (s.teamFontScale !== undefined) setTeamFontScale(s.teamFontScale);
         if (s.showSpotlight !== undefined) setShowSpotlight(s.showSpotlight);
         if (s.colorMode) setColorMode(s.colorMode);
         if (s.manualPalette) setManualPalette(s.manualPalette);
@@ -131,13 +134,14 @@ export default function TournamentManager() {
       logoSize,
       footerText,
       footerSize,
+      teamFontScale,
       showSpotlight,
       colorMode,
       manualPalette,
       currentPhase,
     };
     localStorage.setItem("tournament-settings", JSON.stringify(settings));
-  }, [hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, showSpotlight, colorMode, manualPalette, currentPhase]);
+  }, [hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, showSpotlight, colorMode, manualPalette, currentPhase]);
 
   const saveTournament = useCallback(() => {
     if (!saveName.trim()) return;
@@ -156,6 +160,7 @@ export default function TournamentManager() {
       logoSize,
       footerText,
       footerSize,
+      teamFontScale,
       showSpotlight,
       showProjectorPots,
       colorMode,
@@ -167,7 +172,7 @@ export default function TournamentManager() {
     setSavedTournaments(updated);
     localStorage.setItem("saved-tournaments", JSON.stringify(updated));
     setSaveName("");
-  }, [saveName, pots, groups, potsFinalized, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, showSpotlight, showProjectorPots, colorMode, manualPalette, numberOfGroups, teamsPerGroup, savedTournaments]);
+  }, [saveName, pots, groups, potsFinalized, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, showSpotlight, showProjectorPots, colorMode, manualPalette, numberOfGroups, teamsPerGroup, savedTournaments]);
 
   const loadTournament = useCallback((preset: SavedTournament) => {
     if (!window.confirm(`Load "${preset.name}"? This will replace your current tournament.`)) return;
@@ -188,6 +193,7 @@ export default function TournamentManager() {
     setLogoSize(preset.logoSize);
     setFooterText(preset.footerText);
     setFooterSize(preset.footerSize);
+    setTeamFontScale(preset.teamFontScale ?? 1);
     setShowSpotlight(preset.showSpotlight);
     setShowProjectorPots(preset.showProjectorPots);
     setColorMode(preset.colorMode as any);
@@ -265,10 +271,11 @@ export default function TournamentManager() {
         logoSize,
         footerText,
         footerSize,
+        teamFontScale,
         showSpotlight,
       });
     }
-  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, showSpotlight]);
+  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, showSpotlight]);
 
   const handleCreatePot = (e: React.FormEvent) => {
     e.preventDefault();
@@ -501,6 +508,21 @@ export default function TournamentManager() {
                       >
                         <div className="settings-card">
                           <h4 className="settings-card-title">Text & Labels</h4>
+                          <div className="settings-group">
+                            <div className="settings-footer-size">
+                              <label className="settings-label">Team Font Size: {teamFontScale.toFixed(2)}x</label>
+                              <input
+                                type="range"
+                                min="0.75"
+                                max="1.5"
+                                step="0.05"
+                                value={teamFontScale}
+                                onChange={(e) => setTeamFontScale(parseFloat(e.target.value))}
+                                className="settings-range"
+                              />
+                            </div>
+                          </div>
+
                           <div className="settings-group">
                             <label className="settings-label">Projector Title</label>
                             <input

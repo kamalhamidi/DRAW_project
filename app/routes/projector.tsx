@@ -50,6 +50,7 @@ export default function ProjectorView() {
   const [logoSize, setLogoSize] = useState<number>(70);
   const [footerText, setFooterText] = useState<string>("");
   const [footerSize, setFooterSize] = useState<number>(1.1);
+  const [teamFontScale, setTeamFontScale] = useState<number>(1);
   const [showSpotlight, setShowSpotlight] = useState(true);
 
   useEffect(() => {
@@ -59,7 +60,7 @@ export default function ProjectorView() {
     const channel = new BroadcastChannel("draw_sync");
 
     const handleMessage = (event: MessageEvent) => {
-      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, showSpotlight } = event.data;
+      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, showSpotlight } = event.data;
       setDrawState({
         pots: pots || [],
         groups: groups || [],
@@ -89,6 +90,9 @@ export default function ProjectorView() {
       }
       if (footerSize !== undefined) {
         setFooterSize(footerSize);
+      }
+      if (teamFontScale !== undefined) {
+        setTeamFontScale(teamFontScale);
       }
       if (showSpotlight !== undefined) {
         setShowSpotlight(showSpotlight);
@@ -1430,7 +1434,10 @@ export default function ProjectorView() {
   ].filter(Boolean).join(" ");
 
   return (
-    <div className={containerClass}>
+    <div
+      className={containerClass}
+      style={{ "--projector-team-font-scale": teamFontScale } as React.CSSProperties}
+    >
       <AnimatePresence mode="wait">
         {projectorLayout === "classic" && (
           <motion.div
