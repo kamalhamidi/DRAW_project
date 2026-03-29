@@ -504,9 +504,7 @@ export default function ProjectorView() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            <div className="stadium-panel-header green">
-              <h2>Groups</h2>
-            </div>
+            
             {groups.length > 0 ? (
               <div className="stadium-groups-grid">
                 {groups.map((group, index) => {
@@ -578,9 +576,6 @@ export default function ProjectorView() {
                 exit={{ opacity: 0, x: 40 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
-                <div className="stadium-panel-header red">
-                  <h2>Pots</h2>
-                </div>
                 <div className="stadium-pots-list">
                   {pots.map((pot, potIndex) => (
                     <motion.div
@@ -689,10 +684,6 @@ export default function ProjectorView() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
               >
-                {/* Floating Pill Header */}
-                <div className="broadcast-card-header red">
-                  <h3>{pot.name}</h3>
-                </div>
                 {/* Card Body */}
                 <div className="broadcast-card-body">
                   {pot.teams.map((team) => {
