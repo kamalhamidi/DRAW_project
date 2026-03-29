@@ -2531,10 +2531,12 @@ body.bg-none::before {
 
 /* Projector Footer */
 .projector-footer {
+  position: absolute;
+  bottom: 4rem;
   width: 100%;
   text-align: center;
   padding: 1.25rem 2rem;
-  margin-top: 1rem;
+  margin-top: 0;
 }
 
 .projector-footer-text {
