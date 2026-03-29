@@ -297,14 +297,35 @@ export default function TournamentManager() {
 
   const handleCreateGroups = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (groups.length > 0) {
+      const hasAssignments = groups.some((group) => group.teams.some((team) => team !== null));
+      const confirmMessage = hasAssignments
+        ? "Recreate groups with these settings? This will clear all current group assignments."
+        : "Recreate groups with these settings?";
+
+      if (!window.confirm(confirmMessage)) return;
+    }
+
     createGroups(numberOfGroups, teamsPerGroup);
     setShowGroupForm(false);
+  };
+
+  const openGroupEditor = () => {
+    if (groups.length > 0) {
+      setNumberOfGroups(groups.length);
+      setTeamsPerGroup(groups[0]?.capacity || 1);
+    }
+    setShowGroupForm(true);
   };
 
   const totalTeams = pots.reduce((acc, pot) => acc + pot.teams.length, 0);
   const assignedTeams = groups.reduce(
     (acc, group) => acc + group.teams.filter((t) => t !== null).length,
     0
+  );
+  const hasGroupAssignments = groups.some((group) =>
+    group.teams.some((team) => team !== null)
   );
   const allTeamsAssigned = totalTeams > 0 && totalTeams === assignedTeams;
 
@@ -1187,55 +1208,84 @@ export default function TournamentManager() {
 
               {/* Unlock Step 1 */}
               {potsFinalized && (
-                <div style={{ marginBottom: "2rem", textAlign: "center" }}>
-                  <div className="step-header" style={{ background: "rgba(255, 60, 73, 0.2)", border: "2px solid #FF3C49", padding: "0.5rem", width: "50%", margin: "0 auto" }}>
-                    <h2 style={{ fontSize: "1.2rem", margin: 0, color: "#fff" }}>Step 1: Pots Finalized ({pots.length} created)</h2>
+                <div className="edit-workbench">
+                  <div className="edit-workbench-card red">
+                    <div className="edit-workbench-title-row">
+                      <h3 className="edit-workbench-title">Step 1 · Pots Finalized</h3>
+                      <span className="edit-workbench-badge">{pots.length} Pots</span>
+                    </div>
+                    <p className="edit-workbench-text">
+                      Need to adjust pot names or teams? Unlock Step 1 to edit pots.
+                    </p>
+                    <div className="edit-workbench-chips">
+                      <span className="edit-workbench-chip">{totalTeams} Teams</span>
+                      <span className="edit-workbench-chip muted">Ready for draw setup</span>
+                    </div>
+                    <motion.button
+                      className="edit-action-btn red"
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => {
+                        if (window.confirm("Do you want to unlock Step 1 to edit pots and teams?")) {
+                          unfinalizePots();
+                        }
+                      }}
+                    >
+                      🔓 Edit Pots
+                    </motion.button>
                   </div>
-                  <motion.button
-                    style={{
-                      marginTop: "1rem",
-                      background: "transparent",
-                      border: "2px solid #FF3C49",
-                      borderRadius: "25px",
-                      color: "#FF3C49",
-                      fontSize: "1rem",
-                      fontWeight: "bold",
-                      padding: "0.75rem 2rem",
-                      cursor: "pointer",
-                      textTransform: "uppercase",
-                      fontFamily: "Inter, sans-serif"
-                    }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => {
-                      if (window.confirm("Do you want to unlock Step 1 to edit pots and teams?")) {
-                        unfinalizePots();
-                      }
-                    }}
-                  >
-                    🔓 Edit Pots
-                  </motion.button>
                 </div>
               )}
 
-              {/* Step 2: Create Groups */}
-              {potsFinalized && groups.length === 0 && (
+              {/* Step 2: Create / Edit Groups */}
+              {potsFinalized && (
                 <>
-                  <div className="step-header green">
-                    <h2>Step 2: Create Groups</h2>
+                  <div className="edit-workbench">
+                    <div className="edit-workbench-card green">
+                      <div className="edit-workbench-title-row">
+                        <h3 className="edit-workbench-title">
+                          {groups.length === 0 ? "Step 2 · Create Groups" : "Step 2 · Edit Groups"}
+                        </h3>
+                        <span className="edit-workbench-badge">{groups.length || 0} Groups</span>
+                      </div>
+                      <p className="edit-workbench-text">
+                        Configure number of groups and team slots with live capacity preview.
+                      </p>
+                      <div className="edit-workbench-chips">
+                        <span className="edit-workbench-chip">{assignedTeams}/{totalTeams} Assigned</span>
+                        <span className="edit-workbench-chip muted">
+                          Capacity {groups.length > 0 ? groups.length * (groups[0]?.capacity || 0) : numberOfGroups * teamsPerGroup}
+                        </span>
+                      </div>
+
+                      <AnimatePresence>
+                        {!showGroupForm && (
+                          <motion.button
+                            className="edit-action-btn green"
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={openGroupEditor}
+                          >
+                            {groups.length === 0 ? "+ Create Groups" : "✏️ Edit Groups"}
+                          </motion.button>
+                        )}
+                      </AnimatePresence>
+                    </div>
                   </div>
 
                   <AnimatePresence>
-                    {!showGroupForm && (
+                    {showGroupForm && (
                       <motion.button
                         className="btn-create green-border"
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={() => setShowGroupForm(true)}
+                        onClick={() => setShowGroupForm(false)}
                       >
-                        + Create Groups
+                        ← Back to Group Summary
                       </motion.button>
                     )}
                   </AnimatePresence>
@@ -1243,13 +1293,16 @@ export default function TournamentManager() {
                   <AnimatePresence>
                     {showGroupForm && (
                       <motion.div
-                        className="form-container green-border"
+                        className="form-container green-border group-editor-form"
                         variants={slideInVariants}
                         initial="hidden"
                         animate="visible"
                         exit="exit"
                       >
-                        <h3 className="form-title">Create Groups</h3>
+                        <h3 className="form-title">{groups.length === 0 ? "Create Groups" : "Edit Groups"}</h3>
+                        <p className="form-subtitle">
+                          Set the structure for the draw board. You can adjust this later.
+                        </p>
 
                         <form onSubmit={handleCreateGroups}>
                           <div className="form-group">
@@ -1285,15 +1338,17 @@ export default function TournamentManager() {
                           </div>
 
                           <div className="info-box">
-                            <p>
-                              <strong>Total capacity:</strong> {numberOfGroups}{" "}
-                              groups × {teamsPerGroup} teams ={" "}
-                              {numberOfGroups * teamsPerGroup} teams
+                            <p className="info-row">
+                              <strong>Total capacity</strong>
+                              <span>{numberOfGroups} groups × {teamsPerGroup} teams = {numberOfGroups * teamsPerGroup}</span>
                             </p>
-                            <p>
-                              <strong>Available teams:</strong> {totalTeams}{" "}
-                              teams
+                            <p className="info-row">
+                              <strong>Available teams</strong>
+                              <span>{totalTeams} teams</span>
                             </p>
+                            {groups.length > 0 && hasGroupAssignments && (
+                              <p className="info-warning">⚠ Saving changes will reset current assignments.</p>
+                            )}
                           </div>
 
                           <div className="form-buttons">
@@ -1303,7 +1358,7 @@ export default function TournamentManager() {
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
                             >
-                              Create Groups
+                              {groups.length === 0 ? "Create Groups" : "Save Group Changes"}
                             </motion.button>
                             <motion.button
                               className="btn-cancel"

@@ -890,6 +890,131 @@ body.bg-none::before {
   color: var(--color-accent-2);
 }
 
+/* Edit Workbench (Setup enhancements) */
+.edit-workbench {
+  margin-bottom: 1.4rem;
+}
+
+.edit-workbench-card {
+  border-radius: 16px;
+  padding: 1rem 1.1rem;
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.edit-workbench-card.red {
+  border-color: color-mix(in srgb, var(--color-accent-1) 50%, transparent);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-accent-1) 12%, transparent) 0%,
+    rgba(255, 255, 255, 0.03) 70%
+  );
+}
+
+.edit-workbench-card.green {
+  border-color: color-mix(in srgb, var(--color-accent-2) 45%, transparent);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-accent-2) 11%, transparent) 0%,
+    rgba(255, 255, 255, 0.03) 70%
+  );
+}
+
+.edit-workbench-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.edit-workbench-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.edit-workbench-badge {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.26rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.86);
+  white-space: nowrap;
+}
+
+.edit-workbench-text {
+  margin: 0 0 0.65rem;
+  font-size: 0.84rem;
+  color: rgba(255, 255, 255, 0.76);
+  font-weight: 600;
+}
+
+.edit-workbench-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.85rem;
+}
+
+.edit-workbench-chip {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 0.25rem 0.55rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.edit-workbench-chip.muted {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.edit-action-btn {
+  width: 100%;
+  border-radius: 11px;
+  padding: 0.8rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.edit-action-btn.red {
+  border: 1.5px solid color-mix(in srgb, var(--color-accent-1) 65%, transparent);
+  color: var(--color-accent-1);
+  background: color-mix(in srgb, var(--color-accent-1) 10%, transparent);
+}
+
+.edit-action-btn.red:hover {
+  border-color: var(--color-accent-1);
+  background: color-mix(in srgb, var(--color-accent-1) 18%, transparent);
+}
+
+.edit-action-btn.green {
+  border: 1.5px solid color-mix(in srgb, var(--color-accent-2) 60%, transparent);
+  color: var(--color-accent-2);
+  background: color-mix(in srgb, var(--color-accent-2) 10%, transparent);
+}
+
+.edit-action-btn.green:hover {
+  border-color: var(--color-accent-2);
+  background: color-mix(in srgb, var(--color-accent-2) 17%, transparent);
+}
+
 /* Buttons */
 .btn-create {
   width: 100%;
@@ -949,6 +1074,17 @@ body.bg-none::before {
   color: #fff;
   font-weight: 900;
   text-transform: uppercase;
+}
+
+.group-editor-form .form-title {
+  margin-bottom: 0.35rem;
+}
+
+.form-subtitle {
+  margin: 0 0 1.25rem;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.92rem;
+  font-weight: 600;
 }
 
 .form-group {
@@ -1102,6 +1238,36 @@ body.bg-none::before {
   color: #fff;
   font-weight: 700;
   margin: 0;
+}
+
+.info-box .info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.9rem;
+}
+
+.info-box .info-row strong {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.info-box .info-row span {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #fff;
+  text-align: right;
+}
+
+.info-warning {
+  margin-top: 0.6rem !important;
+  font-size: 0.78rem !important;
+  color: #ffd27a !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.02em;
 }
 
 .info-box p:not(:last-child) {

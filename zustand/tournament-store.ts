@@ -98,7 +98,17 @@ export const useTournamentStore = create<TournamentState>()(
             teams: Array(teamsPerGroup).fill(null), // Create empty slots
           });
         }
-        set({ groups: newGroups });
+        set((state) => ({
+          groups: newGroups,
+          selectedTeam: null,
+          pots: state.pots.map((pot) => ({
+            ...pot,
+            teams: pot.teams.map((team) => ({
+              ...team,
+              assigned: false,
+            })),
+          })),
+        }));
       },
 
       selectTeam: (team: Team | null) => set({ selectedTeam: team }),
