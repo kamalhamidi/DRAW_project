@@ -1522,6 +1522,83 @@ body.bg-none::before {
 
 .pot-card-header .pot-title {
   margin-bottom: 0;
+  flex: 1;
+}
+
+.pot-card-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.btn-edit-pot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--color-highlight);
+  background: color-mix(in srgb, var(--color-highlight) 15%, transparent);
+  color: var(--color-highlight);
+  font-size: 0.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-edit-pot:hover {
+  background: var(--color-highlight);
+  color: #fff;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--color-highlight) 50%, transparent);
+}
+
+.btn-delete-pot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--color-accent-1);
+  background: color-mix(in srgb, var(--color-accent-1) 15%, transparent);
+  color: var(--color-accent-1);
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-delete-pot:hover {
+  background: var(--color-accent-1);
+  color: #fff;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--color-accent-1) 50%, transparent);
+}
+
+.edit-pot-input {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.edit-pot-input:focus {
+  border-color: var(--color-highlight);
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--color-highlight) 25%, transparent);
+}
+
+.edit-pot-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
 }
 
 .btn-delete-pot {

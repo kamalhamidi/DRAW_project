@@ -37,6 +37,7 @@ interface TournamentState {
   removeTeamFromSlot: (groupId: number, slotIndex: number) => void;
   removeTeamFromPot: (potId: number, teamId: number) => void;
   deletePot: (potId: number) => void;
+  updatePotName: (potId: number, newName: string) => void;
   finalizePots: () => void;
   unfinalizePots: () => void;
   resetTournament: () => void;
@@ -82,6 +83,14 @@ export const useTournamentStore = create<TournamentState>()(
       deletePot: (potId: number) => {
         set((state) => ({
           pots: state.pots.filter((pot) => pot.id !== potId),
+        }));
+      },
+
+      updatePotName: (potId: number, newName: string) => {
+        set((state) => ({
+          pots: state.pots.map((pot) =>
+            pot.id === potId ? { ...pot, name: newName } : pot
+          ),
         }));
       },
 

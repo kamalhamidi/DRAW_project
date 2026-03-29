@@ -44,6 +44,7 @@ export default function TournamentManager() {
     removeTeamFromSlot,
     removeTeamFromPot,
     deletePot,
+    updatePotName,
     resetTournament,
   } = useTournamentStore();
 
@@ -108,6 +109,17 @@ export default function TournamentManager() {
     isDestructive: false,
   });
 
+  // Edit Pot Name Modal
+  const [editPotModal, setEditPotModal] = useState<{
+    show: boolean;
+    potId: number | null;
+    potName: string;
+  }>({
+    show: false,
+    potId: null,
+    potName: "",
+  });
+
   const showConfirm = (title: string, message: string, action: () => void, isDestructive = false) => {
     setConfirmModal({
       show: true,
@@ -127,6 +139,29 @@ export default function TournamentManager() {
       confirmModal.action();
     }
     closeConfirm();
+  };
+
+  const openEditPotModal = (pot: any) => {
+    setEditPotModal({
+      show: true,
+      potId: pot.id,
+      potName: pot.name,
+    });
+  };
+
+  const closeEditPotModal = () => {
+    setEditPotModal({
+      show: false,
+      potId: null,
+      potName: "",
+    });
+  };
+
+  const saveEditPotName = () => {
+    if (editPotModal.potId && editPotModal.potName.trim()) {
+      updatePotName(editPotModal.potId, editPotModal.potName.trim());
+      closeEditPotModal();
+    }
   };
 
   // Restore all settings from localStorage on mount
@@ -1202,22 +1237,33 @@ export default function TournamentManager() {
                           >
                             <div className="pot-card-header">
                               <h3 className="pot-title">{pot.name}</h3>
-                              <motion.button
-                                className="btn-delete-pot"
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
-                                onClick={() => {
-                                  showConfirm(
-                                    "Delete Pot",
-                                    `Delete entire "${pot.name}" and all its teams?`,
-                                    () => deletePot(pot.id),
-                                    true
-                                  );
-                                }}
-                                title={`Delete ${pot.name}`}
-                              >
-                                🗑
-                              </motion.button>
+                              <div className="pot-card-actions">
+                                <motion.button
+                                  className="btn-edit-pot"
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.9 }}
+                                  onClick={() => openEditPotModal(pot)}
+                                  title={`Edit ${pot.name}`}
+                                >
+                                  ✏️
+                                </motion.button>
+                                <motion.button
+                                  className="btn-delete-pot"
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.9 }}
+                                  onClick={() => {
+                                    showConfirm(
+                                      "Delete Pot",
+                                      `Delete entire "${pot.name}" and all its teams?`,
+                                      () => deletePot(pot.id),
+                                      true
+                                    );
+                                  }}
+                                  title={`Delete ${pot.name}`}
+                                >
+                                  🗑
+                                </motion.button>
+                              </div>
                             </div>
                             <div className="teams-list">
                               {pot.teams.map((team) => (
@@ -1711,6 +1757,66 @@ export default function TournamentManager() {
                   </div>
                 </div>
               </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Edit Pot Name Modal */}
+        <AnimatePresence>
+          {editPotModal.show && (
+            <motion.div
+              className="confirm-modal-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              onClick={closeEditPotModal}
+            >
+              <motion.div
+                className="confirm-modal"
+                initial={{ opacity: 0, scale: 0.85, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.85, y: 20 }}
+                transition={{ duration: 0.2 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="confirm-modal-header">
+                  <h2 className="confirm-modal-title">Edit Pot Name</h2>
+                </div>
+                <div className="confirm-modal-body">
+                  <input
+                    type="text"
+                    className="edit-pot-input"
+                    value={editPotModal.potName}
+                    onChange={(e) =>
+                      setEditPotModal({ ...editPotModal, potName: e.target.value })
+                    }
+                    placeholder="Enter pot name"
+                    autoFocus
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") saveEditPotName();
+                    }}
+                  />
+                </div>
+                <div className="confirm-modal-footer">
+                  <motion.button
+                    className="confirm-btn-cancel"
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={closeEditPotModal}
+                  >
+                    Cancel
+                  </motion.button>
+                  <motion.button
+                    className="confirm-btn-action"
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={saveEditPotName}
+                  >
+                    Save
+                  </motion.button>
+                </div>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
