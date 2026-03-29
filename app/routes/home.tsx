@@ -93,6 +93,42 @@ export default function TournamentManager() {
   const [showSavePanel, setShowSavePanel] = useState(false);
   const [saveName, setSaveName] = useState("");
 
+  // Custom Confirm Modal
+  const [confirmModal, setConfirmModal] = useState<{
+    show: boolean;
+    title: string;
+    message: string;
+    action: (() => void) | null;
+    isDestructive?: boolean;
+  }>({
+    show: false,
+    title: "",
+    message: "",
+    action: null,
+    isDestructive: false,
+  });
+
+  const showConfirm = (title: string, message: string, action: () => void, isDestructive = false) => {
+    setConfirmModal({
+      show: true,
+      title,
+      message,
+      action,
+      isDestructive,
+    });
+  };
+
+  const closeConfirm = () => {
+    setConfirmModal({ show: false, title: "", message: "", action: null, isDestructive: false });
+  };
+
+  const confirmAction = () => {
+    if (confirmModal.action) {
+      confirmModal.action();
+    }
+    closeConfirm();
+  };
+
   // Restore all settings from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem("saved-tournaments");
@@ -175,34 +211,39 @@ export default function TournamentManager() {
   }, [saveName, pots, groups, potsFinalized, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, showSpotlight, showProjectorPots, colorMode, manualPalette, numberOfGroups, teamsPerGroup, savedTournaments]);
 
   const loadTournament = useCallback((preset: SavedTournament) => {
-    if (!window.confirm(`Load "${preset.name}"? This will replace your current tournament.`)) return;
-    // Reset store and repopulate
-    resetTournament();
-    // We need to set the zustand store directly
-    useTournamentStore.setState({
-      pots: preset.pots,
-      groups: preset.groups,
-      potsFinalized: preset.potsFinalized,
-      selectedTeam: null,
-    });
-    setBgAnimation(preset.bgAnimation as any);
-    setProjectorLayout(preset.projectorLayout as any);
-    setProjectorTitle(preset.projectorTitle);
-    setBgImage(preset.bgImage);
-    setCompetitionLogo(preset.competitionLogo);
-    setLogoSize(preset.logoSize);
-    setFooterText(preset.footerText);
-    setFooterSize(preset.footerSize);
-    setTeamFontScale(preset.teamFontScale ?? 1);
-    setShowSpotlight(preset.showSpotlight);
-    setShowProjectorPots(preset.showProjectorPots);
-    setColorMode(preset.colorMode as any);
-    setManualPalette(preset.manualPalette);
-    setNumberOfGroups(preset.numberOfGroups);
-    setTeamsPerGroup(preset.teamsPerGroup);
-    setCurrentPhase(preset.potsFinalized ? "draw" : "setup");
-    setShowSavePanel(false);
-  }, [resetTournament]);
+    showConfirm(
+      "Load Tournament",
+      `Load "${preset.name}"? This will replace your current tournament.`,
+      () => {
+        // Reset store and repopulate
+        resetTournament();
+        // We need to set the zustand store directly
+        useTournamentStore.setState({
+          pots: preset.pots,
+          groups: preset.groups,
+          potsFinalized: preset.potsFinalized,
+          selectedTeam: null,
+        });
+        setBgAnimation(preset.bgAnimation as any);
+        setProjectorLayout(preset.projectorLayout as any);
+        setProjectorTitle(preset.projectorTitle);
+        setBgImage(preset.bgImage);
+        setCompetitionLogo(preset.competitionLogo);
+        setLogoSize(preset.logoSize);
+        setFooterText(preset.footerText);
+        setFooterSize(preset.footerSize);
+        setTeamFontScale(preset.teamFontScale ?? 1);
+        setShowSpotlight(preset.showSpotlight);
+        setShowProjectorPots(preset.showProjectorPots);
+        setColorMode(preset.colorMode as any);
+        setManualPalette(preset.manualPalette);
+        setNumberOfGroups(preset.numberOfGroups);
+        setTeamsPerGroup(preset.teamsPerGroup);
+        setCurrentPhase(preset.potsFinalized ? "draw" : "setup");
+        setShowSavePanel(false);
+      }
+    );
+  }, [resetTournament, showConfirm]);
 
   const deleteSavedTournament = useCallback((id: string) => {
     const updated = savedTournaments.filter(t => t.id !== id);
@@ -300,15 +341,19 @@ export default function TournamentManager() {
 
     if (groups.length > 0) {
       const hasAssignments = groups.some((group) => group.teams.some((team) => team !== null));
-      const confirmMessage = hasAssignments
+      const title = "Update Group Configuration";
+      const message = hasAssignments
         ? "Recreate groups with these settings? This will clear all current group assignments."
         : "Recreate groups with these settings?";
 
-      if (!window.confirm(confirmMessage)) return;
+      showConfirm(title, message, () => {
+        createGroups(numberOfGroups, teamsPerGroup);
+        setShowGroupForm(false);
+      });
+    } else {
+      createGroups(numberOfGroups, teamsPerGroup);
+      setShowGroupForm(false);
     }
-
-    createGroups(numberOfGroups, teamsPerGroup);
-    setShowGroupForm(false);
   };
 
   const openGroupEditor = () => {
@@ -468,9 +513,12 @@ export default function TournamentManager() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => {
-                if (window.confirm("Reset everything? This will clear all pots, groups, and assignments.")) {
-                  resetTournament();
-                }
+                showConfirm(
+                  "Reset Tournament",
+                  "Reset everything? This will clear all pots, groups, and assignments.",
+                  () => resetTournament(),
+                  true
+                );
               }}
               title="Reset Tournament"
             >
@@ -1159,9 +1207,12 @@ export default function TournamentManager() {
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.9 }}
                                 onClick={() => {
-                                  if (window.confirm(`Delete entire "${pot.name}" and all its teams?`)) {
-                                    deletePot(pot.id);
-                                  }
+                                  showConfirm(
+                                    "Delete Pot",
+                                    `Delete entire "${pot.name}" and all its teams?`,
+                                    () => deletePot(pot.id),
+                                    true
+                                  );
                                 }}
                                 title={`Delete ${pot.name}`}
                               >
@@ -1178,9 +1229,12 @@ export default function TournamentManager() {
                                     whileHover={{ scale: 1.2 }}
                                     whileTap={{ scale: 0.9 }}
                                     onClick={() => {
-                                      if (window.confirm(`Remove "${team.name}" from ${pot.name}?`)) {
-                                        removeTeamFromPot(pot.id, team.id);
-                                      }
+                                      showConfirm(
+                                        "Remove Team",
+                                        `Remove "${team.name}" from ${pot.name}?`,
+                                        () => removeTeamFromPot(pot.id, team.id),
+                                        true
+                                      );
                                     }}
                                     title={`Remove ${team.name}`}
                                   >
@@ -1226,9 +1280,11 @@ export default function TournamentManager() {
                       whileHover={{ scale: 1.03 }}
                       whileTap={{ scale: 0.97 }}
                       onClick={() => {
-                        if (window.confirm("Do you want to unlock Step 1 to edit pots and teams?")) {
-                          unfinalizePots();
-                        }
+                        showConfirm(
+                          "Edit Pots",
+                          "Do you want to unlock Step 1 to edit pots and teams?",
+                          () => unfinalizePots()
+                        );
                       }}
                     >
                       🔓 Edit Pots
@@ -1655,6 +1711,54 @@ export default function TournamentManager() {
                   </div>
                 </div>
               </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Custom Confirmation Modal */}
+        <AnimatePresence>
+          {confirmModal.show && (
+            <motion.div
+              className="confirm-modal-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              onClick={closeConfirm}
+            >
+              <motion.div
+                className={`confirm-modal ${confirmModal.isDestructive ? "destructive" : ""}`}
+                initial={{ opacity: 0, scale: 0.85, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.85, y: 20 }}
+                transition={{ duration: 0.2 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="confirm-modal-header">
+                  <h2 className="confirm-modal-title">{confirmModal.title}</h2>
+                </div>
+                <div className="confirm-modal-body">
+                  <p className="confirm-modal-message">{confirmModal.message}</p>
+                </div>
+                <div className="confirm-modal-footer">
+                  <motion.button
+                    className="confirm-btn-cancel"
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={closeConfirm}
+                  >
+                    Cancel
+                  </motion.button>
+                  <motion.button
+                    className={`confirm-btn-action ${confirmModal.isDestructive ? "destructive" : ""}`}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={confirmAction}
+                  >
+                    {confirmModal.isDestructive ? "Delete" : "Confirm"}
+                  </motion.button>
+                </div>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
