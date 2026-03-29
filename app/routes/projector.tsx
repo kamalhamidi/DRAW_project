@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { applyColorPalette, resetColorPalette, type ColorPalette } from "~/utils/extractColors";
+import { applyColorPalette, resetColorPalette, extractColorsFromImage, type ColorPalette } from "~/utils/extractColors";
 import { getTeamColors } from "../../data/countryColors";
 import { FlagImg } from "~/components/FlagImg";
 
@@ -53,6 +53,7 @@ export default function ProjectorView() {
   const [footerSize, setFooterSize] = useState<number>(1.1);
   const [teamFontScale, setTeamFontScale] = useState<number>(1);
   const [showSpotlight, setShowSpotlight] = useState(true);
+  const [selectedTeamColors, setSelectedTeamColors] = useState<[string, string]>(["#ffffff", "#cccccc"]);
 
   useEffect(() => {
     setHydrated(true);
@@ -124,6 +125,38 @@ export default function ProjectorView() {
   useEffect(() => {
     document.documentElement.style.setProperty("--bg-image", `url("${bgImage}")`);
   }, [bgImage]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const resolveSelectedTeamColors = async () => {
+      if (!drawState.selectedTeam) {
+        return;
+      }
+
+      const fallback = getTeamColors(drawState.selectedTeam.countryCode);
+
+      if (drawState.selectedTeam.customFlagImage) {
+        const palette = await extractColorsFromImage(drawState.selectedTeam.customFlagImage);
+        if (cancelled) return;
+
+        if (palette) {
+          setSelectedTeamColors([palette.accent1, palette.accent2]);
+          return;
+        }
+      }
+
+      if (!cancelled) {
+        setSelectedTeamColors(fallback);
+      }
+    };
+
+    resolveSelectedTeamColors();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [drawState.selectedTeam]);
 
   if (!hydrated) {
     return <div className="projector-loading">Initializing Projector...</div>;
@@ -424,7 +457,7 @@ export default function ProjectorView() {
         {/* Selected Team Spotlight */}
         <AnimatePresence mode="wait">
           {showSpotlight && selectedTeam && (() => {
-            const [tc1, tc2] = getTeamColors(selectedTeam.countryCode);
+            const [tc1, tc2] = selectedTeamColors;
             return (
             <motion.div
               key="stadium-spotlight-wrapper"
@@ -809,7 +842,7 @@ export default function ProjectorView() {
         {/* Selected Team Spotlight */}
         <AnimatePresence mode="wait">
           {showSpotlight && selectedTeam && (() => {
-            const [tc1, tc2] = getTeamColors(selectedTeam.countryCode);
+            const [tc1, tc2] = selectedTeamColors;
             return (
             <motion.div
               key="gala-spotlight-wrapper"
@@ -1274,7 +1307,7 @@ export default function ProjectorView() {
         {/* Selected Team — FULL SCREEN TAKEOVER */}
         <AnimatePresence mode="wait">
           {selectedTeam && (() => {
-            const [tc1, tc2] = getTeamColors(selectedTeam.countryCode);
+            const [tc1, tc2] = selectedTeamColors;
             return (
               <motion.div
                 key={`cine-take-${selectedTeam.id}`}

@@ -1447,6 +1447,14 @@ body.bg-none::before {
   gap: 0.5rem;
 }
 
+.draw-status-main {
+  width: 100%;
+  min-height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .draw-status.default {
   background: rgba(255,255,255,0.04);
 }
@@ -1477,6 +1485,7 @@ body.bg-none::before {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  max-width: 100%;
 }
 
 .draw-selected-flag {
@@ -1490,6 +1499,10 @@ body.bg-none::before {
   text-transform: uppercase;
   letter-spacing: 0.02em;
   color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: min(46vw, 420px);
 }
 
 .draw-deselect-btn {

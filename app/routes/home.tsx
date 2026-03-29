@@ -1381,44 +1381,46 @@ export default function TournamentManager() {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
               >
-                <AnimatePresence mode="wait">
-                  {selectedTeam ? (
-                    <motion.div
-                      key="selected"
-                      className="draw-selected-team"
-                      initial={{ opacity: 0, scale: 0.85, y: -10 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.85, y: 10 }}
-                      transition={{ type: "spring", stiffness: 200, damping: 18 }}
-                    >
-                      <span className="draw-selected-label">Selected</span>
-                      <div className="draw-selected-body">
-                        <FlagImg src={selectedTeam.customFlagImage} code={selectedTeam.countryCode} size="lg" className="draw-selected-flag" />
-                        <span className="draw-selected-name">{selectedTeam.name}</span>
-                        <motion.button
-                          className="draw-deselect-btn"
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => selectTeam(null)}
-                          title="Deselect"
-                        >
-                          ✕
-                        </motion.button>
-                      </div>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="waiting"
-                      className="draw-waiting"
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                    >
-                      <span className="draw-waiting-icon">🎯</span>
-                      <span className="draw-waiting-text">Click a team, then click a slot</span>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                <div className="draw-status-main">
+                  <AnimatePresence mode="wait" initial={false}>
+                    {selectedTeam ? (
+                      <motion.div
+                        key="selected"
+                        className="draw-selected-team"
+                        initial={{ opacity: 0, scale: 0.85, y: -10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.85, y: 10 }}
+                        transition={{ type: "spring", stiffness: 200, damping: 18 }}
+                      >
+                        <span className="draw-selected-label">Selected</span>
+                        <div className="draw-selected-body">
+                          <FlagImg src={selectedTeam.customFlagImage} code={selectedTeam.countryCode} size="lg" className="draw-selected-flag" />
+                          <span className="draw-selected-name">{selectedTeam.name}</span>
+                          <motion.button
+                            className="draw-deselect-btn"
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => selectTeam(null)}
+                            title="Deselect"
+                          >
+                            ✕
+                          </motion.button>
+                        </div>
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="waiting"
+                        className="draw-waiting"
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                      >
+                        <span className="draw-waiting-icon">🎯</span>
+                        <span className="draw-waiting-text">Click a team, then click a slot</span>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
                 <p className="draw-progress-text">
                   {allTeamsAssigned
                     ? "✅ Draw Complete — All teams assigned!"
