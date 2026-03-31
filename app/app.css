@@ -5462,176 +5462,472 @@ body.bg-none::before {
 }
 
 /* ============================================================
-   PROJECTOR — MATCHES VIEW STYLES
+   PROJECTOR — PREMIUM MATCHES VIEW
    ============================================================ */
 
 .projector-container.matches-mode {
   overflow: hidden;
 }
 
-.projector-matches-wrapper {
+/* ---- Wrapper ---- */
+.pm-wrapper {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  padding: clamp(0.5rem, 1.5vh, 1.5rem);
+  position: relative;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  z-index: 0;
 }
 
-.projector-matches-header {
+/* ---- Ambient Orbs ---- */
+.pm-ambient {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.pm-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  animation: pmOrbFloat linear infinite;
+}
+
+.pm-orb-1 {
+  width: clamp(150px, 20vw, 350px);
+  height: clamp(150px, 20vw, 350px);
+  top: 5%; left: 5%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--color-primary) 30%, transparent), transparent 70%);
+  animation-duration: 22s;
+}
+
+.pm-orb-2 {
+  width: clamp(100px, 15vw, 250px);
+  height: clamp(100px, 15vw, 250px);
+  top: 60%; right: 8%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--color-accent-1) 20%, transparent), transparent 70%);
+  animation-duration: 18s;
+  animation-delay: -4s;
+}
+
+.pm-orb-3 {
+  width: clamp(120px, 18vw, 300px);
+  height: clamp(120px, 18vw, 300px);
+  bottom: 10%; left: 30%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--color-accent-2) 15%, transparent), transparent 70%);
+  animation-duration: 26s;
+  animation-delay: -8s;
+}
+
+.pm-orb-4 {
+  width: clamp(80px, 12vw, 200px);
+  height: clamp(80px, 12vw, 200px);
+  top: 25%; right: 25%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--color-primary) 18%, transparent), transparent 70%);
+  animation-duration: 20s;
+  animation-delay: -12s;
+}
+
+@keyframes pmOrbFloat {
+  0%   { transform: translateY(0) translateX(0) scale(1);    opacity: 0.4; }
+  25%  { transform: translateY(-30px) translateX(20px) scale(1.08); opacity: 0.7; }
+  50%  { transform: translateY(-50px) translateX(-15px) scale(1.05); opacity: 0.5; }
+  75%  { transform: translateY(-20px) translateX(30px) scale(1.1); opacity: 0.65; }
+  100% { transform: translateY(0) translateX(0) scale(1);    opacity: 0.4; }
+}
+
+/* ---- Cinematic Bars ---- */
+.pm-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.pm-bar-top {
+  top: 0;
+  height: clamp(2px, 0.4vh, 5px);
+  background: linear-gradient(90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--color-primary) 60%, transparent) 20%,
+    var(--color-primary) 50%,
+    color-mix(in srgb, var(--color-primary) 60%, transparent) 80%,
+    transparent 100%
+  );
+}
+
+.pm-bar-bottom {
+  bottom: 0;
+  height: clamp(2px, 0.4vh, 5px);
+  background: linear-gradient(90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--color-accent-1) 40%, transparent) 20%,
+    var(--color-accent-1) 50%,
+    color-mix(in srgb, var(--color-accent-1) 40%, transparent) 80%,
+    transparent 100%
+  );
+}
+
+/* ---- Header ---- */
+.pm-header {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(0.2rem, 0.6vh, 0.5rem);
+  padding: clamp(0.5rem, 1.5vh, 1.2rem) clamp(1rem, 3vw, 3rem);
+  position: relative;
+  z-index: 10;
+}
+
+.pm-header-line {
+  width: clamp(200px, 50vw, 700px);
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent,
+    color-mix(in srgb, var(--color-primary) 50%, transparent) 30%,
+    rgba(255, 255, 255, 0.25) 50%,
+    color-mix(in srgb, var(--color-primary) 50%, transparent) 70%,
+    transparent
+  );
+}
+
+.pm-header-content {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: clamp(0.5rem, 2vw, 2rem);
-  padding-bottom: clamp(0.3rem, 1vh, 0.8rem);
-  flex-shrink: 0;
 }
 
-.projector-matches-title {
+.pm-logo {
+  object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4));
+}
+
+.pm-title {
   font-family: 'DM Sans', 'Inter', sans-serif;
-  font-size: clamp(0.9rem, 2.5vw, 2rem);
+  font-size: clamp(0.85rem, 2.8vw, 2.2rem);
   font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   color: #fff;
-  text-align: center;
   margin: 0;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(180deg, #ffffff 0%, rgba(255, 255, 255, 0.75) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.projector-matches-content {
-  flex: 1;
+.pm-header-sub {
   display: flex;
-  flex-direction: column;
-  gap: clamp(0.3rem, 0.8vh, 0.6rem);
-  overflow: hidden;
-  min-height: 0;
+  align-items: center;
+  gap: clamp(0.3rem, 0.8vw, 0.6rem);
 }
 
-.projector-matches-round {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: clamp(0.2rem, 0.5vh, 0.4rem);
-  min-height: 0;
-}
-
-.projector-matches-round-header {
-  flex-shrink: 0;
-}
-
-.projector-matches-round-label {
-  display: inline-block;
-  padding: clamp(0.15rem, 0.4vh, 0.3rem) clamp(0.5rem, 1.5vw, 1rem);
-  background: linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 70%, transparent), color-mix(in srgb, var(--color-primary-dark) 70%, transparent));
-  border-radius: 6px;
-  font-size: clamp(0.55rem, 1.2vw, 0.85rem);
-  font-weight: 900;
-  color: #fff;
+.pm-header-badge {
+  font-size: clamp(0.45rem, 0.9vw, 0.7rem);
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.45);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 
-.projector-matches-groups {
+.pm-header-dot {
+  color: color-mix(in srgb, var(--color-primary) 60%, transparent);
+  font-size: clamp(0.5rem, 1vw, 0.8rem);
+}
+
+/* ---- Content ---- */
+.pm-content {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.2rem, 3vh, 2.5rem);
+  padding: 0 clamp(0.5rem, 2vw, 2rem);
+  overflow: hidden;
+  min-height: 0;
+  position: relative;
+  z-index: 10;
+  justify-content: center;
+}
+
+/* ---- Round ---- */
+.pm-round {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.15rem, 0.4vh, 0.35rem);
+}
+
+.pm-round-header {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.4rem, 1vw, 0.8rem);
+  flex-shrink: 0;
+}
+
+.pm-round-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(255, 255, 255, 0.12) 50%,
+    transparent
+  );
+}
+
+.pm-round-label {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.2rem, 0.4vw, 0.35rem);
+  padding: clamp(0.15rem, 0.35vh, 0.25rem) clamp(0.5rem, 1.2vw, 1rem);
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--color-primary) 55%, transparent),
+    color-mix(in srgb, var(--color-primary-dark) 45%, transparent)
+  );
+  border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+  border-radius: clamp(4px, 0.5vw, 8px);
+  font-size: clamp(0.48rem, 1vw, 0.75rem);
+  font-weight: 900;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 12px color-mix(in srgb, var(--color-primary) 25%, transparent);
+  flex-shrink: 0;
+}
+
+.pm-round-icon {
+  font-size: clamp(0.5rem, 1vw, 0.8rem);
+}
+
+/* ---- Groups Grid ---- */
+.pm-groups {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
-  gap: clamp(0.25rem, 0.6vw, 0.5rem);
-  min-height: 0;
-  overflow: hidden;
+  gap: clamp(0.2rem, 0.5vw, 0.45rem);
 }
 
-.projector-matches-group-block {
+/* ---- Group Block ---- */
+.pm-group {
   display: flex;
   flex-direction: column;
-  gap: clamp(0.15rem, 0.3vh, 0.25rem);
-  background: rgba(255, 255, 255, 0.04);
+  background: linear-gradient(165deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: clamp(6px, 1vw, 10px);
-  padding: clamp(0.25rem, 0.5vw, 0.5rem);
+  border-radius: clamp(6px, 0.8vw, 12px);
   overflow: hidden;
   min-height: 0;
+  position: relative;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
-.projector-matches-group-label {
-  font-size: clamp(0.5rem, 1vw, 0.72rem);
-  font-weight: 900;
-  color: var(--color-accent-2);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+.pm-group::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg,
+    var(--color-primary),
+    var(--color-accent-2),
+    var(--color-primary)
+  );
+  opacity: 0.7;
+}
+
+.pm-group-header {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.2rem, 0.4vw, 0.35rem);
+  padding: clamp(0.2rem, 0.4vh, 0.35rem) clamp(0.3rem, 0.6vw, 0.6rem);
   flex-shrink: 0;
 }
 
-.projector-matches-list {
+.pm-group-letter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(16px, 2vw, 26px);
+  height: clamp(16px, 2vw, 26px);
+  border-radius: clamp(4px, 0.4vw, 6px);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  font-size: clamp(0.4rem, 0.9vw, 0.65rem);
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 0;
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--color-primary) 30%, transparent);
+}
+
+.pm-group-name {
+  font-size: clamp(0.4rem, 0.85vw, 0.62rem);
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ---- Match List ---- */
+.pm-match-list {
   display: flex;
   flex-direction: column;
-  gap: clamp(0.1rem, 0.25vh, 0.2rem);
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
+  gap: clamp(0.08rem, 0.2vh, 0.15rem);
+  padding: 0 clamp(0.2rem, 0.4vw, 0.4rem) clamp(0.2rem, 0.4vh, 0.35rem);
 }
 
-.projector-match-card {
+/* ---- Match Card ---- */
+.pm-match {
   display: flex;
   align-items: center;
-  gap: clamp(0.2rem, 0.5vw, 0.4rem);
-  padding: clamp(0.2rem, 0.4vh, 0.35rem) clamp(0.25rem, 0.5vw, 0.5rem);
-  background: rgba(255, 255, 255, 0.03);
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.01) 100%
+  );
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: clamp(4px, 0.6vw, 8px);
+  border-radius: clamp(4px, 0.5vw, 8px);
+  overflow: hidden;
+  position: relative;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
   flex-shrink: 0;
 }
 
-.projector-match-home,
-.projector-match-away {
+.pm-match:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* ---- Team Cell ---- */
+.pm-team {
   flex: 1;
   display: flex;
   align-items: center;
-  gap: clamp(0.15rem, 0.3vw, 0.25rem);
+  gap: clamp(0.15rem, 0.35vw, 0.3rem);
+  padding: clamp(0.2rem, 0.4vh, 0.35rem) clamp(0.25rem, 0.5vw, 0.5rem);
   min-width: 0;
+  position: relative;
+  transition: background 0.4s ease;
 }
 
-.projector-match-away {
+.pm-team.assigned {
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--color-primary) 8%, transparent),
+    transparent
+  );
+}
+
+.pm-team-away {
   justify-content: flex-end;
   text-align: right;
+  flex-direction: row;
 }
 
-.projector-match-flag {
-  width: clamp(14px, 2vw, 22px);
-  height: clamp(10px, 1.5vw, 16px);
-  border-radius: 2px;
+.pm-team-away.assigned {
+  background: linear-gradient(270deg,
+    color-mix(in srgb, var(--color-primary) 8%, transparent),
+    transparent
+  );
+}
+
+.pm-flag {
+  width: clamp(14px, 2vw, 24px);
+  height: clamp(10px, 1.4vw, 18px);
+  border-radius: clamp(1px, 0.2vw, 3px);
   object-fit: cover;
   flex-shrink: 0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.projector-match-name {
-  font-size: clamp(0.45rem, 1vw, 0.78rem);
+.pm-name {
+  font-size: clamp(0.42rem, 1vw, 0.78rem);
   font-weight: 700;
   color: #fff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
-.projector-match-placeholder {
-  font-size: clamp(0.45rem, 1vw, 0.78rem);
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.3);
-  font-style: italic;
+.pm-placeholder {
+  font-size: clamp(0.42rem, 1vw, 0.72rem);
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.2);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
-.projector-match-vs {
-  font-size: clamp(0.4rem, 0.8vw, 0.6rem);
+/* ---- VS Diamond ---- */
+.pm-vs-wrap {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+}
+
+.pm-vs-diamond {
+  width: clamp(20px, 2.5vw, 34px);
+  height: clamp(20px, 2.5vw, 34px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg,
+    var(--color-accent-1),
+    color-mix(in srgb, var(--color-accent-1) 70%, #000)
+  );
+  transform: rotate(45deg);
+  border-radius: clamp(3px, 0.4vw, 5px);
+  box-shadow:
+    0 0 12px color-mix(in srgb, var(--color-accent-1) 30%, transparent),
+    0 2px 6px rgba(0, 0, 0, 0.3);
+  animation: pmVsPulse 2.5s ease-in-out infinite;
+}
+
+.pm-vs-diamond span {
+  transform: rotate(-45deg);
+  font-size: clamp(0.35rem, 0.7vw, 0.5rem);
   font-weight: 900;
-  color: var(--color-accent-1);
-  flex-shrink: 0;
-  padding: 0 clamp(0.1rem, 0.2vw, 0.15rem);
+  color: #fff;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
-.projector-matches-footer {
+@keyframes pmVsPulse {
+  0%, 100% { box-shadow: 0 0 8px color-mix(in srgb, var(--color-accent-1) 25%, transparent), 0 2px 6px rgba(0, 0, 0, 0.3); }
+  50%      { box-shadow: 0 0 18px color-mix(in srgb, var(--color-accent-1) 45%, transparent), 0 2px 8px rgba(0, 0, 0, 0.4); }
+}
+
+/* ---- Footer ---- */
+.pm-footer {
   flex-shrink: 0;
-  text-align: center;
-  padding-top: clamp(0.25rem, 0.5vh, 0.5rem);
-  color: rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.5rem, 1.5vw, 1.5rem);
+  padding: clamp(0.3rem, 0.8vh, 0.7rem) clamp(1rem, 3vw, 3rem);
+  color: rgba(255, 255, 255, 0.4);
   font-weight: 600;
+  letter-spacing: 0.03em;
+  position: relative;
+  z-index: 10;
+}
+
+.pm-footer-line {
+  flex: 1;
+  max-width: 200px;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(255, 255, 255, 0.15),
+    transparent
+  );
 }

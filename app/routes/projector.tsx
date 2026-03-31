@@ -1466,81 +1466,156 @@ export default function ProjectorView() {
       </div>
     );
   };
-
-  // ============ MATCHES VIEW (Layout-Theme-Agnostic) ============
+  // ============ MATCHES VIEW — PREMIUM BROADCAST LAYOUT ============
   const renderMatchesView = () => {
     const rounds = [...new Set(matches.map(m => m.round))].sort();
     const groupLetters = [...new Set(matches.map(m => m.group))].sort();
 
     return (
-      <div className="projector-matches-wrapper">
-        {/* Header */}
-        <div className="projector-matches-header">
-          {competitionLogo && <img src={competitionLogo} alt="" className="projector-logo" style={{ height: `${logoSize * 0.7}px` }} />}
-          {projectorTitle.trim() && <h1 className="projector-matches-title">{projectorTitle}</h1>}
-          {competitionLogo && <img src={competitionLogo} alt="" className="projector-logo" style={{ height: `${logoSize * 0.7}px` }} />}
+      <div className="pm-wrapper">
+        {/* Ambient Background Effects */}
+        <div className="pm-ambient">
+          <div className="pm-orb pm-orb-1" />
+          <div className="pm-orb pm-orb-2" />
+          <div className="pm-orb pm-orb-3" />
+          <div className="pm-orb pm-orb-4" />
         </div>
 
-        {/* Matches Grid */}
-        <div className="projector-matches-content">
-          {rounds.map(round => (
-            <div key={round} className="projector-matches-round">
-              <div className="projector-matches-round-header">
-                <span className="projector-matches-round-label">Round {round}</span>
+        {/* Top Gradient Bar */}
+        <div className="pm-bar pm-bar-top" />
+
+        {/* Header */}
+        <motion.div
+          className="pm-header"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+        >
+          <div className="pm-header-line" />
+          <div className="pm-header-content">
+            {competitionLogo && <img src={competitionLogo} alt="" className="pm-logo" style={{ height: `${logoSize * 0.65}px` }} />}
+            {projectorTitle.trim() && <h1 className="pm-title">{projectorTitle}</h1>}
+            {competitionLogo && <img src={competitionLogo} alt="" className="pm-logo" style={{ height: `${logoSize * 0.65}px` }} />}
+          </div>
+          <div className="pm-header-sub">
+            <span className="pm-header-badge">{rounds.length} Round{rounds.length !== 1 ? "s" : ""}</span>
+            <span className="pm-header-dot">·</span>
+            <span className="pm-header-badge">{groupLetters.length} Group{groupLetters.length !== 1 ? "s" : ""}</span>
+            <span className="pm-header-dot">·</span>
+            <span className="pm-header-badge">{matches.length} Match{matches.length !== 1 ? "es" : ""}</span>
+          </div>
+          <div className="pm-header-line" />
+        </motion.div>
+
+        {/* Match Content */}
+        <div className="pm-content">
+          {rounds.map((round, roundIdx) => (
+            <motion.div
+              key={round}
+              className="pm-round"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: roundIdx * 0.15, duration: 0.4 }}
+            >
+              <div className="pm-round-header">
+                <div className="pm-round-line" />
+                <span className="pm-round-label">
+                  {/* <span className="pm-round-icon"></span> */}
+                  Round {round}
+                </span>
+                <div className="pm-round-line" />
               </div>
-              <div className="projector-matches-groups">
-                {groupLetters.map(gl => {
+
+              <div className="pm-groups">
+                {groupLetters.map((gl, glIdx) => {
                   const roundGroupMatches = matches.filter(m => m.round === round && m.group === gl);
                   if (roundGroupMatches.length === 0) return null;
+
                   return (
-                    <div key={gl} className="projector-matches-group-block">
-                      <span className="projector-matches-group-label">Group {gl}</span>
-                      <div className="projector-matches-list">
-                        {roundGroupMatches.map(match => {
+                    <motion.div
+                      key={gl}
+                      className="pm-group"
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: roundIdx * 0.15 + glIdx * 0.08, duration: 0.35 }}
+                    >
+                      <div className="pm-group-header">
+                        <span className="pm-group-letter">{gl}</span>
+                        <span className="pm-group-name">Group {gl}</span>
+                      </div>
+
+                      <div className="pm-match-list">
+                        {roundGroupMatches.map((match, matchIdx) => {
                           const matchGroup = drawState.groups.find(g => g.name.charAt(g.name.length - 1) === match.group);
                           const homeTeam = matchGroup?.teams[match.homeSlotIndex] || null;
                           const awayTeam = matchGroup?.teams[match.awaySlotIndex] || null;
+
                           return (
-                            <div key={match.id} className="projector-match-card">
-                              <div className="projector-match-home">
+                            <motion.div
+                              key={match.id}
+                              className="pm-match"
+                              initial={{ opacity: 0, scale: 0.95 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ delay: roundIdx * 0.15 + glIdx * 0.08 + matchIdx * 0.05, duration: 0.3 }}
+                            >
+                              {/* Home Team */}
+                              <div className={`pm-team pm-team-home ${homeTeam ? "assigned" : ""}`}>
                                 {homeTeam ? (
                                   <>
-                                    <FlagImg src={homeTeam.customFlagImage} code={homeTeam.countryCode} size="sm" className="projector-match-flag" />
-                                    <span className="projector-match-name">{homeTeam.name}</span>
+                                    <FlagImg src={homeTeam.customFlagImage} code={homeTeam.countryCode} size="sm" className="pm-flag" />
+                                    <span className="pm-name">{homeTeam.name}</span>
                                   </>
                                 ) : (
-                                  <span className="projector-match-placeholder">{match.homePlaceholder}</span>
+                                  <span className="pm-placeholder">{match.homePlaceholder}</span>
                                 )}
                               </div>
-                              <span className="projector-match-vs">VS</span>
-                              <div className="projector-match-away">
+
+                              {/* VS Diamond */}
+                              <div className="pm-vs-wrap">
+                                <div className="pm-vs-diamond">
+                                  <span>VS</span>
+                                </div>
+                              </div>
+
+                              {/* Away Team */}
+                              <div className={`pm-team pm-team-away ${awayTeam ? "assigned" : ""}`}>
                                 {awayTeam ? (
                                   <>
-                                    <span className="projector-match-name">{awayTeam.name}</span>
-                                    <FlagImg src={awayTeam.customFlagImage} code={awayTeam.countryCode} size="sm" className="projector-match-flag" />
+                                    <span className="pm-name">{awayTeam.name}</span>
+                                    <FlagImg src={awayTeam.customFlagImage} code={awayTeam.countryCode} size="sm" className="pm-flag" />
                                   </>
                                 ) : (
-                                  <span className="projector-match-placeholder">{match.awayPlaceholder}</span>
+                                  <span className="pm-placeholder">{match.awayPlaceholder}</span>
                                 )}
                               </div>
-                            </div>
+                            </motion.div>
                           );
                         })}
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 })}
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
 
         {/* Footer */}
         {footerText && (
-          <div className="projector-matches-footer">
-            <span style={{ fontSize: `${footerSize}rem` }}>{footerText}</span>
-          </div>
+          <motion.div
+            className="pm-footer"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+          >
+            <div className="pm-footer-line" />
+            <span style={{ fontSize: `${footerSize * 0.85}rem` }}>{footerText}</span>
+            <div className="pm-footer-line" />
+          </motion.div>
         )}
+
+        {/* Bottom Gradient Bar */}
+        <div className="pm-bar pm-bar-bottom" />
       </div>
     );
   };
