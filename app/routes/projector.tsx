@@ -68,6 +68,7 @@ export default function ProjectorView() {
   const [selectedTeamColors, setSelectedTeamColors] = useState<[string, string]>(["#ffffff", "#cccccc"]);
   const [matches, setMatches] = useState<Match[]>([]);
   const [projectorDisplayMode, setProjectorDisplayMode] = useState<"groups" | "matches">("groups");
+  const [matchesLayout, setMatchesLayout] = useState<"default" | "gala">("default");
 
   useEffect(() => {
     setHydrated(true);
@@ -76,7 +77,7 @@ export default function ProjectorView() {
     const channel = new BroadcastChannel("draw_sync");
 
     const handleMessage = (event: MessageEvent) => {
-      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, showSpotlight, matches: incomingMatches, projectorDisplayMode: incomingDisplayMode } = event.data;
+      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, showSpotlight, matches: incomingMatches, projectorDisplayMode: incomingDisplayMode, matchesLayout: incomingMatchesLayout } = event.data;
       setDrawState({
         pots: pots || [],
         groups: groups || [],
@@ -118,6 +119,9 @@ export default function ProjectorView() {
       }
       if (incomingDisplayMode !== undefined) {
         setProjectorDisplayMode(incomingDisplayMode);
+      }
+      if (incomingMatchesLayout !== undefined) {
+        setMatchesLayout(incomingMatchesLayout);
       }
       // Apply color palette from the home page
       if (colorPalette) {
@@ -1620,6 +1624,143 @@ export default function ProjectorView() {
     );
   };
 
+  // ============ MATCHES GALA VIEW — CEREMONY STYLE ============
+  const renderMatchesGalaView = () => {
+    const rounds = [...new Set(matches.map(m => m.round))].sort();
+    const groupLetters = [...new Set(matches.map(m => m.group))].sort();
+
+    return (
+      <div className="pmg-wrapper">
+        {/* Film Grain */}
+        <div className="pmg-grain" />
+
+        {/* Ambient Glow */}
+        <div className="pmg-glow pmg-glow-1" />
+        <div className="pmg-glow pmg-glow-2" />
+
+        {/* Header */}
+        <motion.div
+          className="pmg-header"
+          initial={{ opacity: 0, y: -25 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: "easeOut" }}
+        >
+          <div className="pmg-header-ornament">
+            <div className="pmg-ornament-line" />
+            <div className="pmg-ornament-diamond" />
+            <div className="pmg-ornament-line" />
+          </div>
+          <div className="pmg-header-content">
+            {competitionLogo && <img src={competitionLogo} alt="" className="pmg-logo" style={{ height: `${logoSize * 0.6}px` }} />}
+            {projectorTitle.trim() && <h1 className="pmg-title">{projectorTitle}</h1>}
+            {competitionLogo && <img src={competitionLogo} alt="" className="pmg-logo" style={{ height: `${logoSize * 0.6}px` }} />}
+          </div>
+          <div className="pmg-header-subtitle">Match Schedule</div>
+          <div className="pmg-header-ornament">
+            <div className="pmg-ornament-line" />
+            <div className="pmg-ornament-diamond" />
+            <div className="pmg-ornament-line" />
+          </div>
+        </motion.div>
+
+        {/* Content */}
+        <div className="pmg-content">
+          {rounds.map((round, roundIdx) => (
+            <motion.div
+              key={round}
+              className="pmg-round"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: roundIdx * 0.2, duration: 0.5 }}
+            >
+              <div className="pmg-round-badge">
+                <span className="pmg-round-text">Round {round}</span>
+              </div>
+
+              <div className="pmg-tables">
+                {groupLetters.map((gl, glIdx) => {
+                  const roundGroupMatches = matches.filter(m => m.round === round && m.group === gl);
+                  if (roundGroupMatches.length === 0) return null;
+
+                  return (
+                    <motion.div
+                      key={gl}
+                      className="pmg-table"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: roundIdx * 0.2 + glIdx * 0.1, duration: 0.4 }}
+                    >
+                      <div className="pmg-table-header">
+                        <div className="pmg-table-crest">{gl}</div>
+                        <span className="pmg-table-name">Group {gl}</span>
+                      </div>
+
+                      <div className="pmg-table-body">
+                        {roundGroupMatches.map((match, matchIdx) => {
+                          const matchGroup = drawState.groups.find(g => g.name.charAt(g.name.length - 1) === match.group);
+                          const homeTeam = matchGroup?.teams[match.homeSlotIndex] || null;
+                          const awayTeam = matchGroup?.teams[match.awaySlotIndex] || null;
+
+                          return (
+                            <motion.div
+                              key={match.id}
+                              className={`pmg-row ${matchIdx % 2 === 0 ? "even" : "odd"}`}
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: roundIdx * 0.2 + glIdx * 0.1 + matchIdx * 0.06, duration: 0.3 }}
+                            >
+                              <div className="pmg-cell pmg-cell-home">
+                                {homeTeam ? (
+                                  <>
+                                    <FlagImg src={homeTeam.customFlagImage} code={homeTeam.countryCode} size="sm" className="pmg-flag" />
+                                    <span className="pmg-team-name">{homeTeam.name}</span>
+                                  </>
+                                ) : (
+                                  <span className="pmg-team-ph">{match.homePlaceholder}</span>
+                                )}
+                              </div>
+
+                              <div className="pmg-cell pmg-cell-vs">
+                                <span className="pmg-vs">v</span>
+                              </div>
+
+                              <div className="pmg-cell pmg-cell-away">
+                                {awayTeam ? (
+                                  <>
+                                    <span className="pmg-team-name">{awayTeam.name}</span>
+                                    <FlagImg src={awayTeam.customFlagImage} code={awayTeam.countryCode} size="sm" className="pmg-flag" />
+                                  </>
+                                ) : (
+                                  <span className="pmg-team-ph">{match.awayPlaceholder}</span>
+                                )}
+                              </div>
+                            </motion.div>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Footer */}
+        {footerText && (
+          <motion.div
+            className="pmg-footer"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+          >
+            <span style={{ fontSize: `${footerSize * 0.85}rem` }}>{footerText}</span>
+          </motion.div>
+        )}
+      </div>
+    );
+  };
+
   // Determine container class
   const containerClass = [
     "projector-container",
@@ -1640,13 +1781,13 @@ export default function ProjectorView() {
         {/* Matches Display Mode */}
         {projectorDisplayMode === "matches" && matches.length > 0 ? (
           <motion.div
-            key="matches-view"
+            key={`matches-${matchesLayout}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
           >
-            {renderMatchesView()}
+            {matchesLayout === "gala" ? renderMatchesGalaView() : renderMatchesView()}
           </motion.div>
         ) : (
           <>

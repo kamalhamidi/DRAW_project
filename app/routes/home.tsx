@@ -93,6 +93,7 @@ export default function TournamentManager() {
   const [showMatchesPanel, setShowMatchesPanel] = useState(false);
   const [matchesFilterRound, setMatchesFilterRound] = useState<number | "all">("all");
   const [projectorDisplayMode, setProjectorDisplayMode] = useState<"groups" | "matches">("groups");
+  const [matchesLayout, setMatchesLayout] = useState<"default" | "gala">("default");
   const [colorPalette, setColorPalette] = useState<ColorPalette | null>(null);
   const [manualPalette, setManualPalette] = useState<ColorPalette>({
     primary: "#8200C5",
@@ -203,6 +204,7 @@ export default function TournamentManager() {
         if (s.manualPalette) setManualPalette(s.manualPalette);
         if (s.currentPhase) setCurrentPhase(s.currentPhase);
         if (s.projectorDisplayMode) setProjectorDisplayMode(s.projectorDisplayMode);
+        if (s.matchesLayout) setMatchesLayout(s.matchesLayout);
       } catch { }
     }
   }, []);
@@ -226,9 +228,10 @@ export default function TournamentManager() {
       manualPalette,
       currentPhase,
       projectorDisplayMode,
+      matchesLayout,
     };
     localStorage.setItem("tournament-settings", JSON.stringify(settings));
-  }, [hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, showSpotlight, colorMode, manualPalette, currentPhase, projectorDisplayMode]);
+  }, [hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, showSpotlight, colorMode, manualPalette, currentPhase, projectorDisplayMode, matchesLayout]);
 
   const saveTournament = useCallback(() => {
     if (!saveName.trim()) return;
@@ -367,9 +370,10 @@ export default function TournamentManager() {
         showSpotlight,
         matches,
         projectorDisplayMode,
+        matchesLayout,
       });
     }
-  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, showSpotlight, matches, projectorDisplayMode]);
+  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, showSpotlight, matches, projectorDisplayMode, matchesLayout]);
 
   const handleCreatePot = (e: React.FormEvent) => {
     e.preventDefault();
@@ -971,27 +975,53 @@ export default function TournamentManager() {
                           </div>
 
                           {matches.length > 0 && (
-                            <div className="settings-group">
-                              <label className="settings-label">Projector Display Mode</label>
-                              <div className="settings-layout-btns">
-                                <motion.button
-                                  className={`settings-layout-btn ${projectorDisplayMode === "groups" ? "active" : ""}`}
-                                  whileHover={{ scale: 1.05 }}
-                                  whileTap={{ scale: 0.95 }}
-                                  onClick={() => setProjectorDisplayMode("groups")}
-                                >
-                                  🏆 Groups
-                                </motion.button>
-                                <motion.button
-                                  className={`settings-layout-btn ${projectorDisplayMode === "matches" ? "active" : ""}`}
-                                  whileHover={{ scale: 1.05 }}
-                                  whileTap={{ scale: 0.95 }}
-                                  onClick={() => setProjectorDisplayMode("matches")}
-                                >
-                                  ⚔️ Matches
-                                </motion.button>
+                            <>
+                              <div className="settings-group">
+                                <label className="settings-label">Projector Display Mode</label>
+                                <div className="settings-layout-btns">
+                                  <motion.button
+                                    className={`settings-layout-btn ${projectorDisplayMode === "groups" ? "active" : ""}`}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => setProjectorDisplayMode("groups")}
+                                  >
+                                    🏆 Groups
+                                  </motion.button>
+                                  <motion.button
+                                    className={`settings-layout-btn ${projectorDisplayMode === "matches" ? "active" : ""}`}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => setProjectorDisplayMode("matches")}
+                                  >
+                                    ⚔️ Matches
+                                  </motion.button>
+                                </div>
                               </div>
-                            </div>
+
+                              {projectorDisplayMode === "matches" && (
+                                <div className="settings-group">
+                                  <label className="settings-label">Matches Layout</label>
+                                  <div className="settings-layout-btns">
+                                    <motion.button
+                                      className={`settings-layout-btn ${matchesLayout === "default" ? "active" : ""}`}
+                                      whileHover={{ scale: 1.05 }}
+                                      whileTap={{ scale: 0.95 }}
+                                      onClick={() => setMatchesLayout("default")}
+                                    >
+                                      📋 Default
+                                    </motion.button>
+                                    <motion.button
+                                      className={`settings-layout-btn ${matchesLayout === "gala" ? "active" : ""}`}
+                                      whileHover={{ scale: 1.05 }}
+                                      whileTap={{ scale: 0.95 }}
+                                      onClick={() => setMatchesLayout("gala")}
+                                    >
+                                      ✨ Gala
+                                    </motion.button>
+                                  </div>
+                                </div>
+                              )}
+                            </>
                           )}
                         </div>
                       </motion.div>
