@@ -31,8 +31,8 @@ interface Match {
   round: number;            // 1-based
   matchNumber: number;      // global sequential
   group: string;            // "A", "B", "C", ...
-  homeTeam: Team | null;
-  awayTeam: Team | null;
+  homeSlotIndex: number;    // 0-based index into group.teams
+  awaySlotIndex: number;    // 0-based index into group.teams
   homePlaceholder: string;  // e.g. "A1"
   awayPlaceholder: string;  // e.g. "A4"
 }
@@ -268,17 +268,14 @@ export const useTournamentStore = create<TournamentState>()(
               // Skip if indices are out of bounds for this group
               if (homeIdx >= group.teams.length || awayIdx >= group.teams.length) continue;
 
-              const homeTeam = group.teams[homeIdx];
-              const awayTeam = group.teams[awayIdx];
-
               newMatches.push({
                 id: generateUUID(),
                 tournamentId,
                 round,
                 matchNumber: matchNumber++,
                 group: groupLetter,
-                homeTeam: homeTeam || null,
-                awayTeam: awayTeam || null,
+                homeSlotIndex: homeIdx,
+                awaySlotIndex: awayIdx,
                 homePlaceholder: `${groupLetter}${homeIdx + 1}`,
                 awayPlaceholder: `${groupLetter}${awayIdx + 1}`,
               });

@@ -33,8 +33,8 @@ interface Match {
   round: number;
   matchNumber: number;
   group: string;
-  homeTeam: Team | null;
-  awayTeam: Team | null;
+  homeSlotIndex: number;
+  awaySlotIndex: number;
   homePlaceholder: string;
   awayPlaceholder: string;
 }
@@ -1496,31 +1496,36 @@ export default function ProjectorView() {
                     <div key={gl} className="projector-matches-group-block">
                       <span className="projector-matches-group-label">Group {gl}</span>
                       <div className="projector-matches-list">
-                        {roundGroupMatches.map(match => (
-                          <div key={match.id} className="projector-match-card">
-                            <div className="projector-match-home">
-                              {match.homeTeam ? (
-                                <>
-                                  <FlagImg src={match.homeTeam.customFlagImage} code={match.homeTeam.countryCode} size="sm" className="projector-match-flag" />
-                                  <span className="projector-match-name">{match.homeTeam.name}</span>
-                                </>
-                              ) : (
-                                <span className="projector-match-placeholder">{match.homePlaceholder}</span>
-                              )}
+                        {roundGroupMatches.map(match => {
+                          const matchGroup = drawState.groups.find(g => g.name.charAt(g.name.length - 1) === match.group);
+                          const homeTeam = matchGroup?.teams[match.homeSlotIndex] || null;
+                          const awayTeam = matchGroup?.teams[match.awaySlotIndex] || null;
+                          return (
+                            <div key={match.id} className="projector-match-card">
+                              <div className="projector-match-home">
+                                {homeTeam ? (
+                                  <>
+                                    <FlagImg src={homeTeam.customFlagImage} code={homeTeam.countryCode} size="sm" className="projector-match-flag" />
+                                    <span className="projector-match-name">{homeTeam.name}</span>
+                                  </>
+                                ) : (
+                                  <span className="projector-match-placeholder">{match.homePlaceholder}</span>
+                                )}
+                              </div>
+                              <span className="projector-match-vs">VS</span>
+                              <div className="projector-match-away">
+                                {awayTeam ? (
+                                  <>
+                                    <span className="projector-match-name">{awayTeam.name}</span>
+                                    <FlagImg src={awayTeam.customFlagImage} code={awayTeam.countryCode} size="sm" className="projector-match-flag" />
+                                  </>
+                                ) : (
+                                  <span className="projector-match-placeholder">{match.awayPlaceholder}</span>
+                                )}
+                              </div>
                             </div>
-                            <span className="projector-match-vs">VS</span>
-                            <div className="projector-match-away">
-                              {match.awayTeam ? (
-                                <>
-                                  <span className="projector-match-name">{match.awayTeam.name}</span>
-                                  <FlagImg src={match.awayTeam.customFlagImage} code={match.awayTeam.countryCode} size="sm" className="projector-match-flag" />
-                                </>
-                              ) : (
-                                <span className="projector-match-placeholder">{match.awayPlaceholder}</span>
-                              )}
-                            </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   );

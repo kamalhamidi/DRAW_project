@@ -1114,44 +1114,49 @@ export default function TournamentManager() {
                 </div>
                 <div className="matches-cards-grid">
                   {(matchesFilterRound === "all" ? matches : matches.filter(m => m.round === matchesFilterRound))
-                    .map((match) => (
-                      <motion.div
-                        key={match.id}
-                        className="match-card"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        layout
-                      >
-                        <div className="match-card-badges">
-                          <span className="match-badge match-badge-round">R{match.round}</span>
-                          <span className="match-badge match-badge-group">Group {match.group}</span>
-                          <span className="match-badge match-badge-num">#{match.matchNumber}</span>
-                        </div>
-                        <div className="match-card-teams">
-                          <div className="match-team home">
-                            {match.homeTeam ? (
-                              <>
-                                <FlagImg src={match.homeTeam.customFlagImage} code={match.homeTeam.countryCode} size="sm" className="match-team-flag" />
-                                <span className="match-team-name">{match.homeTeam.name}</span>
-                              </>
-                            ) : (
-                              <span className="match-team-placeholder">{match.homePlaceholder}</span>
-                            )}
+                    .map((match) => {
+                      const matchGroup = groups.find(g => g.name.charAt(g.name.length - 1) === match.group);
+                      const homeTeam = matchGroup?.teams[match.homeSlotIndex] || null;
+                      const awayTeam = matchGroup?.teams[match.awaySlotIndex] || null;
+                      return (
+                        <motion.div
+                          key={match.id}
+                          className="match-card"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          layout
+                        >
+                          <div className="match-card-badges">
+                            <span className="match-badge match-badge-round">R{match.round}</span>
+                            <span className="match-badge match-badge-group">Group {match.group}</span>
+                            <span className="match-badge match-badge-num">#{match.matchNumber}</span>
                           </div>
-                          <span className="match-vs">VS</span>
-                          <div className="match-team away">
-                            {match.awayTeam ? (
-                              <>
-                                <FlagImg src={match.awayTeam.customFlagImage} code={match.awayTeam.countryCode} size="sm" className="match-team-flag" />
-                                <span className="match-team-name">{match.awayTeam.name}</span>
-                              </>
-                            ) : (
-                              <span className="match-team-placeholder">{match.awayPlaceholder}</span>
-                            )}
+                          <div className="match-card-teams">
+                            <div className="match-team home">
+                              {homeTeam ? (
+                                <>
+                                  <FlagImg src={homeTeam.customFlagImage} code={homeTeam.countryCode} size="sm" className="match-team-flag" />
+                                  <span className="match-team-name">{homeTeam.name}</span>
+                                </>
+                              ) : (
+                                <span className="match-team-placeholder">{match.homePlaceholder}</span>
+                              )}
+                            </div>
+                            <span className="match-vs">VS</span>
+                            <div className="match-team away">
+                              {awayTeam ? (
+                                <>
+                                  <FlagImg src={awayTeam.customFlagImage} code={awayTeam.countryCode} size="sm" className="match-team-flag" />
+                                  <span className="match-team-name">{awayTeam.name}</span>
+                                </>
+                              ) : (
+                                <span className="match-team-placeholder">{match.awayPlaceholder}</span>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      </motion.div>
-                    ))}
+                        </motion.div>
+                      );
+                    })}
                 </div>
               </div>
             </motion.div>
