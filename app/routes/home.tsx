@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useTournamentStore } from "zustand/tournament-store";
+import { useTournamentStore, type Match, type RoundConfig } from "zustand/tournament-store";
 import { africaCountries } from "data/africaCountries";
 import { extractColorsFromImage, applyColorPalette, resetColorPalette, type ColorPalette } from "~/utils/extractColors";
 import { FlagImg } from "~/components/FlagImg";
@@ -33,6 +33,8 @@ export default function TournamentManager() {
   const {
     pots,
     groups,
+    matches,
+    roundConfigs,
     selectedTeam,
     potsFinalized,
     addPotWithTeams,
@@ -45,6 +47,10 @@ export default function TournamentManager() {
     removeTeamFromPot,
     deletePot,
     updatePotName,
+    setRoundConfig,
+    removeRoundConfig,
+    generateMatchesForRound,
+    clearMatchesForRound,
     resetTournament,
   } = useTournamentStore();
 
@@ -63,7 +69,7 @@ export default function TournamentManager() {
   const [numberOfGroups, setNumberOfGroups] = useState(2);
   const [teamsPerGroup, setTeamsPerGroup] = useState(4);
 
-  const [currentPhase, setCurrentPhase] = useState<"setup" | "draw">("setup");
+  const [currentPhase, setCurrentPhase] = useState<"setup" | "draw" | "matches">("setup");
   const [hydrated, setHydrated] = useState(false);
   const [showProjectorPots, setShowProjectorPots] = useState(true);
   const [bgAnimation, setBgAnimation] = useState<"none" | "slide" | "zoom" | "fade">("zoom");
@@ -79,6 +85,14 @@ export default function TournamentManager() {
   const [teamFontScale, setTeamFontScale] = useState<number>(1);
   const [showSpotlight, setShowSpotlight] = useState(true);
   const [colorMode, setColorMode] = useState<"auto" | "manual">("manual");
+
+  // Match Setup state
+  const [currentRound, setCurrentRound] = useState(1);
+  const [pairingSlotA, setPairingSlotA] = useState<number | null>(null);
+  const [currentPairings, setCurrentPairings] = useState<[number, number][]>([]);
+  const [showMatchesPanel, setShowMatchesPanel] = useState(false);
+  const [matchesFilterRound, setMatchesFilterRound] = useState<number | "all">("all");
+  const [projectorDisplayMode, setProjectorDisplayMode] = useState<"groups" | "matches">("groups");
   const [colorPalette, setColorPalette] = useState<ColorPalette | null>(null);
   const [manualPalette, setManualPalette] = useState<ColorPalette>({
     primary: "#8200C5",
@@ -188,6 +202,7 @@ export default function TournamentManager() {
         if (s.colorMode) setColorMode(s.colorMode);
         if (s.manualPalette) setManualPalette(s.manualPalette);
         if (s.currentPhase) setCurrentPhase(s.currentPhase);
+        if (s.projectorDisplayMode) setProjectorDisplayMode(s.projectorDisplayMode);
       } catch { }
     }
   }, []);
@@ -210,9 +225,10 @@ export default function TournamentManager() {
       colorMode,
       manualPalette,
       currentPhase,
+      projectorDisplayMode,
     };
     localStorage.setItem("tournament-settings", JSON.stringify(settings));
-  }, [hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, showSpotlight, colorMode, manualPalette, currentPhase]);
+  }, [hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, showSpotlight, colorMode, manualPalette, currentPhase, projectorDisplayMode]);
 
   const saveTournament = useCallback(() => {
     if (!saveName.trim()) return;
@@ -349,9 +365,11 @@ export default function TournamentManager() {
         footerSize,
         teamFontScale,
         showSpotlight,
+        matches,
+        projectorDisplayMode,
       });
     }
-  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, showSpotlight]);
+  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, showSpotlight, matches, projectorDisplayMode]);
 
   const handleCreatePot = (e: React.FormEvent) => {
     e.preventDefault();
@@ -499,6 +517,18 @@ export default function TournamentManager() {
                 <span className="tab-badge green">{assignedTeams}/{totalTeams}</span>
               )}
             </motion.button>
+            <motion.button
+              className={`navbar-tab ${currentPhase === "matches" ? "active" : ""} ${groups.length === 0 ? "disabled" : ""}`}
+              whileHover={{ scale: groups.length > 0 ? 1.05 : 1 }}
+              whileTap={{ scale: groups.length > 0 ? 0.95 : 1 }}
+              onClick={() => groups.length > 0 && setCurrentPhase("matches")}
+            >
+              <span className="tab-icon">⚔️</span>
+              <span className="tab-text">Matches</span>
+              {matches.length > 0 && (
+                <span className="tab-badge green">{matches.length}</span>
+              )}
+            </motion.button>
           </div>
 
           {/* Right: Actions */}
@@ -521,6 +551,17 @@ export default function TournamentManager() {
             >
               🎬 Projector
             </motion.button>
+            {matches.length > 0 && (
+              <motion.button
+                className={`navbar-btn navbar-btn-matches ${showMatchesPanel ? "active" : ""}`}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowMatchesPanel(!showMatchesPanel)}
+                title="View Matches"
+              >
+                📋 Matches
+              </motion.button>
+            )}
             <motion.button
               className={`navbar-btn navbar-btn-settings ${showProjectorSettings ? "active" : ""}`}
               whileHover={{ scale: 1.05 }}
@@ -928,6 +969,30 @@ export default function TournamentManager() {
                               {showSpotlight ? "✓ Spotlight On" : "🚫 Spotlight Off"}
                             </motion.button>
                           </div>
+
+                          {matches.length > 0 && (
+                            <div className="settings-group">
+                              <label className="settings-label">Projector Display Mode</label>
+                              <div className="settings-layout-btns">
+                                <motion.button
+                                  className={`settings-layout-btn ${projectorDisplayMode === "groups" ? "active" : ""}`}
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={() => setProjectorDisplayMode("groups")}
+                                >
+                                  🏆 Groups
+                                </motion.button>
+                                <motion.button
+                                  className={`settings-layout-btn ${projectorDisplayMode === "matches" ? "active" : ""}`}
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={() => setProjectorDisplayMode("matches")}
+                                >
+                                  ⚔️ Matches
+                                </motion.button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </motion.div>
                     )}
@@ -1010,6 +1075,83 @@ export default function TournamentManager() {
                       ))}
                     </div>
                   )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Matches Panel */}
+        <AnimatePresence>
+          {showMatchesPanel && matches.length > 0 && (
+            <motion.div
+              className="matches-panel"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <div className="matches-panel-inner">
+                <div className="matches-panel-header">
+                  <h3 className="matches-panel-title">📋 Generated Matches ({matches.length})</h3>
+                  <div className="matches-filter-tabs">
+                    <button
+                      className={`matches-filter-tab ${matchesFilterRound === "all" ? "active" : ""}`}
+                      onClick={() => setMatchesFilterRound("all")}
+                    >
+                      All Rounds
+                    </button>
+                    {[...new Set(matches.map(m => m.round))].sort().map(r => (
+                      <button
+                        key={r}
+                        className={`matches-filter-tab ${matchesFilterRound === r ? "active" : ""}`}
+                        onClick={() => setMatchesFilterRound(r)}
+                      >
+                        Round {r}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="matches-cards-grid">
+                  {(matchesFilterRound === "all" ? matches : matches.filter(m => m.round === matchesFilterRound))
+                    .map((match) => (
+                      <motion.div
+                        key={match.id}
+                        className="match-card"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        layout
+                      >
+                        <div className="match-card-badges">
+                          <span className="match-badge match-badge-round">R{match.round}</span>
+                          <span className="match-badge match-badge-group">Group {match.group}</span>
+                          <span className="match-badge match-badge-num">#{match.matchNumber}</span>
+                        </div>
+                        <div className="match-card-teams">
+                          <div className="match-team home">
+                            {match.homeTeam ? (
+                              <>
+                                <FlagImg src={match.homeTeam.customFlagImage} code={match.homeTeam.countryCode} size="sm" className="match-team-flag" />
+                                <span className="match-team-name">{match.homeTeam.name}</span>
+                              </>
+                            ) : (
+                              <span className="match-team-placeholder">{match.homePlaceholder}</span>
+                            )}
+                          </div>
+                          <span className="match-vs">VS</span>
+                          <div className="match-team away">
+                            {match.awayTeam ? (
+                              <>
+                                <FlagImg src={match.awayTeam.customFlagImage} code={match.awayTeam.countryCode} size="sm" className="match-team-flag" />
+                                <span className="match-team-name">{match.awayTeam.name}</span>
+                              </>
+                            ) : (
+                              <span className="match-team-placeholder">{match.awayPlaceholder}</span>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
                 </div>
               </div>
             </motion.div>
@@ -1757,6 +1899,250 @@ export default function TournamentManager() {
                   </div>
                 </div>
               </div>
+            </motion.div>
+          )}
+
+          {/* Matches Phase */}
+          {currentPhase === "matches" && (
+            <motion.div
+              key="matches"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="step-header purple">
+                <h2>Step 3: Configure Match Pairings</h2>
+              </div>
+
+              {/* Round Selector */}
+              <div className="match-setup-rounds">
+                <div className="match-round-tabs">
+                  {(() => {
+                    const maxRound = roundConfigs.length > 0 ? Math.max(...roundConfigs.map(rc => rc.round)) : 0;
+                    const roundNumbers = Array.from({ length: Math.max(maxRound, currentRound) }, (_, i) => i + 1);
+                    return roundNumbers.map(r => (
+                      <motion.button
+                        key={r}
+                        className={`match-round-tab ${currentRound === r ? "active" : ""} ${roundConfigs.some(rc => rc.round === r) ? "configured" : ""}`}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => {
+                          setCurrentRound(r);
+                          const existing = roundConfigs.find(rc => rc.round === r);
+                          setCurrentPairings(existing ? [...existing.pairings] : []);
+                          setPairingSlotA(null);
+                        }}
+                      >
+                        Round {r}
+                        {roundConfigs.some(rc => rc.round === r) && <span className="round-check">✓</span>}
+                      </motion.button>
+                    ));
+                  })()}
+                  <motion.button
+                    className="match-round-tab add-round"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      const maxRound = roundConfigs.length > 0 ? Math.max(...roundConfigs.map(rc => rc.round)) : 0;
+                      const next = Math.max(maxRound, currentRound) + 1;
+                      setCurrentRound(next);
+                      setCurrentPairings([]);
+                      setPairingSlotA(null);
+                    }}
+                  >
+                    + Add Round
+                  </motion.button>
+                </div>
+              </div>
+
+              {/* Pairing Builder */}
+              {groups.length > 0 && (
+                <div className="pairing-builder">
+                  <div className="pairing-builder-header">
+                    <h3>Configure Round {currentRound} — Using {groups[0].name} as example</h3>
+                    <p className="pairing-builder-hint">
+                      Click two slots to pair them. Each team must appear in exactly one match per round.
+                    </p>
+                  </div>
+
+                  <div className="pairing-slots">
+                    {Array.from({ length: groups[0].teams.length }).map((_, idx) => {
+                      const groupLetter = groups[0].name.charAt(groups[0].name.length - 1);
+                      const team = groups[0].teams[idx];
+                      const isPaired = currentPairings.some(([a, b]) => a === idx || b === idx);
+                      const isSelectedForPairing = pairingSlotA === idx;
+
+                      return (
+                        <motion.button
+                          key={idx}
+                          className={`pairing-slot ${isPaired ? "paired" : ""} ${isSelectedForPairing ? "selected" : ""}`}
+                          whileHover={{ scale: isPaired ? 1 : 1.05 }}
+                          whileTap={{ scale: isPaired ? 1 : 0.95 }}
+                          disabled={isPaired}
+                          onClick={() => {
+                            if (isPaired) return;
+                            if (pairingSlotA === null) {
+                              setPairingSlotA(idx);
+                            } else if (pairingSlotA === idx) {
+                              setPairingSlotA(null);
+                            } else {
+                              setCurrentPairings(prev => [...prev, [pairingSlotA, idx]]);
+                              setPairingSlotA(null);
+                            }
+                          }}
+                        >
+                          <span className="pairing-slot-label">{groupLetter}{idx + 1}</span>
+                          {team ? (
+                            <span className="pairing-slot-team">
+                              <FlagImg src={team.customFlagImage} code={team.countryCode} size="xs" className="pairing-slot-flag" />
+                              {team.name}
+                            </span>
+                          ) : (
+                            <span className="pairing-slot-team empty">Empty Slot</span>
+                          )}
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Current Pairings */}
+                  {currentPairings.length > 0 && (
+                    <div className="pairing-result">
+                      <h4>Configured Pairings for Round {currentRound}:</h4>
+                      <div className="pairing-list">
+                        {currentPairings.map(([a, b], idx) => {
+                          const groupLetter = groups[0].name.charAt(groups[0].name.length - 1);
+                          const teamA = groups[0].teams[a];
+                          const teamB = groups[0].teams[b];
+                          return (
+                            <div key={idx} className="pairing-item">
+                              <span className="pairing-team">
+                                {teamA ? teamA.name : `${groupLetter}${a + 1}`}
+                              </span>
+                              <span className="pairing-vs">vs</span>
+                              <span className="pairing-team">
+                                {teamB ? teamB.name : `${groupLetter}${b + 1}`}
+                              </span>
+                              <motion.button
+                                className="pairing-remove"
+                                whileHover={{ scale: 1.2 }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={() => {
+                                  setCurrentPairings(prev => prev.filter((_, i) => i !== idx));
+                                }}
+                              >
+                                ✕
+                              </motion.button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Preview for all groups */}
+                  {currentPairings.length > 0 && (
+                    <div className="pairing-preview">
+                      <h4>Preview — Pattern applied to all groups:</h4>
+                      <div className="pairing-preview-grid">
+                        {groups.map(group => {
+                          const gl = group.name.charAt(group.name.length - 1);
+                          return (
+                            <div key={group.id} className="pairing-preview-group">
+                              <span className="pairing-preview-group-name">{group.name}</span>
+                              {currentPairings.map(([a, b], idx) => {
+                                if (a >= group.teams.length || b >= group.teams.length) return null;
+                                const tA = group.teams[a];
+                                const tB = group.teams[b];
+                                return (
+                                  <div key={idx} className="pairing-preview-match">
+                                    <span>{tA ? tA.name : `${gl}${a + 1}`}</span>
+                                    <span className="pairing-preview-vs">vs</span>
+                                    <span>{tB ? tB.name : `${gl}${b + 1}`}</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="pairing-actions">
+                    <motion.button
+                      className="btn-submit"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      disabled={currentPairings.length === 0}
+                      onClick={() => {
+                        // Validate — check all slots are used exactly once
+                        const slotCount = groups[0].teams.length;
+                        const usedSlots = new Set<number>();
+                        for (const [a, b] of currentPairings) {
+                          usedSlots.add(a);
+                          usedSlots.add(b);
+                        }
+                        // For odd-numbered groups, one team can be left without a pair (bye)
+                        const isOddGroup = slotCount % 2 !== 0;
+                        const expectedPairs = Math.floor(slotCount / 2);
+                        if (currentPairings.length !== expectedPairs) {
+                          alert(`Please create exactly ${expectedPairs} pairings for ${slotCount} teams${isOddGroup ? " (1 bye)" : ""}.`);
+                          return;
+                        }
+                        // Save config and generate
+                        setRoundConfig({ round: currentRound, pairings: currentPairings });
+                        setTimeout(() => generateMatchesForRound(currentRound), 50);
+                      }}
+                    >
+                      ✓ Save & Generate Round {currentRound} Matches
+                    </motion.button>
+                    {currentPairings.length > 0 && (
+                      <motion.button
+                        className="btn-cancel"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => {
+                          setCurrentPairings([]);
+                          setPairingSlotA(null);
+                        }}
+                      >
+                        Clear Pairings
+                      </motion.button>
+                    )}
+                    {roundConfigs.some(rc => rc.round === currentRound) && (
+                      <motion.button
+                        className="btn-cancel destructive"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => {
+                          removeRoundConfig(currentRound);
+                          setCurrentPairings([]);
+                          setPairingSlotA(null);
+                        }}
+                      >
+                        🗑 Delete Round {currentRound}
+                      </motion.button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Summary of all rounds */}
+              {matches.length > 0 && (
+                <div className="match-summary">
+                  <div className="section-title purple">
+                    <h2>Generated Matches ({matches.length})</h2>
+                  </div>
+                  <div className="match-summary-stats">
+                    <span className="match-stat">{roundConfigs.length} Round{roundConfigs.length !== 1 ? "s" : ""}</span>
+                    <span className="match-stat">{groups.length} Group{groups.length !== 1 ? "s" : ""}</span>
+                    <span className="match-stat">{matches.length} Total Matches</span>
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

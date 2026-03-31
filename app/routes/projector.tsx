@@ -27,6 +27,18 @@ interface Group {
   teams: (Team | null)[];
 }
 
+interface Match {
+  id: string;
+  tournamentId: string;
+  round: number;
+  matchNumber: number;
+  group: string;
+  homeTeam: Team | null;
+  awayTeam: Team | null;
+  homePlaceholder: string;
+  awayPlaceholder: string;
+}
+
 interface DrawState {
   pots: Pot[];
   groups: Group[];
@@ -54,6 +66,8 @@ export default function ProjectorView() {
   const [teamFontScale, setTeamFontScale] = useState<number>(1);
   const [showSpotlight, setShowSpotlight] = useState(true);
   const [selectedTeamColors, setSelectedTeamColors] = useState<[string, string]>(["#ffffff", "#cccccc"]);
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [projectorDisplayMode, setProjectorDisplayMode] = useState<"groups" | "matches">("groups");
 
   useEffect(() => {
     setHydrated(true);
@@ -62,7 +76,7 @@ export default function ProjectorView() {
     const channel = new BroadcastChannel("draw_sync");
 
     const handleMessage = (event: MessageEvent) => {
-      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, showSpotlight } = event.data;
+      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, showSpotlight, matches: incomingMatches, projectorDisplayMode: incomingDisplayMode } = event.data;
       setDrawState({
         pots: pots || [],
         groups: groups || [],
@@ -98,6 +112,12 @@ export default function ProjectorView() {
       }
       if (showSpotlight !== undefined) {
         setShowSpotlight(showSpotlight);
+      }
+      if (incomingMatches !== undefined) {
+        setMatches(incomingMatches);
+      }
+      if (incomingDisplayMode !== undefined) {
+        setProjectorDisplayMode(incomingDisplayMode);
       }
       // Apply color palette from the home page
       if (colorPalette) {
@@ -1447,6 +1467,79 @@ export default function ProjectorView() {
     );
   };
 
+  // ============ MATCHES VIEW (Layout-Theme-Agnostic) ============
+  const renderMatchesView = () => {
+    const rounds = [...new Set(matches.map(m => m.round))].sort();
+    const groupLetters = [...new Set(matches.map(m => m.group))].sort();
+
+    return (
+      <div className="projector-matches-wrapper">
+        {/* Header */}
+        <div className="projector-matches-header">
+          {competitionLogo && <img src={competitionLogo} alt="" className="projector-logo" style={{ height: `${logoSize * 0.7}px` }} />}
+          {projectorTitle.trim() && <h1 className="projector-matches-title">{projectorTitle}</h1>}
+          {competitionLogo && <img src={competitionLogo} alt="" className="projector-logo" style={{ height: `${logoSize * 0.7}px` }} />}
+        </div>
+
+        {/* Matches Grid */}
+        <div className="projector-matches-content">
+          {rounds.map(round => (
+            <div key={round} className="projector-matches-round">
+              <div className="projector-matches-round-header">
+                <span className="projector-matches-round-label">Round {round}</span>
+              </div>
+              <div className="projector-matches-groups">
+                {groupLetters.map(gl => {
+                  const roundGroupMatches = matches.filter(m => m.round === round && m.group === gl);
+                  if (roundGroupMatches.length === 0) return null;
+                  return (
+                    <div key={gl} className="projector-matches-group-block">
+                      <span className="projector-matches-group-label">Group {gl}</span>
+                      <div className="projector-matches-list">
+                        {roundGroupMatches.map(match => (
+                          <div key={match.id} className="projector-match-card">
+                            <div className="projector-match-home">
+                              {match.homeTeam ? (
+                                <>
+                                  <FlagImg src={match.homeTeam.customFlagImage} code={match.homeTeam.countryCode} size="sm" className="projector-match-flag" />
+                                  <span className="projector-match-name">{match.homeTeam.name}</span>
+                                </>
+                              ) : (
+                                <span className="projector-match-placeholder">{match.homePlaceholder}</span>
+                              )}
+                            </div>
+                            <span className="projector-match-vs">VS</span>
+                            <div className="projector-match-away">
+                              {match.awayTeam ? (
+                                <>
+                                  <span className="projector-match-name">{match.awayTeam.name}</span>
+                                  <FlagImg src={match.awayTeam.customFlagImage} code={match.awayTeam.countryCode} size="sm" className="projector-match-flag" />
+                                </>
+                              ) : (
+                                <span className="projector-match-placeholder">{match.awayPlaceholder}</span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Footer */}
+        {footerText && (
+          <div className="projector-matches-footer">
+            <span style={{ fontSize: `${footerSize}rem` }}>{footerText}</span>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // Determine container class
   const containerClass = [
     "projector-container",
@@ -1455,6 +1548,7 @@ export default function ProjectorView() {
     projectorLayout === "gala" ? "gala-mode" : "",
     projectorLayout === "minimal" ? "minimal-mode" : "",
     projectorLayout === "cinematic" ? "cinematic-mode" : "",
+    projectorDisplayMode === "matches" ? "matches-mode" : "",
   ].filter(Boolean).join(" ");
 
   return (
@@ -1463,84 +1557,88 @@ export default function ProjectorView() {
       style={{ "--projector-team-font-scale": teamFontScale } as React.CSSProperties}
     >
       <AnimatePresence mode="wait">
-        {projectorLayout === "classic" && (
+        {/* Matches Display Mode */}
+        {projectorDisplayMode === "matches" && matches.length > 0 ? (
           <motion.div
-            key="classic"
+            key="matches-view"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
           >
-            {renderClassicLayout()}
+            {renderMatchesView()}
           </motion.div>
-        )}
-        {projectorLayout === "stadium" && (
-          <motion.div
-            key="stadium"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            {renderStadiumLayout()}
-          </motion.div>
-        )}
-        {projectorLayout === "broadcast" && (
-          <motion.div
-            key="broadcast"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            {renderBroadcastLayout()}
-          </motion.div>
-        )}
-        {projectorLayout === "gala" && (
-          <motion.div
-            key="gala"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            {renderGalaLayout()}
-          </motion.div>
-        )}
-        {projectorLayout === "minimal" && (
-          <motion.div
-            key="minimal"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            {renderMinimalLayout()}
-          </motion.div>
-        )}
-        {projectorLayout === "cinematic" && (
-          <motion.div
-            key="cinematic"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            {renderCinematicLayout()}
-          </motion.div>
+        ) : (
+          <>
+            {projectorLayout === "classic" && (
+              <motion.div
+                key="classic"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                {renderClassicLayout()}
+              </motion.div>
+            )}
+            {projectorLayout === "stadium" && (
+              <motion.div
+                key="stadium"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                {renderStadiumLayout()}
+              </motion.div>
+            )}
+            {projectorLayout === "broadcast" && (
+              <motion.div
+                key="broadcast"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                {renderBroadcastLayout()}
+              </motion.div>
+            )}
+            {projectorLayout === "gala" && (
+              <motion.div
+                key="gala"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                {renderGalaLayout()}
+              </motion.div>
+            )}
+            {projectorLayout === "minimal" && (
+              <motion.div
+                key="minimal"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                {renderMinimalLayout()}
+              </motion.div>
+            )}
+            {projectorLayout === "cinematic" && (
+              <motion.div
+                key="cinematic"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.6 }}
+              >
+                {renderCinematicLayout()}
+              </motion.div>
+            )}
+          </>
         )}
       </AnimatePresence>
-
-      {/* Sync Indicator */}
-      {/* <motion.div
-        className="sync-indicator"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.8 }}
-      >
-        <span className="sync-dot"></span>
-        <span className="sync-text">Live Sync Active </span>
-      </motion.div> */}
     </div>
   );
 }
