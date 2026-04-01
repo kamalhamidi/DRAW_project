@@ -69,7 +69,7 @@ export default function ProjectorView() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [roundNotes, setRoundNotes] = useState<Record<number, string>>({});
   const [projectorDisplayMode, setProjectorDisplayMode] = useState<"groups" | "matches">("groups");
-  const [matchesLayout, setMatchesLayout] = useState<"default" | "gala">("default");
+  const [matchesLayout, setMatchesLayout] = useState<"default" | "gala" | "ultra">("default");
 
   useEffect(() => {
     setHydrated(true);
@@ -1775,6 +1775,132 @@ export default function ProjectorView() {
     );
   };
 
+  // ============ MATCHES ULTRA VIEW — FUTURISTIC TICKET WALL ============
+  const renderMatchesUltraView = () => {
+    const rounds = [...new Set(matches.map(m => m.round))].sort();
+    const groupLetters = [...new Set(matches.map(m => m.group))].sort();
+
+    return (
+      <div className="pmu-wrapper">
+        <div className="pmu-bg-grid" />
+        <div className="pmu-bg-glow pmu-bg-glow-a" />
+        <div className="pmu-bg-glow pmu-bg-glow-b" />
+
+        <motion.header
+          className="pmu-header"
+          initial={{ opacity: 0, y: -16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55 }}
+        >
+          <div className="pmu-header-top">
+            {competitionLogo && <img src={competitionLogo} alt="" className="pmu-logo" style={{ height: `${logoSize * 0.6}px` }} />}
+            <h1 className="pmu-title">{projectorTitle || "Match Center"}</h1>
+          </div>
+          <div className="pmu-meta">
+            <span>{rounds.length} ROUND{rounds.length !== 1 ? "S" : ""}</span>
+            <span>•</span>
+            <span>{groupLetters.length} GROUP{groupLetters.length !== 1 ? "S" : ""}</span>
+            <span>•</span>
+            <span>{matches.length} MATCH{matches.length !== 1 ? "ES" : ""}</span>
+          </div>
+        </motion.header>
+
+        <div className="pmu-content">
+          {rounds.map((round, roundIdx) => (
+            <motion.section
+              key={round}
+              className="pmu-round"
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: roundIdx * 0.12 }}
+            >
+              <div className="pmu-round-head">
+                <span className="pmu-round-pill">ROUND {round}</span>
+              </div>
+
+              {roundNotes[round]?.trim() && (
+                <div className="pmu-round-note">{roundNotes[round].trim()}</div>
+              )}
+
+              <div className="pmu-groups">
+                {groupLetters.map((gl, glIdx) => {
+                  const roundGroupMatches = matches.filter((m) => m.round === round && m.group === gl);
+                  if (roundGroupMatches.length === 0) return null;
+
+                  return (
+                    <motion.div
+                      key={`${round}-${gl}`}
+                      className="pmu-group"
+                      initial={{ opacity: 0, scale: 0.98 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: roundIdx * 0.12 + glIdx * 0.05, duration: 0.3 }}
+                    >
+                      <div className="pmu-group-header">
+                        <span className="pmu-group-badge">{gl}</span>
+                        <span className="pmu-group-name">Group {gl}</span>
+                      </div>
+
+                      <div className="pmu-list">
+                        {roundGroupMatches.map((match, matchIdx) => {
+                          const matchGroup = drawState.groups.find((g) => g.name.charAt(g.name.length - 1) === match.group);
+                          const homeTeam = matchGroup?.teams[match.homeSlotIndex] || null;
+                          const awayTeam = matchGroup?.teams[match.awaySlotIndex] || null;
+
+                          return (
+                            <motion.article
+                              key={match.id}
+                              className="pmu-ticket"
+                              initial={{ opacity: 0, x: -8 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ duration: 0.25, delay: roundIdx * 0.12 + glIdx * 0.05 + matchIdx * 0.04 }}
+                            >
+                              <div className="pmu-ticket-side" />
+                              <div className="pmu-ticket-body">
+                                <div className="pmu-team pmu-team-home">
+                                  {homeTeam ? (
+                                    <>
+                                      <FlagImg src={homeTeam.customFlagImage} code={homeTeam.countryCode} size="sm" className="pmu-flag" />
+                                      <span className="pmu-name">{homeTeam.name}</span>
+                                    </>
+                                  ) : (
+                                    <span className="pmu-placeholder">{match.homePlaceholder}</span>
+                                  )}
+                                </div>
+
+                                <div className="pmu-mid">
+                                  <span className="pmu-vs">VS</span>
+                                  <span className="pmu-match-no">#{match.matchNumber}</span>
+                                </div>
+
+                                <div className="pmu-team pmu-team-away">
+                                  {awayTeam ? (
+                                    <>
+                                      <span className="pmu-name">{awayTeam.name}</span>
+                                      <FlagImg src={awayTeam.customFlagImage} code={awayTeam.countryCode} size="sm" className="pmu-flag" />
+                                    </>
+                                  ) : (
+                                    <span className="pmu-placeholder">{match.awayPlaceholder}</span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="pmu-ticket-side" />
+                            </motion.article>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </motion.section>
+          ))}
+        </div>
+
+        {footerText && <div className="pmu-footer" style={{ fontSize: `${footerSize * 0.85}rem` }}>{footerText}</div>}
+      </div>
+    );
+  };
+
   // Determine container class
   const containerClass = [
     "projector-container",
@@ -1801,7 +1927,11 @@ export default function ProjectorView() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
           >
-            {matchesLayout === "gala" ? renderMatchesGalaView() : renderMatchesView()}
+            {matchesLayout === "gala"
+              ? renderMatchesGalaView()
+              : matchesLayout === "ultra"
+                ? renderMatchesUltraView()
+                : renderMatchesView()}
           </motion.div>
         ) : (
           <>
