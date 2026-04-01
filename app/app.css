@@ -5057,6 +5057,44 @@ body.bg-none::before {
   margin: 0 0 1.25rem;
 }
 
+.round-note-editor {
+  margin-bottom: 1.1rem;
+}
+
+.round-note-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.72);
+  letter-spacing: 0.02em;
+}
+
+.round-note-input {
+  width: 100%;
+  resize: vertical;
+  min-height: 70px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.22);
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  padding: 0.6rem 0.75rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.round-note-input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.round-note-input:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--color-primary) 75%, white 10%);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 22%, transparent);
+}
+
 .pairing-slots {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -5664,6 +5702,21 @@ body.bg-none::before {
   gap: clamp(0.15rem, 0.4vh, 0.35rem);
 }
 
+.pm-round-note {
+  align-self: center;
+  max-width: min(92vw, 1100px);
+  padding: clamp(0.22rem, 0.45vh, 0.36rem) clamp(0.55rem, 1.1vw, 0.9rem);
+  border: 1px solid color-mix(in srgb, var(--color-accent-2) 30%, transparent);
+  border-radius: clamp(4px, 0.5vw, 8px);
+  background: color-mix(in srgb, var(--color-accent-2) 9%, rgba(0, 0, 0, 0.2));
+  font-size: clamp(0.42rem, 0.9vw, 0.72rem);
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.35;
+  text-align: center;
+  white-space: pre-wrap;
+}
+
 .pm-round-header {
   display: flex;
   align-items: center;
@@ -6081,6 +6134,21 @@ body.bg-none::before {
   display: flex;
   flex-direction: column;
   gap: clamp(0.3rem, 0.7vh, 0.5rem);
+}
+
+.pmg-round-note {
+  align-self: center;
+  max-width: min(90vw, 920px);
+  padding: clamp(0.22rem, 0.45vh, 0.36rem) clamp(0.55rem, 1.1vw, 0.9rem);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: clamp(4px, 0.5vw, 8px);
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.12), rgba(212, 175, 55, 0.05));
+  font-size: clamp(0.42rem, 0.88vw, 0.68rem);
+  font-weight: 600;
+  color: rgba(255, 245, 214, 0.9);
+  line-height: 1.35;
+  text-align: center;
+  white-space: pre-wrap;
 }
 
 .pmg-round-badge {

@@ -67,6 +67,7 @@ export default function ProjectorView() {
   const [showSpotlight, setShowSpotlight] = useState(true);
   const [selectedTeamColors, setSelectedTeamColors] = useState<[string, string]>(["#ffffff", "#cccccc"]);
   const [matches, setMatches] = useState<Match[]>([]);
+  const [roundNotes, setRoundNotes] = useState<Record<number, string>>({});
   const [projectorDisplayMode, setProjectorDisplayMode] = useState<"groups" | "matches">("groups");
   const [matchesLayout, setMatchesLayout] = useState<"default" | "gala">("default");
 
@@ -77,7 +78,7 @@ export default function ProjectorView() {
     const channel = new BroadcastChannel("draw_sync");
 
     const handleMessage = (event: MessageEvent) => {
-      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, showSpotlight, matches: incomingMatches, projectorDisplayMode: incomingDisplayMode, matchesLayout: incomingMatchesLayout } = event.data;
+      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, showSpotlight, matches: incomingMatches, roundNotes: incomingRoundNotes, projectorDisplayMode: incomingDisplayMode, matchesLayout: incomingMatchesLayout } = event.data;
       setDrawState({
         pots: pots || [],
         groups: groups || [],
@@ -116,6 +117,9 @@ export default function ProjectorView() {
       }
       if (incomingMatches !== undefined) {
         setMatches(incomingMatches);
+      }
+      if (incomingRoundNotes !== undefined) {
+        setRoundNotes(incomingRoundNotes);
       }
       if (incomingDisplayMode !== undefined) {
         setProjectorDisplayMode(incomingDisplayMode);
@@ -1499,8 +1503,9 @@ export default function ProjectorView() {
           <div className="pm-header-content">
             {competitionLogo && <img src={competitionLogo} alt="" className="pm-logo" style={{ height: `${logoSize * 0.65}px` }} />}
             {projectorTitle.trim() && <h1 className="pm-title">{projectorTitle}</h1>}
-            {competitionLogo && <img src={competitionLogo} alt="" className="pm-logo" style={{ height: `${logoSize * 0.65}px` }} />}
+            {/* {competitionLogo && <img src={competitionLogo} alt="" className="pm-logo" style={{ height: `${logoSize * 0.65}px` }} />} */}
           </div>
+          <div className="pm-header-line" />
           <div className="pm-header-sub">
             <span className="pm-header-badge">{rounds.length} Round{rounds.length !== 1 ? "s" : ""}</span>
             <span className="pm-header-dot">·</span>
@@ -1508,7 +1513,6 @@ export default function ProjectorView() {
             <span className="pm-header-dot">·</span>
             <span className="pm-header-badge">{matches.length} Match{matches.length !== 1 ? "es" : ""}</span>
           </div>
-          <div className="pm-header-line" />
         </motion.div>
 
         {/* Match Content */}
@@ -1529,6 +1533,7 @@ export default function ProjectorView() {
                 </span>
                 <div className="pm-round-line" />
               </div>
+              
 
               <div className="pm-groups">
                 {groupLetters.map((gl, glIdx) => {
@@ -1600,6 +1605,10 @@ export default function ProjectorView() {
                   );
                 })}
               </div>
+
+              {roundNotes[round]?.trim() && (
+                <div className="pm-round-note">{roundNotes[round].trim()}</div>
+              )}
             </motion.div>
           ))}
         </div>
@@ -1653,14 +1662,14 @@ export default function ProjectorView() {
           <div className="pmg-header-content">
             {competitionLogo && <img src={competitionLogo} alt="" className="pmg-logo" style={{ height: `${logoSize * 0.6}px` }} />}
             {projectorTitle.trim() && <h1 className="pmg-title">{projectorTitle}</h1>}
-            {competitionLogo && <img src={competitionLogo} alt="" className="pmg-logo" style={{ height: `${logoSize * 0.6}px` }} />}
+            {/* {competitionLogo && <img src={competitionLogo} alt="" className="pmg-logo" style={{ height: `${logoSize * 0.6}px` }} />} */}
           </div>
-          <div className="pmg-header-subtitle">Match Schedule</div>
           <div className="pmg-header-ornament">
             <div className="pmg-ornament-line" />
             <div className="pmg-ornament-diamond" />
             <div className="pmg-ornament-line" />
           </div>
+          <div className="pmg-header-subtitle">Match Schedule</div>
         </motion.div>
 
         {/* Content */}
@@ -1676,6 +1685,7 @@ export default function ProjectorView() {
               <div className="pmg-round-badge">
                 <span className="pmg-round-text">Round {round}</span>
               </div>
+              
 
               <div className="pmg-tables">
                 {groupLetters.map((gl, glIdx) => {
@@ -1742,6 +1752,10 @@ export default function ProjectorView() {
                   );
                 })}
               </div>
+
+              {roundNotes[round]?.trim() && (
+                <div className="pmg-round-note">{roundNotes[round].trim()}</div>
+              )}
             </motion.div>
           ))}
         </div>
