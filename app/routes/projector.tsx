@@ -69,7 +69,7 @@ export default function ProjectorView() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [roundNotes, setRoundNotes] = useState<Record<number, string>>({});
   const [projectorDisplayMode, setProjectorDisplayMode] = useState<"groups" | "matches">("groups");
-  const [matchesLayout, setMatchesLayout] = useState<"default" | "gala" | "ultra">("default");
+  const [matchesLayout, setMatchesLayout] = useState<"default" | "gala" | "ultra" | "broadcast">("default");
 
   useEffect(() => {
     setHydrated(true);
@@ -1901,6 +1901,119 @@ export default function ProjectorView() {
     );
   };
 
+  // ============ MATCHES BROADCAST VIEW ============
+  const renderMatchesBroadcastView = () => {
+    const rounds = [...new Set(matches.map(m => m.round))].sort();
+    const groupLetters = [...new Set(matches.map(m => m.group))].sort();
+
+    return (
+      <div className="broadcast-matches-wrapper">
+        {competitionLogo && (
+          <div className="broadcast-logo-container">
+            <img src={competitionLogo} alt="" className="projector-logo broadcast-logo" style={{ height: `${logoSize}px` }} />
+          </div>
+        )}
+
+        {rounds.map((round, roundIdx) => (
+          <motion.div
+            key={round}
+            className="broadcast-matches-round"
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: roundIdx * 0.14, duration: 0.4 }}
+          >
+            <div className="broadcast-matches-round-title-wrap">
+              <div className="broadcast-card-header red broadcast-matches-round-title">
+                <h3>Round {round}</h3>
+              </div>
+            </div>
+
+            {roundNotes[round]?.trim() && (
+              <div className="broadcast-matches-round-note">{roundNotes[round].trim()}</div>
+            )}
+
+            <div className="broadcast-section broadcast-matches-groups">
+              {groupLetters.map((gl, glIdx) => {
+                const roundGroupMatches = matches.filter(m => m.round === round && m.group === gl);
+                if (roundGroupMatches.length === 0) return null;
+
+                return (
+                  <motion.div
+                    key={`${round}-${gl}`}
+                    className="broadcast-card"
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: roundIdx * 0.14 + glIdx * 0.08, duration: 0.35 }}
+                  >
+                    <div className="broadcast-card-header green">
+                      <h3>Group {gl}</h3>
+                    </div>
+
+                    <div className="broadcast-card-body broadcast-match-list">
+                      {roundGroupMatches.map((match, matchIdx) => {
+                        const matchGroup = drawState.groups.find(g => g.name.charAt(g.name.length - 1) === match.group);
+                        const homeTeam = matchGroup?.teams[match.homeSlotIndex] || null;
+                        const awayTeam = matchGroup?.teams[match.awaySlotIndex] || null;
+
+                        return (
+                          <motion.div
+                            key={match.id}
+                            className="broadcast-match-row"
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: roundIdx * 0.14 + glIdx * 0.08 + matchIdx * 0.05, duration: 0.25 }}
+                          >
+                            <div className="broadcast-match-team home">
+                              {homeTeam ? (
+                                <>
+                                  <FlagImg src={homeTeam.customFlagImage} code={homeTeam.countryCode} size="sm" className="broadcast-team-flag" />
+                                  <span className="broadcast-team-name">{homeTeam.name}</span>
+                                </>
+                              ) : (
+                                <span className="broadcast-slot-label">{match.homePlaceholder}</span>
+                              )}
+                            </div>
+
+                            <div className="broadcast-match-mid">
+                              <span className="broadcast-match-vs">VS</span>
+                              <span className="broadcast-match-number">#{match.matchNumber}</span>
+                            </div>
+
+                            <div className="broadcast-match-team away">
+                              {awayTeam ? (
+                                <>
+                                  <span className="broadcast-team-name">{awayTeam.name}</span>
+                                  <FlagImg src={awayTeam.customFlagImage} code={awayTeam.countryCode} size="sm" className="broadcast-team-flag" />
+                                </>
+                              ) : (
+                                <span className="broadcast-slot-label">{match.awayPlaceholder}</span>
+                              )}
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </motion.div>
+        ))}
+
+        {footerText && (
+          <motion.div
+            className="projector-footer"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <span className="projector-footer-text" style={{ fontSize: `${footerSize}rem` }}>{footerText}</span>
+          </motion.div>
+        )}
+      </div>
+    );
+  };
+
   // Determine container class
   const containerClass = [
     "projector-container",
@@ -1931,7 +2044,9 @@ export default function ProjectorView() {
               ? renderMatchesGalaView()
               : matchesLayout === "ultra"
                 ? renderMatchesUltraView()
-                : renderMatchesView()}
+                : matchesLayout === "broadcast"
+                  ? renderMatchesBroadcastView()
+                  : renderMatchesView()}
           </motion.div>
         ) : (
           <>

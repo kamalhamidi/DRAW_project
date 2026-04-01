@@ -95,7 +95,7 @@ export default function TournamentManager() {
   const [showMatchesPanel, setShowMatchesPanel] = useState(false);
   const [matchesFilterRound, setMatchesFilterRound] = useState<number | "all">("all");
   const [projectorDisplayMode, setProjectorDisplayMode] = useState<"groups" | "matches">("groups");
-  const [matchesLayout, setMatchesLayout] = useState<"default" | "gala" | "ultra">("default");
+  const [matchesLayout, setMatchesLayout] = useState<"default" | "gala" | "ultra" | "broadcast">("default");
   const [colorPalette, setColorPalette] = useState<ColorPalette | null>(null);
   const [manualPalette, setManualPalette] = useState<ColorPalette>({
     primary: "#8200C5",
@@ -1041,6 +1041,14 @@ export default function TournamentManager() {
                                       onClick={() => setMatchesLayout("ultra")}
                                     >
                                       🚀 Ultra
+                                    </motion.button>
+                                    <motion.button
+                                      className={`settings-layout-btn ${matchesLayout === "broadcast" ? "active" : ""}`}
+                                      whileHover={{ scale: 1.05 }}
+                                      whileTap={{ scale: 0.95 }}
+                                      onClick={() => setMatchesLayout("broadcast")}
+                                    >
+                                      📺 Broadcast
                                     </motion.button>
                                   </div>
                                 </div>
