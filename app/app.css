@@ -6684,34 +6684,75 @@ body.bg-none::before {
   align-items: stretch;
 }
 
+.broadcast-matches-groups .broadcast-card {
+  flex: 0 0 430px;
+  padding: 34px;
+  padding-top: 46px;
+}
+
 .broadcast-match-list {
   gap: 0.5rem;
 }
 
 .broadcast-match-row {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  gap: 0.55rem;
+  grid-template-columns: minmax(0, 1fr) 74px minmax(0, 1fr);
+  gap: 0.9rem;
   align-items: center;
   border-radius: 10px;
-  padding: 0.45rem 0.5rem;
+  padding: 0.6rem 0.6rem;
   background: rgba(255, 255, 255, 0.06);
 }
 
 .broadcast-match-team {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.55rem;
   min-width: 0;
+  overflow: visible;
+}
+
+.broadcast-match-team .broadcast-team-name {
+  display: block;
+  min-width: 0;
+  max-width: none;
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+  overflow-wrap: normal;
+  word-break: normal;
+  line-height: 1.1;
+  font-size: calc(0.9rem * var(--projector-team-font-scale));
+}
+
+.broadcast-match-team .broadcast-team-name.two-rows {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  white-space: normal;
+  line-height: 1.02;
+}
+
+.broadcast-match-team .broadcast-team-name.two-rows > span {
+  display: block;
+}
+
+.broadcast-match-team .broadcast-team-flag {
+  width: 16px;
+  height: 12px;
+  margin-top: 1px;
 }
 
 .broadcast-match-team.home {
-  justify-content: flex-start;
+  justify-content: center;
+  text-align: center;
 }
 
 .broadcast-match-team.away {
-  justify-content: flex-end;
-  text-align: right;
+  justify-content: center;
+  text-align: center;
 }
 
 .broadcast-match-mid {
@@ -6719,7 +6760,7 @@ body.bg-none::before {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-width: 48px;
+  min-width: 74px;
 }
 
 .broadcast-match-vs {

@@ -712,6 +712,10 @@ export default function ProjectorView() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
               >
+                {/* Floating Pill Header */}
+                <div className="broadcast-card-header red">
+                  <h3>{pot.name}</h3>
+                </div>
                 {/* Card Body */}
                 <div className="broadcast-card-body">
                   {pot.teams.map((team) => {
@@ -1903,6 +1907,19 @@ export default function ProjectorView() {
 
   // ============ MATCHES BROADCAST VIEW ============
   const renderMatchesBroadcastView = () => {
+    const renderBroadcastTeamName = (name: string) => {
+      const words = name.trim().split(/\s+/).filter(Boolean);
+      if (words.length === 2) {
+        return (
+          <span className="broadcast-team-name two-rows">
+            <span>{words[0]}</span>
+            <span>{words[1]}</span>
+          </span>
+        );
+      }
+      return <span className="broadcast-team-name">{name}</span>;
+    };
+
     const rounds = [...new Set(matches.map(m => m.round))].sort();
     const groupLetters = [...new Set(matches.map(m => m.group))].sort();
 
@@ -1967,7 +1984,7 @@ export default function ProjectorView() {
                               {homeTeam ? (
                                 <>
                                   <FlagImg src={homeTeam.customFlagImage} code={homeTeam.countryCode} size="sm" className="broadcast-team-flag" />
-                                  <span className="broadcast-team-name">{homeTeam.name}</span>
+                                  {renderBroadcastTeamName(homeTeam.name)}
                                 </>
                               ) : (
                                 <span className="broadcast-slot-label">{match.homePlaceholder}</span>
@@ -1982,7 +1999,7 @@ export default function ProjectorView() {
                             <div className="broadcast-match-team away">
                               {awayTeam ? (
                                 <>
-                                  <span className="broadcast-team-name">{awayTeam.name}</span>
+                                  {renderBroadcastTeamName(awayTeam.name)}
                                   <FlagImg src={awayTeam.customFlagImage} code={awayTeam.countryCode} size="sm" className="broadcast-team-flag" />
                                 </>
                               ) : (

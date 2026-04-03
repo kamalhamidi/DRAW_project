@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTournamentStore, type Match, type RoundConfig } from "zustand/tournament-store";
 import { africaCountries } from "data/africaCountries";
@@ -110,6 +110,13 @@ export default function TournamentManager() {
   const [savedTournaments, setSavedTournaments] = useState<SavedTournament[]>([]);
   const [showSavePanel, setShowSavePanel] = useState(false);
   const [saveName, setSaveName] = useState("");
+
+  const settingsButtonRef = useRef<HTMLButtonElement | null>(null);
+  const saveButtonRef = useRef<HTMLButtonElement | null>(null);
+  const matchesButtonRef = useRef<HTMLButtonElement | null>(null);
+  const settingsPanelRef = useRef<HTMLDivElement | null>(null);
+  const savePanelRef = useRef<HTMLDivElement | null>(null);
+  const matchesPanelRef = useRef<HTMLDivElement | null>(null);
 
   // Custom Confirm Modal
   const [confirmModal, setConfirmModal] = useState<{
@@ -319,6 +326,34 @@ export default function TournamentManager() {
     // Initialize Broadcast Channel
     broadcastChannelRef.current = new BroadcastChannel("draw_sync");
   }, []);
+
+  useEffect(() => {
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node | null;
+      if (!target) return;
+
+      const clickedSettingsPanel = settingsPanelRef.current?.contains(target);
+      const clickedSettingsButton = settingsButtonRef.current?.contains(target);
+      if (showProjectorSettings && !clickedSettingsPanel && !clickedSettingsButton) {
+        setShowProjectorSettings(false);
+      }
+
+      const clickedSavePanel = savePanelRef.current?.contains(target);
+      const clickedSaveButton = saveButtonRef.current?.contains(target);
+      if (showSavePanel && !clickedSavePanel && !clickedSaveButton) {
+        setShowSavePanel(false);
+      }
+
+      const clickedMatchesPanel = matchesPanelRef.current?.contains(target);
+      const clickedMatchesButton = matchesButtonRef.current?.contains(target);
+      if (showMatchesPanel && !clickedMatchesPanel && !clickedMatchesButton) {
+        setShowMatchesPanel(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [showProjectorSettings, showSavePanel, showMatchesPanel]);
 
   useEffect(() => {
     document.body.classList.remove("bg-slide", "bg-zoom", "bg-fade", "bg-none");
@@ -573,6 +608,7 @@ export default function TournamentManager() {
             </motion.button>
             {matches.length > 0 && (
               <motion.button
+                ref={matchesButtonRef}
                 className={`navbar-btn navbar-btn-matches ${showMatchesPanel ? "active" : ""}`}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -583,6 +619,7 @@ export default function TournamentManager() {
               </motion.button>
             )}
             <motion.button
+              ref={settingsButtonRef}
               className={`navbar-btn navbar-btn-settings ${showProjectorSettings ? "active" : ""}`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -596,6 +633,7 @@ export default function TournamentManager() {
               ⚙️
             </motion.button>
             <motion.button
+              ref={saveButtonRef}
               className={`navbar-btn navbar-btn-save ${showSavePanel ? "active" : ""}`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -627,6 +665,7 @@ export default function TournamentManager() {
         <AnimatePresence>
           {showProjectorSettings && (
             <motion.div
+              ref={settingsPanelRef}
               className="projector-settings-panel"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
@@ -1069,6 +1108,7 @@ export default function TournamentManager() {
         <AnimatePresence>
           {showSavePanel && (
             <motion.div
+              ref={savePanelRef}
               className="save-panel"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
@@ -1147,6 +1187,7 @@ export default function TournamentManager() {
         <AnimatePresence>
           {showMatchesPanel && matches.length > 0 && (
             <motion.div
+              ref={matchesPanelRef}
               className="matches-panel"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
