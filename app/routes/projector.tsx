@@ -64,6 +64,7 @@ export default function ProjectorView() {
   const [footerText, setFooterText] = useState<string>("");
   const [footerSize, setFooterSize] = useState<number>(1.1);
   const [teamFontScale, setTeamFontScale] = useState<number>(1);
+  const [potFontScale, setPotFontScale] = useState<number>(1);
   const [showSpotlight, setShowSpotlight] = useState(true);
   const [selectedTeamColors, setSelectedTeamColors] = useState<[string, string]>(["#ffffff", "#cccccc"]);
   const [matches, setMatches] = useState<Match[]>([]);
@@ -78,7 +79,7 @@ export default function ProjectorView() {
     const channel = new BroadcastChannel("draw_sync");
 
     const handleMessage = (event: MessageEvent) => {
-      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, showSpotlight, matches: incomingMatches, roundNotes: incomingRoundNotes, projectorDisplayMode: incomingDisplayMode, matchesLayout: incomingMatchesLayout } = event.data;
+      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale: incomingPotFontScale, showSpotlight, matches: incomingMatches, roundNotes: incomingRoundNotes, projectorDisplayMode: incomingDisplayMode, matchesLayout: incomingMatchesLayout } = event.data;
       setDrawState({
         pots: pots || [],
         groups: groups || [],
@@ -111,6 +112,9 @@ export default function ProjectorView() {
       }
       if (teamFontScale !== undefined) {
         setTeamFontScale(teamFontScale);
+      }
+      if (incomingPotFontScale !== undefined) {
+        setPotFontScale(incomingPotFontScale);
       }
       if (showSpotlight !== undefined) {
         setShowSpotlight(showSpotlight);
@@ -1305,7 +1309,7 @@ export default function ProjectorView() {
             >
               {pots.map((pot) => (
                 <div key={pot.id} className="cine-pot-tab">
-                  <span className="cine-pot-tab-name">{pot.name}</span>
+                    <span className="cine-pot-tab-name">{pot.name}</span>
                   <div className="cine-pot-tab-teams">
                     {pot.teams.map((team) => (
                       <motion.span
@@ -2045,7 +2049,10 @@ export default function ProjectorView() {
   return (
     <div
       className={containerClass}
-      style={{ "--projector-team-font-scale": teamFontScale } as React.CSSProperties}
+      style={{
+        "--projector-team-font-scale": teamFontScale,
+        "--projector-pot-font-scale": potFontScale,
+      } as React.CSSProperties}
     >
       <AnimatePresence mode="wait">
         {/* Matches Display Mode */}
