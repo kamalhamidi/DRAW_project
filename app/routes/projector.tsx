@@ -906,11 +906,11 @@ export default function ProjectorView() {
         </AnimatePresence>
 
         {/* Decorative Divider */}
-        <div className="gala-divider">
+        {/* <div className="gala-divider">
           <span className="gala-divider-line" />
           <span className="gala-divider-diamond">◇</span>
           <span className="gala-divider-line" />
-        </div>
+        </div> */}
 
         {/* Two-Panel Content */}
         <div className={`gala-content ${!drawState.showProjectorPots ? 'pots-hidden' : ''}`}>
