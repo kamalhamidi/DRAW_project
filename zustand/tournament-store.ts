@@ -55,6 +55,8 @@ interface TournamentState {
   assignTeamToSlot: (groupId: number, slotIndex: number) => void;
   removeTeamFromSlot: (groupId: number, slotIndex: number) => void;
   removeTeamFromPot: (potId: number, teamId: number) => void;
+  moveTeamInPot: (potId: number, teamId: number, direction: 'up' | 'down') => void;
+  reorderTeamInPot: (potId: number, draggedTeamId: number, targetTeamId: number) => void;
   deletePot: (potId: number) => void;
   updatePotName: (potId: number, newName: string) => void;
   finalizePots: () => void;
@@ -113,6 +115,45 @@ export const useTournamentStore = create<TournamentState>()(
                 : pot
             )
             .filter((pot) => pot.teams.length > 0); // Remove empty pots
+          return { pots: updatedPots };
+        });
+      },
+
+      moveTeamInPot: (potId: number, teamId: number, direction: 'up' | 'down') => {
+        set((state) => {
+          const updatedPots = state.pots.map((pot) => {
+            if (pot.id !== potId) return pot;
+
+            const currentIndex = pot.teams.findIndex((t) => t.id === teamId);
+            if (currentIndex < 0) return pot;
+
+            const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+            if (targetIndex < 0 || targetIndex >= pot.teams.length) return pot;
+
+            const nextTeams = [...pot.teams];
+            [nextTeams[currentIndex], nextTeams[targetIndex]] = [nextTeams[targetIndex], nextTeams[currentIndex]];
+            return { ...pot, teams: nextTeams };
+          });
+
+          return { pots: updatedPots };
+        });
+      },
+
+      reorderTeamInPot: (potId: number, draggedTeamId: number, targetTeamId: number) => {
+        set((state) => {
+          const updatedPots = state.pots.map((pot) => {
+            if (pot.id !== potId) return pot;
+
+            const fromIndex = pot.teams.findIndex((t) => t.id === draggedTeamId);
+            const toIndex = pot.teams.findIndex((t) => t.id === targetTeamId);
+            if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) return pot;
+
+            const reordered = [...pot.teams];
+            const [dragged] = reordered.splice(fromIndex, 1);
+            reordered.splice(toIndex, 0, dragged);
+            return { ...pot, teams: reordered };
+          });
+
           return { pots: updatedPots };
         });
       },

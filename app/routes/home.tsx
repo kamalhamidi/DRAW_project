@@ -47,6 +47,7 @@ export default function TournamentManager() {
     assignTeamToSlot,
     removeTeamFromSlot,
     removeTeamFromPot,
+    reorderTeamInPot,
     deletePot,
     updatePotName,
     setRoundConfig,
@@ -112,6 +113,8 @@ export default function TournamentManager() {
   const [savedTournaments, setSavedTournaments] = useState<SavedTournament[]>([]);
   const [showSavePanel, setShowSavePanel] = useState(false);
   const [saveName, setSaveName] = useState("");
+  const [draggedPotTeam, setDraggedPotTeam] = useState<{ potId: number; teamId: number } | null>(null);
+  const [dragOverPotTeam, setDragOverPotTeam] = useState<{ potId: number; teamId: number } | null>(null);
 
   const settingsButtonRef = useRef<HTMLButtonElement | null>(null);
   const saveButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -1539,7 +1542,32 @@ export default function TournamentManager() {
                             </div>
                             <div className="teams-list">
                               {pot.teams.map((team) => (
-                                <div key={team.id} className="team-card">
+                                <div
+                                  key={team.id}
+                                  className={`team-card ${draggedPotTeam?.potId === pot.id && draggedPotTeam?.teamId === team.id ? "dragging" : ""} ${dragOverPotTeam?.potId === pot.id && dragOverPotTeam?.teamId === team.id ? "drag-over" : ""}`}
+                                  draggable
+                                  onDragStart={() => {
+                                    setDraggedPotTeam({ potId: pot.id, teamId: team.id });
+                                    setDragOverPotTeam(null);
+                                  }}
+                                  onDragOver={(e) => {
+                                    if (draggedPotTeam?.potId !== pot.id || draggedPotTeam.teamId === team.id) return;
+                                    e.preventDefault();
+                                    setDragOverPotTeam({ potId: pot.id, teamId: team.id });
+                                  }}
+                                  onDrop={(e) => {
+                                    e.preventDefault();
+                                    if (!draggedPotTeam) return;
+                                    if (draggedPotTeam.potId !== pot.id || draggedPotTeam.teamId === team.id) return;
+                                    reorderTeamInPot(pot.id, draggedPotTeam.teamId, team.id);
+                                    setDraggedPotTeam(null);
+                                    setDragOverPotTeam(null);
+                                  }}
+                                  onDragEnd={() => {
+                                    setDraggedPotTeam(null);
+                                    setDragOverPotTeam(null);
+                                  }}
+                                >
                                   <FlagImg src={team.customFlagImage} code={team.countryCode} size="sm" className="team-flag-img" />
                                   <span className="team-name-text">{team.name}</span>
                                   <motion.button

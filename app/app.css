@@ -1423,7 +1423,7 @@ body.bg-none::before {
   font-weight: 700;
   text-transform: uppercase;
   border: 1.5px solid rgba(255, 255, 255, 0.12);
-  cursor: default;
+  cursor: grab;
   transition: all 0.2s ease;
   display: flex;
   flex-direction: row;
@@ -1431,6 +1431,17 @@ body.bg-none::before {
   justify-content: flex-start;
   gap: 0.6rem;
   position: relative;
+}
+
+.team-card.dragging {
+  opacity: 0.45;
+  cursor: grabbing;
+}
+
+.team-card.drag-over {
+  border-color: var(--color-accent-2);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent-2) 35%, transparent);
+  background: color-mix(in srgb, var(--color-accent-2) 12%, rgba(255, 255, 255, 0.05));
 }
 
 .team-card:hover {
