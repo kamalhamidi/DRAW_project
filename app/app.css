@@ -593,6 +593,39 @@ body.bg-none::before {
   gap: 0.4rem;
 }
 
+.settings-layout-option-card {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 0.6rem 0.7rem;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.settings-inline-field-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.settings-inline-field-label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.settings-input.settings-inline-number {
+  min-width: 0;
+  width: 88px;
+  text-align: center;
+  padding-inline: 0.55rem;
+}
+
+.settings-inline-help {
+  margin: 0;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
 .settings-label {
   font-size: 0.65rem;
   font-weight: 800;
@@ -3220,16 +3253,28 @@ body.bg-none::before {
   display: flex;
   justify-content: center;
   gap: 30px;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   width: 100%;
 }
 
 .broadcast-pots-section {
   margin-bottom: 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: visible;
+  padding-bottom: 6px;
+  padding-inline: 8px 20px;
+  justify-content: flex-start;
+}
+
+.broadcast-pots-section::after {
+  content: "";
+  flex: 0 0 12px;
 }
 
 .broadcast-groups-section {
   margin-top: 100px;
+  flex-wrap: nowrap;
 }
 
 /* ---- Broadcast Card ---- */
@@ -3245,6 +3290,41 @@ body.bg-none::before {
   border: none;
   margin-top: 20px;
   /* offset for the floating header */
+}
+
+.broadcast-pots-section .broadcast-pot-card {
+  flex: 1 1 min(96vw, calc(50px + (var(--broadcast-pot-cols, 2) * 190px)));
+  min-width: min(100%, 360px);
+  max-width: min(96vw, calc(50px + (var(--broadcast-pot-cols, 2) * 190px)));
+}
+
+.broadcast-pots-section .broadcast-pot-card[data-pot-cols="1"] {
+  flex: 0 0 340px;
+  min-width: 340px;
+  max-width: 340px;
+}
+
+.broadcast-pots-section .broadcast-pot-card[data-pot-cols="2"] {
+  flex: 1 1 420px;
+  min-width: 360px;
+  max-width: 560px;
+}
+
+.broadcast-pots-section.rows-one-cards {
+  max-width: min(100%, calc(340px * 4 + 30px * 3));
+  margin-inline: auto;
+  flex-wrap: nowrap;
+  justify-content: center;
+}
+
+.broadcast-pots-section.rows-one-cards .broadcast-pot-card {
+  flex: 0 0 auto;
+}
+
+.broadcast-groups-section .broadcast-card {
+  flex: 0 0 340px;
+  min-width: 0;
+  max-width: none;
 }
 
 .broadcast-card.complete {
@@ -3297,6 +3377,26 @@ body.bg-none::before {
   gap: 0.35rem;
 }
 
+.broadcast-card-body-pot-grid {
+  display: grid;
+  grid-template-rows: repeat(var(--broadcast-pot-rows, 1), minmax(0, auto));
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(170px, 1fr);
+  gap: 0.4rem 0.65rem;
+  align-items: start;
+  justify-content: center;
+  max-width: 100%;
+}
+
+.broadcast-card-body-pot-grid .broadcast-team-row {
+  width: auto;
+  min-width: 150px;
+}
+
+.broadcast-card-body-pot-grid .broadcast-empty-text {
+  grid-column: 1 / -1;
+}
+
 /* ---- Team Rows ---- */
 .broadcast-team-row {
   display: flex;
@@ -3306,6 +3406,7 @@ body.bg-none::before {
   border-radius: 10px;
   transition: all 0.2s ease;
   width: 100%;
+  min-height: 42px;
 }
 
 .broadcast-team-row.selected {
@@ -3345,6 +3446,13 @@ body.bg-none::before {
 }
 
 .broadcast-team-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: block;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.2;
   font-size: calc(1.05rem * var(--projector-team-font-scale));
   font-weight: 800;
   color: #fff;
@@ -3411,7 +3519,8 @@ body.bg-none::before {
   }
 
   .broadcast-card {
-    max-width: 300px;
+    min-width: min(100%, 320px);
+    max-width: 100%;
   }
 
   .broadcast-groups-section {
@@ -6722,17 +6831,24 @@ body.bg-none::before {
   gap: 0.55rem;
   min-width: 0;
   overflow: visible;
+  min-height: 42px;
 }
 
 .broadcast-match-team .broadcast-team-name {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
   min-width: 0;
+  min-height: 2.04em;
+  width: auto;
+  max-width: 100%;
   max-width: none;
-  white-space: nowrap;
+  white-space: normal;
   overflow: visible;
   text-overflow: clip;
-  overflow-wrap: normal;
-  word-break: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
   line-height: 1.1;
   font-size: calc(0.9rem * var(--projector-team-font-scale));
 }

@@ -65,6 +65,7 @@ export default function ProjectorView() {
   const [footerSize, setFooterSize] = useState<number>(1.1);
   const [teamFontScale, setTeamFontScale] = useState<number>(1);
   const [potFontScale, setPotFontScale] = useState<number>(1);
+  const [broadcastPotRows, setBroadcastPotRows] = useState<number>(6);
   const [showSpotlight, setShowSpotlight] = useState(true);
   const [selectedTeamColors, setSelectedTeamColors] = useState<[string, string]>(["#ffffff", "#cccccc"]);
   const [matches, setMatches] = useState<Match[]>([]);
@@ -79,7 +80,7 @@ export default function ProjectorView() {
     const channel = new BroadcastChannel("draw_sync");
 
     const handleMessage = (event: MessageEvent) => {
-      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale: incomingPotFontScale, showSpotlight, matches: incomingMatches, roundNotes: incomingRoundNotes, projectorDisplayMode: incomingDisplayMode, matchesLayout: incomingMatchesLayout } = event.data;
+      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale: incomingPotFontScale, broadcastPotRows: incomingBroadcastPotRows, showSpotlight, matches: incomingMatches, roundNotes: incomingRoundNotes, projectorDisplayMode: incomingDisplayMode, matchesLayout: incomingMatchesLayout } = event.data;
       setDrawState({
         pots: pots || [],
         groups: groups || [],
@@ -115,6 +116,9 @@ export default function ProjectorView() {
       }
       if (incomingPotFontScale !== undefined) {
         setPotFontScale(incomingPotFontScale);
+      }
+      if (incomingBroadcastPotRows !== undefined) {
+        setBroadcastPotRows(incomingBroadcastPotRows);
       }
       if (showSpotlight !== undefined) {
         setShowSpotlight(showSpotlight);
@@ -703,15 +707,25 @@ export default function ProjectorView() {
         {/* Pots Section */}
         {pots.length > 0 && drawState.showProjectorPots && (
           <motion.div
-            className="broadcast-section broadcast-pots-section"
+            className={`broadcast-section broadcast-pots-section ${broadcastPotRows === 1 ? "rows-one-cards" : ""}`}
             initial={{ opacity: 0, y: -30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
             {pots.map((pot, index) => (
+              (() => {
+                const safeRows = Math.max(1, Math.min(broadcastPotRows, Math.max(1, pot.teams.length)));
+                const safeCols = Math.max(1, Math.ceil(pot.teams.length / safeRows));
+
+                return (
               <motion.div
                 key={pot.id}
-                className="broadcast-card"
+                className="broadcast-card broadcast-pot-card"
+                data-pot-cols={safeCols}
+                data-pot-rows={safeRows}
+                style={{
+                  "--broadcast-pot-cols": safeCols,
+                } as React.CSSProperties}
                 initial={{ opacity: 0, y: 25 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
@@ -721,7 +735,13 @@ export default function ProjectorView() {
                   <h3>{pot.name}</h3>
                 </div>
                 {/* Card Body */}
-                <div className="broadcast-card-body">
+                <div
+                  className="broadcast-card-body broadcast-card-body-pot-grid"
+                  style={{
+                    "--broadcast-pot-rows": safeRows,
+                    "--broadcast-pot-cols": safeCols,
+                  } as React.CSSProperties}
+                >
                   {pot.teams.map((team) => {
                     const isAssigned = team.assigned || assignedTeamIds.has(team.id);
 
@@ -744,6 +764,8 @@ export default function ProjectorView() {
                   )}
                 </div>
               </motion.div>
+                );
+              })()
             ))}
           </motion.div>
         )}
@@ -1081,7 +1103,7 @@ export default function ProjectorView() {
             {competitionLogo && <img src={competitionLogo} alt="" className="projector-logo minimal-logo" style={{ height: `${logoSize}px` }} />}
             {projectorTitle.trim() && <h1 className="minimal-title">{projectorTitle}</h1>}
           </div>
-          {(pots.length > 0 || groups.length > 0) && (
+          {/* {(pots.length > 0 || groups.length > 0) && (
             <div className="minimal-progress">
               <span className="minimal-progress-text">
                 {allTeamsAssigned ? "Complete" : "In Progress"}
@@ -1095,7 +1117,7 @@ export default function ProjectorView() {
                 />
               </div>
             </div>
-          )}
+          )} */}
         </motion.header>
 
         {/* Selected Team Banner */}

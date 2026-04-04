@@ -22,6 +22,7 @@ interface SavedTournament {
   footerSize: number;
   teamFontScale: number;
   potFontScale: number;
+  broadcastPotRows?: number;
   showSpotlight: boolean;
   showProjectorPots: boolean;
   colorMode: string;
@@ -87,6 +88,7 @@ export default function TournamentManager() {
   const [footerSize, setFooterSize] = useState<number>(1.1);
   const [teamFontScale, setTeamFontScale] = useState<number>(1);
   const [potFontScale, setPotFontScale] = useState<number>(1);
+  const [broadcastPotRows, setBroadcastPotRows] = useState<number>(6);
   const [showSpotlight, setShowSpotlight] = useState(true);
   const [colorMode, setColorMode] = useState<"auto" | "manual">("manual");
 
@@ -214,6 +216,7 @@ export default function TournamentManager() {
         if (s.footerSize !== undefined) setFooterSize(s.footerSize);
         if (s.teamFontScale !== undefined) setTeamFontScale(s.teamFontScale);
         if (s.potFontScale !== undefined) setPotFontScale(s.potFontScale);
+        if (s.broadcastPotRows !== undefined) setBroadcastPotRows(s.broadcastPotRows);
         if (s.showSpotlight !== undefined) setShowSpotlight(s.showSpotlight);
         if (s.colorMode) setColorMode(s.colorMode);
         if (s.manualPalette) setManualPalette(s.manualPalette);
@@ -240,6 +243,7 @@ export default function TournamentManager() {
       footerSize,
       teamFontScale,
       potFontScale,
+      broadcastPotRows,
       showSpotlight,
       colorMode,
       manualPalette,
@@ -249,7 +253,7 @@ export default function TournamentManager() {
       roundNotes,
     };
     localStorage.setItem("tournament-settings", JSON.stringify(settings));
-  }, [hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, showSpotlight, colorMode, manualPalette, currentPhase, projectorDisplayMode, matchesLayout, roundNotes]);
+  }, [hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, colorMode, manualPalette, currentPhase, projectorDisplayMode, matchesLayout, roundNotes]);
 
   const saveTournament = useCallback(() => {
     if (!saveName.trim()) return;
@@ -270,6 +274,7 @@ export default function TournamentManager() {
       footerSize,
       teamFontScale,
       potFontScale,
+      broadcastPotRows,
       showSpotlight,
       showProjectorPots,
       colorMode,
@@ -282,7 +287,7 @@ export default function TournamentManager() {
     setSavedTournaments(updated);
     localStorage.setItem("saved-tournaments", JSON.stringify(updated));
     setSaveName("");
-  }, [saveName, pots, groups, potsFinalized, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, showSpotlight, showProjectorPots, colorMode, manualPalette, numberOfGroups, teamsPerGroup, roundNotes, savedTournaments]);
+  }, [saveName, pots, groups, potsFinalized, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, showProjectorPots, colorMode, manualPalette, numberOfGroups, teamsPerGroup, roundNotes, savedTournaments]);
 
   const loadTournament = useCallback((preset: SavedTournament) => {
     showConfirm(
@@ -308,6 +313,7 @@ export default function TournamentManager() {
         setFooterSize(preset.footerSize);
         setTeamFontScale(preset.teamFontScale ?? 1);
         setPotFontScale(preset.potFontScale ?? 1);
+        setBroadcastPotRows(preset.broadcastPotRows ?? 6);
         setShowSpotlight(preset.showSpotlight);
         setShowProjectorPots(preset.showProjectorPots);
         setColorMode(preset.colorMode as any);
@@ -418,6 +424,7 @@ export default function TournamentManager() {
         footerSize,
         teamFontScale,
         potFontScale,
+        broadcastPotRows,
         showSpotlight,
         matches,
         roundNotes,
@@ -425,7 +432,7 @@ export default function TournamentManager() {
         matchesLayout,
       });
     }
-  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, showSpotlight, matches, roundNotes, projectorDisplayMode, matchesLayout]);
+  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, matches, roundNotes, projectorDisplayMode, matchesLayout]);
 
   const handleCreatePot = (e: React.FormEvent) => {
     e.preventDefault();
@@ -894,6 +901,29 @@ export default function TournamentManager() {
                               ))}
                             </div>
                           </div>
+
+                          {projectorLayout === "broadcast" && (
+                            <div className="settings-group settings-layout-option-card">
+                              <label className="settings-label">Broadcast Layout Options</label>
+                              <div className="settings-inline-field-row">
+                                <label className="settings-inline-field-label" htmlFor="broadcast-pot-rows-input">
+                                  Pot Rows
+                                </label>
+                                <input
+                                  id="broadcast-pot-rows-input"
+                                  type="number"
+                                  min={1}
+                                  max={12}
+                                  className="settings-input settings-inline-number"
+                                  value={broadcastPotRows}
+                                  onChange={(e) => setBroadcastPotRows(Math.max(1, Math.min(12, parseInt(e.target.value) || 1)))}
+                                />
+                              </div>
+                              <p className="settings-inline-help">
+                                Set rows per pot card. Columns are calculated automatically.
+                              </p>
+                            </div>
+                          )}
 
                           <div className="settings-group">
                             <label className="settings-label">Background Animation</label>
