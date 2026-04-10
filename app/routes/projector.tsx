@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import html2canvas from "html2canvas";
 import { applyColorPalette, resetColorPalette, extractColorsFromImage, type ColorPalette } from "~/utils/extractColors";
 import { getTeamColors } from "../../data/countryColors";
 import { FlagImg } from "~/components/FlagImg";
@@ -47,6 +48,8 @@ interface DrawState {
 }
 
 export default function ProjectorView() {
+  const projectorCaptureRef = useRef<HTMLDivElement | null>(null);
+  const isExportingRef = useRef(false);
   const [drawState, setDrawState] = useState<DrawState>({
     pots: [],
     groups: [],
@@ -73,14 +76,87 @@ export default function ProjectorView() {
   const [projectorDisplayMode, setProjectorDisplayMode] = useState<"groups" | "matches">("groups");
   const [matchesLayout, setMatchesLayout] = useState<"default" | "gala" | "ultra" | "broadcast">("default");
 
+  const exportProjectorImage = async () => {
+    if (!projectorCaptureRef.current) return;
+    if (isExportingRef.current) return;
+
+    isExportingRef.current = true;
+
+    try {
+      const canvas = await html2canvas(projectorCaptureRef.current, {
+        useCORS: true,
+        backgroundColor: null,
+        scale: Math.max(1, Math.min(2, window.devicePixelRatio || 1)),
+        windowWidth: projectorCaptureRef.current.clientWidth || window.innerWidth,
+        windowHeight: projectorCaptureRef.current.clientHeight || window.innerHeight,
+        onclone: (clonedDoc) => {
+          const cloneRoot = clonedDoc.getElementById("projector-export-root") as HTMLDivElement | null;
+          if (cloneRoot) {
+            cloneRoot.style.backgroundImage = `url("${bgImage}")`;
+            cloneRoot.style.backgroundSize = "cover";
+            cloneRoot.style.backgroundPosition = "center center";
+            cloneRoot.style.backgroundRepeat = "no-repeat";
+
+            cloneRoot.querySelectorAll<HTMLElement>("*").forEach((el) => {
+              el.style.animation = "none";
+              el.style.transition = "none";
+              if (el.style.opacity === "0") {
+                el.style.opacity = "1";
+              }
+              if (el.style.transform && el.style.transform !== "none") {
+                el.style.transform = "none";
+              }
+            });
+          }
+        },
+      });
+
+      const rawTitle = (projectorTitle || "projector-design").trim().toLowerCase();
+      const slugTitle = rawTitle
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "") || "projector-design";
+      const timestamp = new Date().toISOString().replace(/[.:]/g, "-");
+      const fileName = `${slugTitle}-${timestamp}.png`;
+
+      const blob = await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob((value) => resolve(value), "image/png", 1);
+      });
+
+      if (!blob) {
+        throw new Error("Could not generate image blob");
+      }
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      link.rel = "noopener";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+
+      const feedback = new BroadcastChannel("draw_sync");
+      feedback.postMessage({ event: "export-projector-image-result", ok: true, fileName });
+      feedback.close();
+    } catch (error) {
+      console.error("Failed to export projector image:", error);
+      const feedback = new BroadcastChannel("draw_sync");
+      feedback.postMessage({ event: "export-projector-image-result", ok: false });
+      feedback.close();
+    } finally {
+      isExportingRef.current = false;
+    }
+  };
+
   useEffect(() => {
     setHydrated(true);
 
     // Subscribe to the Broadcast Channel
     const channel = new BroadcastChannel("draw_sync");
 
-    const handleMessage = (event: MessageEvent) => {
-      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale: incomingPotFontScale, broadcastPotRows: incomingBroadcastPotRows, showSpotlight, matches: incomingMatches, roundNotes: incomingRoundNotes, projectorDisplayMode: incomingDisplayMode, matchesLayout: incomingMatchesLayout } = event.data;
+    const applyIncomingState = (data: any) => {
+      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale: incomingPotFontScale, broadcastPotRows: incomingBroadcastPotRows, showSpotlight, matches: incomingMatches, roundNotes: incomingRoundNotes, projectorDisplayMode: incomingDisplayMode, matchesLayout: incomingMatchesLayout } = data;
       setDrawState({
         pots: pots || [],
         groups: groups || [],
@@ -141,6 +217,26 @@ export default function ProjectorView() {
       } else {
         resetColorPalette();
       }
+    };
+
+    try {
+      const persisted = localStorage.getItem("projector-last-state");
+      if (persisted) {
+        applyIncomingState(JSON.parse(persisted));
+      }
+    } catch {
+      // Ignore invalid persisted projector state
+    }
+
+    const handleMessage = (event: MessageEvent) => {
+      const data = event.data || {};
+
+      if (data.command === "export-projector-image") {
+        void exportProjectorImage();
+        return;
+      }
+
+      applyIncomingState(data);
     };
 
     channel.addEventListener("message", handleMessage);
@@ -1288,222 +1384,210 @@ export default function ProjectorView() {
     );
   };
 
-  // ============ CINEMATIC LAYOUT ============
+  // ============ CINEMATIC LAYOUT ==========
   const renderCinematicLayout = () => {
-    const maxSlots = groups.length > 0 ? Math.max(...groups.map(g => g.capacity)) : 0;
+    const maxSlots = groups.length > 0 ? Math.max(...groups.map((group) => group.capacity)) : 0;
+    const spotlightActive = showSpotlight && selectedTeam !== null;
 
     return (
       <div className="cine-wrapper">
-        {/* Film grain */}
         <div className="cine-grain" />
-        {/* Letterbox bars */}
-        <div className="cine-bar cine-bar-top" />
-        <div className="cine-bar cine-bar-bottom" />
-        {/* Floating bokeh */}
         <div className="cine-bokeh">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <span key={i} className={`cine-orb cine-orb-${i + 1}`} />
+          {Array.from({ length: 8 }).map((_, index) => (
+            <span key={index} className={`cine-orb cine-orb-${index + 1}`} />
           ))}
         </div>
 
-        {/* Logo + Title — centered */}
-        <motion.div
-          className="cine-brand"
-          initial={{ opacity: 0, y: -30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, ease: "easeOut" }}
-        >
-          {competitionLogo && (
-            <img src={competitionLogo} alt="" className="projector-logo cine-brand-logo" style={{ height: `${logoSize}px` }} />
-          )}
-          {projectorTitle.trim() && <h1 className="cine-brand-title">{projectorTitle}</h1>}
-        </motion.div>
-
-        {/* Pots — horizontal compact tabs at top */}
-        <AnimatePresence>
-          {drawState.showProjectorPots && pots.length > 0 && (
-            <motion.div
-              className="cine-pots-strip"
-              initial={{ opacity: 0, y: -15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.4 }}
-            >
-              {pots.map((pot) => (
-                <div key={pot.id} className="cine-pot-tab">
-                    <span className="cine-pot-tab-name">{pot.name}</span>
-                  <div className="cine-pot-tab-teams">
-                    {pot.teams.map((team) => (
-                      <motion.span
-                        key={team.id}
-                        className={`cine-pot-pill ${selectedTeam?.id === team.id ? "active" : ""} ${team.assigned ? "used" : ""}`}
-                        layout
-                      >
-                        <FlagImg src={team.customFlagImage} code={team.countryCode} size="xs" className="cine-pot-pill-flag" />
-                        <span className="cine-pot-pill-name">{team.name}</span>
-                      </motion.span>
-                    ))}
-                    {pot.teams.length === 0 && (
-                      <span className="cine-pot-tab-done">✓</span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Selected Team — FULL SCREEN TAKEOVER */}
-        <AnimatePresence mode="wait">
-          {selectedTeam && (() => {
-            const [tc1, tc2] = selectedTeamColors;
-            return (
-              <motion.div
-                key={`cine-take-${selectedTeam.id}`}
-                className="cine-takeover"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                style={{
-                  "--cine-tc1": tc1,
-                  "--cine-tc2": tc2,
-                } as React.CSSProperties}
-              >
-                <motion.div
-                  className="cine-takeover-inner"
-                  initial={{ scale: 0.5, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 1.15, opacity: 0 }}
-                  transition={{ type: "spring", stiffness: 200, damping: 20 }}
-                >
-                  <div className="cine-takeover-glow" />
-                  <motion.div
-                    className="cine-takeover-flag"
-                    initial={{ scale: 0, rotate: -20 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    transition={{ type: "spring", stiffness: 250, damping: 15, delay: 0.1 }}
-                  >
-                    <FlagImg src={selectedTeam.customFlagImage} code={selectedTeam.countryCode} size="xl" />
-                  </motion.div>
-                  <motion.span
-                    className="cine-takeover-name"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.2 }}
-                  >
-                    {selectedTeam.name}
-                  </motion.span>
-                </motion.div>
-              </motion.div>
-            );
-          })()}
-        </AnimatePresence>
-
-        {/* THE DRAW BOARD — unified table, groups as columns */}
-        {groups.length > 0 && (
+        <div className={`cine-backdrop ${spotlightActive ? "dimmed" : ""}`}>
           <motion.div
-            className="cine-board"
-            initial={{ opacity: 0, y: 30 }}
+            className="cine-brand"
+            initial={{ opacity: 0, y: -30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.15 }}
+            transition={{ duration: 1, ease: "easeOut" }}
           >
-            <table className="cine-table">
-              <thead>
-                <tr>
-                  {groups.map((group) => {
-                    const filled = group.teams.filter(t => t !== null).length;
-                    const done = filled === group.capacity;
-                    return (
-                      <th key={group.id} className={done ? "complete" : ""}>
-                        <span className="cine-th-name">{group.name}</span>
-                        <span className={`cine-th-count ${done ? "done" : ""}`}>{filled}/{group.capacity}</span>
-                      </th>
-                    );
-                  })}
-                </tr>
-              </thead>
-              <tbody>
-                {Array.from({ length: maxSlots }).map((_, rowIdx) => (
-                  <tr key={rowIdx}>
+            {competitionLogo && (
+              <img src={competitionLogo} alt="" className="projector-logo cine-brand-logo" style={{ height: `${logoSize}px` }} />
+            )}
+            {projectorTitle.trim() && <h1 className="cine-brand-title">{projectorTitle}</h1>}
+          </motion.div>
+
+          <AnimatePresence>
+            {drawState.showProjectorPots && pots.length > 0 && (
+              <motion.div
+                className="cine-pots-strip"
+                initial={{ opacity: 0, y: -15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.4 }}
+              >
+                {pots.map((pot) => (
+                  <div key={pot.id} className="cine-pot-tab">
+                    <span className="cine-pot-tab-name">{pot.name}</span>
+                    <div className="cine-pot-tab-teams">
+                      {pot.teams.map((team) => (
+                        <motion.span
+                          key={team.id}
+                          className={`cine-pot-pill ${selectedTeam?.id === team.id ? "active" : ""} ${team.assigned ? "used" : ""}`}
+                          layout
+                        >
+                          <FlagImg src={team.customFlagImage} code={team.countryCode} size="xs" className="cine-pot-pill-flag" />
+                          <span className="cine-pot-pill-name">{team.name}</span>
+                        </motion.span>
+                      ))}
+                      {pot.teams.length === 0 && <span className="cine-pot-tab-done">✓</span>}
+                    </div>
+                  </div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {groups.length > 0 && (
+            <motion.div
+              className="cine-board"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.15 }}
+            >
+              <table className="cine-table">
+                <thead>
+                  <tr>
                     {groups.map((group) => {
-                      const team = group.teams[rowIdx] || null;
+                      const filled = group.teams.filter((team) => team !== null).length;
+                      const done = filled === group.capacity;
                       return (
-                        <td key={group.id} className={team ? "filled" : "empty"}>
-                          {team ? (
-                            <motion.div
-                              className="cine-cell"
-                              initial={{ opacity: 0, scale: 0.85 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              transition={{ duration: 0.3 }}
-                            >
-                              <FlagImg src={team.customFlagImage} code={team.countryCode} size="sm" className="cine-cell-flag" />
-                              <span className="cine-cell-name">{team.name}</span>
-                            </motion.div>
-                          ) : (
-                            <div className="cine-cell-empty">
-                              <span className="cine-cell-num">{rowIdx + 1}</span>
-                            </div>
-                          )}
-                        </td>
+                        <th key={group.id} className={done ? "complete" : ""}>
+                          <span className="cine-th-name">{group.name}</span>
+                          <span className={`cine-th-count ${done ? "done" : ""}`}>{filled}/{group.capacity}</span>
+                        </th>
                       );
                     })}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </motion.div>
-        )}
+                </thead>
+                <tbody>
+                  {Array.from({ length: maxSlots }).map((_, rowIdx) => (
+                    <tr key={rowIdx}>
+                      {groups.map((group) => {
+                        const team = group.teams[rowIdx] || null;
+                        return (
+                          <td key={group.id} className={team ? "filled" : "empty"}>
+                            {team ? (
+                              <motion.div
+                                className="cine-cell"
+                                initial={{ opacity: 0, scale: 0.85 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ duration: 0.3 }}
+                              >
+                                <FlagImg src={team.customFlagImage} code={team.countryCode} size="sm" className="cine-cell-flag" />
+                                <span className="cine-cell-name">{team.name}</span>
+                              </motion.div>
+                            ) : (
+                              <div className="cine-cell-empty">
+                                <span className="cine-cell-num">{rowIdx + 1}</span>
+                              </div>
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </motion.div>
+          )}
 
-        {/* Footer */}
-        {footerText && (
-          <motion.div
-            className="projector-footer"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            <span className="projector-footer-text" style={{ fontSize: `${footerSize}rem` }}>{footerText}</span>
-          </motion.div>
-        )}
-
-        {/* Empty State */}
-        {pots.length === 0 && groups.length === 0 && (
-          <motion.div
-            className="cine-empty"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1.5 }}
-          >
-            {competitionLogo ? (
-              <motion.img
-                src={competitionLogo}
-                alt=""
-                className="empty-state-logo cine-empty-logo"
-                style={{ height: `${logoSize * 1.8}px` }}
-                animate={{ scale: [1, 1.03, 1], opacity: [0.7, 1, 0.7] }}
-                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-              />
-            ) : (
-              <div className="cine-empty-icon">🎬</div>
-            )}
-            <motion.h2
-              initial={{ opacity: 0, y: 20 }}
+          {footerText && (
+            <motion.div
+              className="projector-footer"
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 1 }}
+              transition={{ duration: 0.4 }}
             >
-              {projectorTitle || "The Stage Is Set"}
-            </motion.h2>
-            <div className="empty-state-dots cine-dots">
-              <span className="empty-dot" />
-              <span className="empty-dot" />
-              <span className="empty-dot" />
-            </div>
-          </motion.div>
-        )}
+              <span className="projector-footer-text" style={{ fontSize: `${footerSize}rem` }}>{footerText}</span>
+            </motion.div>
+          )}
+
+          {pots.length === 0 && groups.length === 0 && (
+            <motion.div
+              className="cine-empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1.5 }}
+            >
+              {competitionLogo ? (
+                <motion.img
+                  src={competitionLogo}
+                  alt=""
+                  className="empty-state-logo cine-empty-logo"
+                  style={{ height: `${logoSize * 1.8}px` }}
+                  animate={{ scale: [1, 1.03, 1], opacity: [0.7, 1, 0.7] }}
+                  transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                />
+              ) : (
+                <div className="cine-empty-icon">🎬</div>
+              )}
+              <motion.h2
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 1 }}
+              >
+                {projectorTitle || "The Stage Is Set"}
+              </motion.h2>
+              <div className="empty-state-dots cine-dots">
+                <span className="empty-dot" />
+                <span className="empty-dot" />
+                <span className="empty-dot" />
+              </div>
+            </motion.div>
+          )}
+        </div>
+
+        <AnimatePresence mode="wait">
+          {showSpotlight && selectedTeam ? (
+            <motion.div
+              key={`cine-take-${selectedTeam.id}`}
+              className="cine-takeover"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              style={{
+                "--cine-tc1": selectedTeamColors[0],
+                "--cine-tc2": selectedTeamColors[1],
+              } as React.CSSProperties}
+            >
+              <motion.div
+                className="cine-takeover-inner"
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 1.15, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 200, damping: 20 }}
+              >
+                <div className="cine-takeover-glow" />
+                <motion.div
+                  className="cine-takeover-flag"
+                  initial={{ scale: 0, rotate: -20 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ type: "spring", stiffness: 250, damping: 15, delay: 0.1 }}
+                >
+                  <FlagImg src={selectedTeam.customFlagImage} code={selectedTeam.countryCode} size="xl" />
+                </motion.div>
+                <motion.span
+                  className="cine-takeover-name"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.2 }}
+                >
+                  {selectedTeam.name}
+                </motion.span>
+              </motion.div>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
       </div>
     );
   };
+
   // ============ MATCHES VIEW — PREMIUM BROADCAST LAYOUT ============
   const renderMatchesView = () => {
     const rounds = [...new Set(matches.map(m => m.round))].sort();
@@ -1824,7 +1908,7 @@ export default function ProjectorView() {
         >
           <div className="pmu-header-top">
             {competitionLogo && <img src={competitionLogo} alt="" className="pmu-logo" style={{ height: `${logoSize * 0.6}px` }} />}
-            <h1 className="pmu-title">{projectorTitle || "Match Center"}</h1>
+            {/* <h1 className="pmu-title">{projectorTitle || "Match Center"}</h1> */}
           </div>
           <div className="pmu-meta">
             <span>{rounds.length} ROUND{rounds.length !== 1 ? "S" : ""}</span>
@@ -2070,6 +2154,8 @@ export default function ProjectorView() {
 
   return (
     <div
+      id="projector-export-root"
+      ref={projectorCaptureRef}
       className={containerClass}
       style={{
         "--projector-team-font-scale": teamFontScale,

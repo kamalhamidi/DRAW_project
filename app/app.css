@@ -317,6 +317,17 @@ body.bg-none::before {
   color: #FFB800;
 }
 
+.navbar-btn-export {
+  border-color: #38BDF8;
+  color: #38BDF8;
+}
+
+.navbar-btn-export:hover {
+  background: rgba(56, 189, 248, 0.12);
+  border-color: #38BDF8;
+  color: #38BDF8;
+}
+
 /* Projector Settings Panel */
 .projector-settings-panel {
   overflow: hidden;
@@ -4198,6 +4209,7 @@ body.bg-none::before {
   font-weight: 800;
   color: #fff;
   letter-spacing: -0.01em;
+  text-transform: uppercase;
 }
 
 /* ---- Main Content ---- */
@@ -4322,6 +4334,7 @@ body.bg-none::before {
   font-size: calc(1rem * var(--projector-team-font-scale));
   font-weight: 700;
   color: rgba(255, 255, 255, 0.9);
+  text-transform: uppercase;
 }
 
 .minimal-row-empty {
@@ -4395,6 +4408,7 @@ body.bg-none::before {
   font-size: calc(0.88rem * var(--projector-team-font-scale));
   font-weight: 700;
   color: rgba(255, 255, 255, 0.85);
+  text-transform: uppercase;
 }
 
 .minimal-pot-done {
@@ -4489,28 +4503,50 @@ body.bg-none::before {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  width: 100vw;
+  overflow: hidden;
 }
 
 .projector-container.cinematic-mode > div {
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-height: 100vh;
 }
 
 .cine-wrapper {
   position: relative;
-  width: 100%;
+  width: 100vw;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 0;
   overflow: hidden;
+  isolation: isolate;
 }
 
-.cine-wrapper > *:not(.cine-grain):not(.cine-bokeh):not(.cine-bar) {
+.cine-wrapper > *:not(.cine-grain):not(.cine-bokeh):not(.cine-backdrop):not(.cine-takeover) {
   position: relative;
   z-index: 2;
+}
+
+.cine-backdrop {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: filter 0.35s ease, opacity 0.35s ease, transform 0.35s ease;
+}
+
+/* the background blur cinematique mode  */
+.cine-backdrop.dimmed {
+  filter: blur(1px) saturate(0.90) brightness(0.90);
+  opacity: 0.90;
+  transform: scale(1.0);
 }
 
 /* ---- Film Grain ---- */
@@ -4530,20 +4566,6 @@ body.bg-none::before {
   33% { transform: translate(-1px, 1px); }
   66% { transform: translate(1px, -1px); }
 }
-
-/* ---- Letterbox Bars ---- */
-.cine-bar {
-  position: fixed;
-  left: 0;
-  right: 0;
-  height: 4vh;
-  background: #000;
-  z-index: 150;
-  pointer-events: none;
-}
-
-.cine-bar-top { top: 0; }
-.cine-bar-bottom { bottom: 0; }
 
 /* ---- Bokeh Orbs ---- */
 .cine-bokeh {
@@ -4676,6 +4698,7 @@ body.bg-none::before {
   font-weight: 700;
   color: rgba(255, 255, 255, 0.7);
   white-space: nowrap;
+  text-transform: uppercase;
 }
 
 .cine-pot-tab-done {
@@ -4688,13 +4711,13 @@ body.bg-none::before {
 .cine-takeover {
   position: fixed;
   inset: 0;
-  z-index: 100;
+  z-index: 120;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .cine-takeover-inner {
@@ -4702,8 +4725,8 @@ body.bg-none::before {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
-  padding: 4rem 6rem;
+  gap: 1.35rem;
+  padding: 3.75rem 5.5rem;
 }
 
 .cine-takeover-glow {
@@ -4963,6 +4986,7 @@ body.bg-none::before {
   font-weight: 800;
   color: rgba(255, 255, 255, 0.9);
   letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
 .cine-cell-empty {
@@ -5050,10 +5074,6 @@ body.bg-none::before {
 
   .cine-table tbody td {
     height: 48px;
-  }
-
-  .cine-bar {
-    height: 3vh;
   }
 
   .cine-takeover-inner {
@@ -6763,7 +6783,7 @@ body.bg-none::before {
   flex-direction: column;
   align-items: center;
   gap: 36px;
-  padding: 80px 0 60px;
+  padding: 150px 0 60px;
 }
 
 .broadcast-matches-round {

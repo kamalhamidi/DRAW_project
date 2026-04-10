@@ -77,7 +77,7 @@ export default function TournamentManager() {
   const [hydrated, setHydrated] = useState(false);
   const [showProjectorPots, setShowProjectorPots] = useState(true);
   const [bgAnimation, setBgAnimation] = useState<"none" | "slide" | "zoom" | "fade">("zoom");
-  const [projectorLayout, setProjectorLayout] = useState<"classic" | "stadium" | "broadcast" | "gala" | "minimal" | "cinematic">("broadcast");
+  const [projectorLayout, setProjectorLayout] = useState<"stadium" | "broadcast" | "gala" | "minimal" | "cinematic">("broadcast");
   const [projectorTitle, setProjectorTitle] = useState("Tournament Draw");
   const [showProjectorSettings, setShowProjectorSettings] = useState(false);
   const [activeSettingsSection, setActiveSettingsSection] = useState<"general" | "branding" | "visual" | "colors" | "behavior">("general");
@@ -207,7 +207,7 @@ export default function TournamentManager() {
         const s = JSON.parse(settings);
         if (s.showProjectorPots !== undefined) setShowProjectorPots(s.showProjectorPots);
         if (s.bgAnimation) setBgAnimation(s.bgAnimation);
-        if (s.projectorLayout) setProjectorLayout(s.projectorLayout);
+        if (s.projectorLayout) setProjectorLayout(s.projectorLayout === "classic" ? "broadcast" : s.projectorLayout);
         if (s.projectorTitle !== undefined) setProjectorTitle(s.projectorTitle);
         if (s.bgImage) setBgImage(s.bgImage);
         if (s.competitionLogo !== undefined) setCompetitionLogo(s.competitionLogo);
@@ -304,7 +304,7 @@ export default function TournamentManager() {
           selectedTeam: null,
         });
         setBgAnimation(preset.bgAnimation as any);
-        setProjectorLayout(preset.projectorLayout as any);
+        setProjectorLayout(preset.projectorLayout === "classic" ? "broadcast" : (preset.projectorLayout as any));
         setProjectorTitle(preset.projectorTitle);
         setBgImage(preset.bgImage);
         setCompetitionLogo(preset.competitionLogo);
@@ -333,6 +333,11 @@ export default function TournamentManager() {
     localStorage.setItem("saved-tournaments", JSON.stringify(updated));
   }, [savedTournaments]);
 
+  const exportProjectorDesign = useCallback(() => {
+    if (!broadcastChannelRef.current) return;
+    broadcastChannelRef.current.postMessage({ command: "export-projector-image" });
+  }, []);
+
   // Broadcast Channel for projector sync
   const broadcastChannelRef = React.useRef<BroadcastChannel | null>(null);
 
@@ -340,6 +345,24 @@ export default function TournamentManager() {
     setHydrated(true);
     // Initialize Broadcast Channel
     broadcastChannelRef.current = new BroadcastChannel("draw_sync");
+
+    const handleExportResult = (event: MessageEvent) => {
+      const data = event.data || {};
+      if (data.event !== "export-projector-image-result") return;
+
+      if (data.ok) {
+        alert(`Projector image exported: ${data.fileName || "download started"}`);
+      } else {
+        alert("Export failed. Make sure the projector window is open and visible, then try again.");
+      }
+    };
+
+    broadcastChannelRef.current.addEventListener("message", handleExportResult);
+
+    return () => {
+      broadcastChannelRef.current?.removeEventListener("message", handleExportResult);
+      broadcastChannelRef.current?.close();
+    };
   }, []);
 
   useEffect(() => {
@@ -408,7 +431,7 @@ export default function TournamentManager() {
   // Broadcast state changes to projector
   useEffect(() => {
     if (broadcastChannelRef.current && hydrated) {
-      broadcastChannelRef.current.postMessage({
+      const syncPayload = {
         pots,
         groups,
         selectedTeam,
@@ -430,7 +453,15 @@ export default function TournamentManager() {
         roundNotes,
         projectorDisplayMode,
         matchesLayout,
-      });
+      };
+
+      broadcastChannelRef.current.postMessage(syncPayload);
+
+      try {
+        localStorage.setItem("projector-last-state", JSON.stringify(syncPayload));
+      } catch {
+        // Ignore storage errors
+      }
     }
   }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, matches, roundNotes, projectorDisplayMode, matchesLayout]);
 
@@ -622,6 +653,15 @@ export default function TournamentManager() {
               title="Open Projector Window"
             >
               🎬 Projector
+            </motion.button>
+            <motion.button
+              className="navbar-btn navbar-btn-export"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={exportProjectorDesign}
+              title="Export current projector design as PNG"
+            >
+              📸 Export
             </motion.button>
             {matches.length > 0 && (
               <motion.button
@@ -881,7 +921,6 @@ export default function TournamentManager() {
                             <label className="settings-label">Layout</label>
                             <div className="settings-layout-btns settings-layout-wrap">
                               {([
-                                { key: "classic", icon: "🏛", label: "Classic" },
                                 { key: "stadium", icon: "🏟", label: "Stadium" },
                                 { key: "broadcast", icon: "📺", label: "Broadcast" },
                                 { key: "gala", icon: "✨", label: "Gala" },
