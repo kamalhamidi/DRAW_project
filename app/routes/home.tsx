@@ -29,6 +29,7 @@ interface SavedTournament {
   manualPalette: ColorPalette;
   numberOfGroups: number;
   teamsPerGroup: number;
+  galaOrientation?: "horizontal" | "vertical";
   roundNotes?: Record<number, string>;
 }
 
@@ -101,6 +102,7 @@ export default function TournamentManager() {
   const [matchesFilterRound, setMatchesFilterRound] = useState<number | "all">("all");
   const [projectorDisplayMode, setProjectorDisplayMode] = useState<"groups" | "matches">("groups");
   const [matchesLayout, setMatchesLayout] = useState<"default" | "gala" | "ultra" | "broadcast">("default");
+  const [galaOrientation, setGalaOrientation] = useState<"horizontal" | "vertical">("horizontal");
   const [colorPalette, setColorPalette] = useState<ColorPalette | null>(null);
   const [manualPalette, setManualPalette] = useState<ColorPalette>({
     primary: "#8200C5",
@@ -223,6 +225,7 @@ export default function TournamentManager() {
         if (s.currentPhase) setCurrentPhase(s.currentPhase);
         if (s.projectorDisplayMode) setProjectorDisplayMode(s.projectorDisplayMode);
         if (s.matchesLayout) setMatchesLayout(s.matchesLayout);
+        if (s.galaOrientation) setGalaOrientation(s.galaOrientation);
         if (s.roundNotes) setRoundNotes(s.roundNotes);
       } catch { }
     }
@@ -250,10 +253,11 @@ export default function TournamentManager() {
       currentPhase,
       projectorDisplayMode,
       matchesLayout,
+      galaOrientation,
       roundNotes,
     };
     localStorage.setItem("tournament-settings", JSON.stringify(settings));
-  }, [hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, colorMode, manualPalette, currentPhase, projectorDisplayMode, matchesLayout, roundNotes]);
+  }, [hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, colorMode, manualPalette, currentPhase, projectorDisplayMode, matchesLayout, galaOrientation, roundNotes]);
 
   const saveTournament = useCallback(() => {
     if (!saveName.trim()) return;
@@ -281,13 +285,14 @@ export default function TournamentManager() {
       manualPalette,
       numberOfGroups,
       teamsPerGroup,
+      galaOrientation,
       roundNotes,
     };
     const updated = [...savedTournaments, preset];
     setSavedTournaments(updated);
     localStorage.setItem("saved-tournaments", JSON.stringify(updated));
     setSaveName("");
-  }, [saveName, pots, groups, potsFinalized, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, showProjectorPots, colorMode, manualPalette, numberOfGroups, teamsPerGroup, roundNotes, savedTournaments]);
+  }, [saveName, pots, groups, potsFinalized, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, showProjectorPots, colorMode, manualPalette, numberOfGroups, teamsPerGroup, galaOrientation, roundNotes, savedTournaments]);
 
   const loadTournament = useCallback((preset: SavedTournament) => {
     showConfirm(
@@ -320,6 +325,7 @@ export default function TournamentManager() {
         setManualPalette(preset.manualPalette);
         setNumberOfGroups(preset.numberOfGroups);
         setTeamsPerGroup(preset.teamsPerGroup);
+        setGalaOrientation(preset.galaOrientation ?? "horizontal");
         setRoundNotes(preset.roundNotes ?? {});
         setCurrentPhase(preset.potsFinalized ? "draw" : "setup");
         setShowSavePanel(false);
@@ -453,6 +459,7 @@ export default function TournamentManager() {
         roundNotes,
         projectorDisplayMode,
         matchesLayout,
+        galaOrientation,
       };
 
       broadcastChannelRef.current.postMessage(syncPayload);
@@ -463,7 +470,7 @@ export default function TournamentManager() {
         // Ignore storage errors
       }
     }
-  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, matches, roundNotes, projectorDisplayMode, matchesLayout]);
+  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, matches, roundNotes, projectorDisplayMode, matchesLayout, galaOrientation]);
 
   const handleCreatePot = (e: React.FormEvent) => {
     e.preventDefault();
@@ -941,6 +948,33 @@ export default function TournamentManager() {
                             </div>
                           </div>
 
+                          {projectorLayout === "gala" && (
+                            <div className="settings-group settings-layout-option-card">
+                              <label className="settings-label">Gala Orientation</label>
+                              <div className="settings-layout-btns">
+                                <motion.button
+                                  className={`settings-layout-btn ${galaOrientation === "horizontal" ? "active" : ""}`}
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={() => setGalaOrientation("horizontal")}
+                                >
+                                  ↔️ Horizontal
+                                </motion.button>
+                                <motion.button
+                                  className={`settings-layout-btn ${galaOrientation === "vertical" ? "active" : ""}`}
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={() => setGalaOrientation("vertical")}
+                                >
+                                  ↕️ Vertical
+                                </motion.button>
+                              </div>
+                              <p className="settings-inline-help">
+                                Vertical mode places pots on top and groups below.
+                              </p>
+                            </div>
+                          )}
+
                           {projectorLayout === "broadcast" && (
                             <div className="settings-group settings-layout-option-card">
                               <label className="settings-label">Broadcast Layout Options</label>
@@ -1142,14 +1176,14 @@ export default function TournamentManager() {
                                     whileTap={{ scale: 0.95 }}
                                     onClick={() => setProjectorDisplayMode("matches")}
                                   >
-                                    ⚔️ Matches
+                                    ⚔️ Fixtures
                                   </motion.button>
                                 </div>
                               </div>
 
                               {projectorDisplayMode === "matches" && (
                                 <div className="settings-group">
-                                  <label className="settings-label">Matches Layout</label>
+                                  <label className="settings-label">Fixtures Theme</label>
                                   <div className="settings-layout-btns">
                                     <motion.button
                                       className={`settings-layout-btn ${matchesLayout === "default" ? "active" : ""}`}
@@ -1157,7 +1191,7 @@ export default function TournamentManager() {
                                       whileTap={{ scale: 0.95 }}
                                       onClick={() => setMatchesLayout("default")}
                                     >
-                                      📋 Default
+                                      📋 Classic Board
                                     </motion.button>
                                     <motion.button
                                       className={`settings-layout-btn ${matchesLayout === "gala" ? "active" : ""}`}
@@ -1165,7 +1199,7 @@ export default function TournamentManager() {
                                       whileTap={{ scale: 0.95 }}
                                       onClick={() => setMatchesLayout("gala")}
                                     >
-                                      ✨ Gala
+                                      ✨ Prestige
                                     </motion.button>
                                     <motion.button
                                       className={`settings-layout-btn ${matchesLayout === "ultra" ? "active" : ""}`}
@@ -1173,7 +1207,7 @@ export default function TournamentManager() {
                                       whileTap={{ scale: 0.95 }}
                                       onClick={() => setMatchesLayout("ultra")}
                                     >
-                                      🚀 Ultra
+                                      🚀 Velocity
                                     </motion.button>
                                     <motion.button
                                       className={`settings-layout-btn ${matchesLayout === "broadcast" ? "active" : ""}`}
@@ -1181,7 +1215,7 @@ export default function TournamentManager() {
                                       whileTap={{ scale: 0.95 }}
                                       onClick={() => setMatchesLayout("broadcast")}
                                     >
-                                      📺 Broadcast
+                                      📺 Studio Desk
                                     </motion.button>
                                   </div>
                                 </div>

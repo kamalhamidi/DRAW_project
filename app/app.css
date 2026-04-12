@@ -3779,6 +3779,23 @@ body.bg-none::before {
   width: 100%;
 }
 
+/* Vertical: pots on top, groups below */
+.gala-content.vertical {
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+.gala-content.vertical .gala-pots-panel {
+  order: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.gala-content.vertical .gala-groups-panel {
+  order: 2;
+}
+
 /* ---- Groups Panel ---- */
 .gala-groups-list {
   display: grid;

@@ -1,7 +1,7 @@
 // Dominant colors from each African country's flag
 // [primary, secondary] — used for spotlight theming
 export const countryColors: Record<string, [string, string]> = {
-  DZ: ["#006233", "#D21034"],     // Algeria — green, red
+  DZ: ["#006233", "#e3f5e3"],     // Algeria — green, red
   AO: ["#CC092F", "#000000"],     // Angola — red, black
   BJ: ["#008751", "#FCD116"],     // Benin — green, yellow
   BW: ["#6DA9E4", "#000000"],     // Botswana — blue, black

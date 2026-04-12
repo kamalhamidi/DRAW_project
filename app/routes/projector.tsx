@@ -75,6 +75,10 @@ export default function ProjectorView() {
   const [roundNotes, setRoundNotes] = useState<Record<number, string>>({});
   const [projectorDisplayMode, setProjectorDisplayMode] = useState<"groups" | "matches">("groups");
   const [matchesLayout, setMatchesLayout] = useState<"default" | "gala" | "ultra" | "broadcast">("default");
+  const [galaOrientation, setGalaOrientation] = useState<"horizontal" | "vertical">("horizontal");
+
+  const getGroupSlotPrefix = (groupName: string) =>
+    (groupName.match(/[A-Za-z]+$/)?.[0] ?? groupName.match(/[A-Za-z]/)?.[0] ?? "G").toUpperCase();
 
   const exportProjectorImage = async () => {
     if (!projectorCaptureRef.current) return;
@@ -156,7 +160,7 @@ export default function ProjectorView() {
     const channel = new BroadcastChannel("draw_sync");
 
     const applyIncomingState = (data: any) => {
-      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale: incomingPotFontScale, broadcastPotRows: incomingBroadcastPotRows, showSpotlight, matches: incomingMatches, roundNotes: incomingRoundNotes, projectorDisplayMode: incomingDisplayMode, matchesLayout: incomingMatchesLayout } = data;
+      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale: incomingPotFontScale, broadcastPotRows: incomingBroadcastPotRows, showSpotlight, matches: incomingMatches, roundNotes: incomingRoundNotes, projectorDisplayMode: incomingDisplayMode, matchesLayout: incomingMatchesLayout, galaOrientation: incomingGalaOrientation } = data;
       setDrawState({
         pots: pots || [],
         groups: groups || [],
@@ -210,6 +214,9 @@ export default function ProjectorView() {
       }
       if (incomingMatchesLayout !== undefined) {
         setMatchesLayout(incomingMatchesLayout);
+      }
+      if (incomingGalaOrientation !== undefined) {
+        setGalaOrientation(incomingGalaOrientation);
       }
       // Apply color palette from the home page
       if (colorPalette) {
@@ -642,6 +649,7 @@ export default function ProjectorView() {
                 {groups.map((group, index) => {
                   const filledSlots = group.teams.filter((t) => t !== null).length;
                   const isGroupComplete = filledSlots === group.capacity;
+                  const groupPrefix = getGroupSlotPrefix(group.name);
 
                   return (
                     <motion.div
@@ -674,13 +682,12 @@ export default function ProjectorView() {
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ type: "spring", stiffness: 300 }}
                               >
-                                <span className="stadium-slot-number">{slotIndex + 1}</span>
                                 <FlagImg src={team.customFlagImage} code={team.countryCode} size="sm" className="stadium-slot-flag" />
                                 <span className="stadium-slot-name">{team.name}</span>
                               </motion.div>
                             ) : (
                               <div className="stadium-slot-empty">
-                                <span className="stadium-slot-number">{slotIndex + 1}</span>
+                                <span className="stadium-slot-number">{`${groupPrefix}${slotIndex + 1}`}</span>
                                 <span className="stadium-slot-dash">—</span>
                               </div>
                             )}
@@ -1035,7 +1042,7 @@ export default function ProjectorView() {
         </div> */}
 
         {/* Two-Panel Content */}
-        <div className={`gala-content ${!drawState.showProjectorPots ? 'pots-hidden' : ''}`}>
+        <div className={`gala-content ${!drawState.showProjectorPots ? 'pots-hidden' : ''} ${galaOrientation === 'vertical' ? 'vertical' : ''}`}>
           {/* Groups Panel */}
           <div className="gala-panel gala-groups-panel">
             {groups.length > 0 ? (
@@ -1043,6 +1050,7 @@ export default function ProjectorView() {
                 {groups.map((group, index) => {
                   const filledSlots = group.teams.filter((t) => t !== null).length;
                   const isGroupComplete = filledSlots === group.capacity;
+                  const groupPrefix = getGroupSlotPrefix(group.name);
 
                   return (
                     <motion.div
@@ -1065,7 +1073,6 @@ export default function ProjectorView() {
                             className={`gala-row ${team ? "filled" : "empty"}`}
                             layout
                           >
-                            <span className="gala-row-num">{slotIndex + 1}</span>
                             {team ? (
                               <motion.div
                                 className="gala-row-team"
@@ -1077,7 +1084,10 @@ export default function ProjectorView() {
                                 <span className="gala-row-name">{team.name}</span>
                               </motion.div>
                             ) : (
-                              <span className="gala-row-empty">—</span>
+                              <>
+                                <span className="gala-row-num">{`${groupPrefix}${slotIndex + 1}`}</span>
+                                <span className="gala-row-empty">—</span>
+                              </>
                             )}
                           </motion.div>
                         ))}
@@ -1250,6 +1260,7 @@ export default function ProjectorView() {
                 {groups.map((group, index) => {
                   const filledSlots = group.teams.filter((t) => t !== null).length;
                   const isComplete = filledSlots === group.capacity;
+                  const groupPrefix = getGroupSlotPrefix(group.name);
 
                   return (
                     <motion.div
@@ -1272,7 +1283,6 @@ export default function ProjectorView() {
                             className={`minimal-team-row ${team ? "filled" : "empty"}`}
                             layout
                           >
-                            <span className="minimal-row-num">{slotIndex + 1}</span>
                             {team ? (
                               <motion.div
                                 className="minimal-row-team"
@@ -1284,7 +1294,10 @@ export default function ProjectorView() {
                                 <span className="minimal-row-name">{team.name}</span>
                               </motion.div>
                             ) : (
-                              <span className="minimal-row-empty">—</span>
+                              <>
+                                <span className="minimal-row-num">{`${groupPrefix}${slotIndex + 1}`}</span>
+                                <span className="minimal-row-empty">—</span>
+                              </>
                             )}
                           </motion.div>
                         ))}
@@ -1469,6 +1482,7 @@ export default function ProjectorView() {
                     <tr key={rowIdx}>
                       {groups.map((group) => {
                         const team = group.teams[rowIdx] || null;
+                        const groupPrefix = getGroupSlotPrefix(group.name);
                         return (
                           <td key={group.id} className={team ? "filled" : "empty"}>
                             {team ? (
@@ -1483,7 +1497,7 @@ export default function ProjectorView() {
                               </motion.div>
                             ) : (
                               <div className="cine-cell-empty">
-                                <span className="cine-cell-num">{rowIdx + 1}</span>
+                                <span className="cine-cell-num">{`${groupPrefix}${rowIdx + 1}`}</span>
                               </div>
                             )}
                           </td>
