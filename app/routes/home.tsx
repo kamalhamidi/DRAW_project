@@ -33,6 +33,7 @@ interface SavedTournament {
   galaColorSwap?: boolean;
   roundNotes?: Record<number, string>;
   customLayout?: CustomLayoutConfig;
+  broadcastEditLayout?: CustomLayoutConfig;
 }
 
 type CustomLayoutElementKey = "header" | "pots" | "groups" | "footer";
@@ -107,6 +108,60 @@ const createDefaultCustomLayout = (): CustomLayoutConfig => ({
       background: "rgba(255, 255, 255, 0.04)",
       border: "rgba(255, 255, 255, 0.10)",
       accent: "#D4AF37",
+      text: "#FFFFFF",
+    },
+  ],
+});
+
+const createDefaultBroadcastEditLayout = (): CustomLayoutConfig => ({
+  canvas: { width: 1280, height: 720 },
+  elements: [
+    {
+      id: "header",
+      label: "Header",
+      x: 2,
+      y: 2,
+      width: 96,
+      height: 13,
+      background: "rgba(130, 0, 197, 0.18)",
+      border: "rgba(130, 0, 197, 0.45)",
+      accent: "#8200C5",
+      text: "#FFFFFF",
+    },
+    {
+      id: "pots",
+      label: "Pots",
+      x: 2,
+      y: 18,
+      width: 96,
+      height: 27,
+      background: "rgba(255, 60, 73, 0.12)",
+      border: "rgba(255, 60, 73, 0.38)",
+      accent: "#FF3C49",
+      text: "#FFFFFF",
+    },
+    {
+      id: "groups",
+      label: "Groups",
+      x: 2,
+      y: 48,
+      width: 96,
+      height: 38,
+      background: "rgba(10, 253, 9, 0.09)",
+      border: "rgba(10, 253, 9, 0.33)",
+      accent: "#0AFD09",
+      text: "#FFFFFF",
+    },
+    {
+      id: "footer",
+      label: "Footer",
+      x: 2,
+      y: 89,
+      width: 96,
+      height: 9,
+      background: "rgba(255, 255, 255, 0.05)",
+      border: "rgba(255, 255, 255, 0.12)",
+      accent: "#38BDF8",
       text: "#FFFFFF",
     },
   ],
@@ -241,6 +296,8 @@ export default function TournamentManager() {
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
   const [customLayout, setCustomLayout] = useState<CustomLayoutConfig>(() => createDefaultCustomLayout());
   const [selectedCustomElementId, setSelectedCustomElementId] = useState<CustomLayoutElementKey>("groups");
+  const [broadcastEditLayout, setBroadcastEditLayout] = useState<CustomLayoutConfig>(() => createDefaultBroadcastEditLayout());
+  const [selectedBroadcastElementId, setSelectedBroadcastElementId] = useState<CustomLayoutElementKey>("groups");
   const [colorPalette, setColorPalette] = useState<ColorPalette | null>(null);
   const [manualPalette, setManualPalette] = useState<ColorPalette>({
     primary: "#8200C5",
@@ -266,6 +323,14 @@ export default function TournamentManager() {
   const matchesPanelRef = useRef<HTMLDivElement | null>(null);
   const customEditorCanvasRef = useRef<HTMLDivElement | null>(null);
   const customInteractionRef = useRef<{
+    id: CustomLayoutElementKey;
+    mode: "drag" | "resize";
+    startX: number;
+    startY: number;
+    startLayout: CustomLayoutConfig;
+  } | null>(null);
+  const broadcastEditorCanvasRef = useRef<HTMLDivElement | null>(null);
+  const broadcastInteractionRef = useRef<{
     id: CustomLayoutElementKey;
     mode: "drag" | "resize";
     startX: number;
@@ -475,6 +540,80 @@ export default function TournamentManager() {
     }
   };
 
+  const updateBroadcastElement = useCallback((elementId: CustomLayoutElementKey, patch: Partial<CustomLayoutElement>) => {
+    setBroadcastEditLayout((current) => ({
+      ...current,
+      elements: current.elements.map((element) =>
+        element.id === elementId ? { ...element, ...patch } : element
+      ),
+    }));
+  }, []);
+
+  const startBroadcastInteraction = (event: React.PointerEvent<HTMLElement>, elementId: CustomLayoutElementKey, mode: "drag" | "resize") => {
+    event.preventDefault();
+    event.stopPropagation();
+    const canvas = broadcastEditorCanvasRef.current;
+    if (!canvas) return;
+
+    const layoutSnapshot = normalizeCustomLayout(broadcastEditLayout);
+    broadcastInteractionRef.current = {
+      id: elementId,
+      mode,
+      startX: event.clientX,
+      startY: event.clientY,
+      startLayout: layoutSnapshot,
+    };
+    setSelectedBroadcastElementId(elementId);
+  };
+
+  useEffect(() => {
+    const handlePointerMove = (event: PointerEvent) => {
+      const interaction = broadcastInteractionRef.current;
+      const canvas = broadcastEditorCanvasRef.current;
+      if (!interaction || !canvas) return;
+
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
+
+      const dxPercent = ((event.clientX - interaction.startX) / rect.width) * 100;
+      const dyPercent = ((event.clientY - interaction.startY) / rect.height) * 100;
+
+      setBroadcastEditLayout((current) => ({
+        ...current,
+        elements: current.elements.map((element) => {
+          if (element.id !== interaction.id) return element;
+
+          if (interaction.mode === "drag") {
+            return {
+              ...element,
+              x: clampLayoutNumber(interaction.startLayout.elements.find((item) => item.id === element.id)?.x ?? element.x + dxPercent, 0, 100 - element.width),
+              y: clampLayoutNumber(interaction.startLayout.elements.find((item) => item.id === element.id)?.y ?? element.y + dyPercent, 0, 100 - element.height),
+            };
+          }
+
+          const startElement = interaction.startLayout.elements.find((item) => item.id === element.id) ?? element;
+          return {
+            ...element,
+            width: clampLayoutNumber(startElement.width + dxPercent, 12, 100 - startElement.x),
+            height: clampLayoutNumber(startElement.height + dyPercent, 8, 100 - startElement.y),
+          };
+        }),
+      }));
+    };
+
+    const handlePointerUp = () => {
+      broadcastInteractionRef.current = null;
+    };
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
+
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+    };
+  }, [broadcastEditLayout]);
+
   // Restore all settings from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem("saved-tournaments");
@@ -507,6 +646,7 @@ export default function TournamentManager() {
         if (s.galaColorSwap !== undefined) setGalaColorSwap(Boolean(s.galaColorSwap));
         if (s.roundNotes) setRoundNotes(s.roundNotes);
         if (s.customLayout) setCustomLayout(normalizeCustomLayout(s.customLayout));
+        if (s.broadcastEditLayout) setBroadcastEditLayout(normalizeCustomLayout(s.broadcastEditLayout));
       } catch { }
     }
   }, []);
@@ -537,9 +677,10 @@ export default function TournamentManager() {
       galaColorSwap,
       roundNotes,
       customLayout,
+      broadcastEditLayout,
     };
     localStorage.setItem("tournament-settings", JSON.stringify(settings));
-  }, [hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, colorMode, manualPalette, currentPhase, projectorDisplayMode, matchesLayout, galaOrientation, galaColorSwap, roundNotes, customLayout]);
+  }, [hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, colorMode, manualPalette, currentPhase, projectorDisplayMode, matchesLayout, galaOrientation, galaColorSwap, roundNotes, customLayout, broadcastEditLayout]);
 
   const saveTournament = useCallback(() => {
     if (!saveName.trim()) return;
@@ -571,12 +712,13 @@ export default function TournamentManager() {
       galaColorSwap,
       roundNotes,
       customLayout,
+      broadcastEditLayout,
     };
     const updated = [...savedTournaments, preset];
     setSavedTournaments(updated);
     localStorage.setItem("saved-tournaments", JSON.stringify(updated));
     setSaveName("");
-  }, [saveName, pots, groups, potsFinalized, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, showProjectorPots, colorMode, manualPalette, numberOfGroups, teamsPerGroup, galaOrientation, galaColorSwap, roundNotes, customLayout, savedTournaments]);
+  }, [saveName, pots, groups, potsFinalized, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, showProjectorPots, colorMode, manualPalette, numberOfGroups, teamsPerGroup, galaOrientation, galaColorSwap, roundNotes, customLayout, broadcastEditLayout, savedTournaments]);
 
   const loadTournament = useCallback((preset: SavedTournament) => {
     showConfirm(
@@ -613,6 +755,7 @@ export default function TournamentManager() {
         setGalaColorSwap(preset.galaColorSwap ?? false);
         setRoundNotes(preset.roundNotes ?? {});
         setCustomLayout(normalizeCustomLayout(preset.customLayout));
+        setBroadcastEditLayout(normalizeCustomLayout(preset.broadcastEditLayout));
         setCurrentPhase(preset.potsFinalized ? "draw" : "setup");
         setShowSavePanel(false);
       }
@@ -748,6 +891,7 @@ export default function TournamentManager() {
         galaOrientation,
         galaColorSwap,
         customLayout,
+        broadcastEditLayout,
       };
 
       broadcastChannelRef.current.postMessage(syncPayload);
@@ -758,7 +902,7 @@ export default function TournamentManager() {
         // Ignore storage errors
       }
     }
-  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, matches, roundNotes, projectorDisplayMode, matchesLayout, galaOrientation, galaColorSwap, customLayout]);
+  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, matches, roundNotes, projectorDisplayMode, matchesLayout, galaOrientation, galaColorSwap, customLayout, broadcastEditLayout]);
 
   const handleCreatePot = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1292,7 +1436,7 @@ export default function TournamentManager() {
                           )}
 
                           {projectorLayout === "broadcast" && (
-                            <div className="settings-group settings-layout-option-card">
+                            <div className="settings-group settings-layout-option-card custom-layout-editor-card">
                               <label className="settings-label">Broadcast Layout Options</label>
                               <div className="settings-inline-field-row">
                                 <label className="settings-inline-field-label" htmlFor="broadcast-pot-rows-input">
@@ -1311,6 +1455,195 @@ export default function TournamentManager() {
                               <p className="settings-inline-help">
                                 Set rows per pot card. Columns are calculated automatically.
                               </p>
+
+                              <div className="settings-layout-editor-header">
+                                <div>
+                                  <label className="settings-label">Broadcast Position & Size Editor</label>
+                                  <p className="settings-inline-help">
+                                    Same as custom: drag blocks, resize from corner, and tune colors.
+                                  </p>
+                                </div>
+                                <button
+                                  type="button"
+                                  className="settings-layout-btn"
+                                  onClick={() => setBroadcastEditLayout(createDefaultBroadcastEditLayout())}
+                                >
+                                  Reset Broadcast Layout
+                                </button>
+                              </div>
+
+                              <div className="custom-layout-editor">
+                                <div className="custom-layout-canvas-wrap">
+                                  <div className="custom-layout-canvas" ref={broadcastEditorCanvasRef}>
+                                    {broadcastEditLayout.elements.map((element) => {
+                                      const isActive = selectedBroadcastElementId === element.id;
+                                      return (
+                                        <motion.div
+                                          key={element.id}
+                                          className={`custom-layout-element ${isActive ? "active" : ""}`}
+                                          style={{
+                                            left: `${element.x}%`,
+                                            top: `${element.y}%`,
+                                            width: `${element.width}%`,
+                                            height: `${element.height}%`,
+                                            background: element.background,
+                                            borderColor: element.border,
+                                            color: element.text,
+                                          }}
+                                          onPointerDown={(event) => startBroadcastInteraction(event, element.id, "drag")}
+                                          onClick={() => setSelectedBroadcastElementId(element.id)}
+                                        >
+                                          <div className="custom-layout-element-bar">
+                                            <span>{element.label}</span>
+                                            <button
+                                              type="button"
+                                              className="custom-layout-select-btn"
+                                              onClick={(event) => {
+                                                event.stopPropagation();
+                                                setSelectedBroadcastElementId(element.id);
+                                              }}
+                                            >
+                                              Edit
+                                            </button>
+                                          </div>
+                                          <div className="custom-layout-element-body">
+                                            {renderCustomCanvasSection(element)}
+                                          </div>
+                                          <button
+                                            type="button"
+                                            className="custom-layout-resize-handle"
+                                            onPointerDown={(event) => startBroadcastInteraction(event, element.id, "resize")}
+                                          >
+                                            ↘
+                                          </button>
+                                        </motion.div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+
+                                <div className="custom-layout-controls">
+                                  <div className="settings-group">
+                                    <label className="settings-label">Selected Broadcast Element</label>
+                                    <div className="settings-layout-btns settings-layout-wrap">
+                                      {broadcastEditLayout.elements.map((element) => (
+                                        <button
+                                          key={element.id}
+                                          type="button"
+                                          className={`settings-layout-btn ${selectedBroadcastElementId === element.id ? "active" : ""}`}
+                                          onClick={() => setSelectedBroadcastElementId(element.id)}
+                                        >
+                                          {element.label}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+
+                                  {(() => {
+                                    const activeElement = broadcastEditLayout.elements.find((element) => element.id === selectedBroadcastElementId) ?? broadcastEditLayout.elements[0];
+                                    if (!activeElement) return null;
+
+                                    return (
+                                      <>
+                                        <div className="settings-group">
+                                          <label className="settings-label">Position</label>
+                                          <div className="settings-inline-field-row custom-range-row">
+                                            <span className="settings-inline-field-label">X</span>
+                                            <input
+                                              type="range"
+                                              min="0"
+                                              max="100"
+                                              step="1"
+                                              value={activeElement.x}
+                                              onChange={(event) => updateBroadcastElement(activeElement.id, { x: Number(event.target.value) })}
+                                              className="settings-range"
+                                            />
+                                          </div>
+                                          <div className="settings-inline-field-row custom-range-row">
+                                            <span className="settings-inline-field-label">Y</span>
+                                            <input
+                                              type="range"
+                                              min="0"
+                                              max="100"
+                                              step="1"
+                                              value={activeElement.y}
+                                              onChange={(event) => updateBroadcastElement(activeElement.id, { y: Number(event.target.value) })}
+                                              className="settings-range"
+                                            />
+                                          </div>
+                                        </div>
+
+                                        <div className="settings-group">
+                                          <label className="settings-label">Size</label>
+                                          <div className="settings-inline-field-row custom-range-row">
+                                            <span className="settings-inline-field-label">W</span>
+                                            <input
+                                              type="range"
+                                              min="10"
+                                              max="100"
+                                              step="1"
+                                              value={activeElement.width}
+                                              onChange={(event) => updateBroadcastElement(activeElement.id, { width: Number(event.target.value) })}
+                                              className="settings-range"
+                                            />
+                                          </div>
+                                          <div className="settings-inline-field-row custom-range-row">
+                                            <span className="settings-inline-field-label">H</span>
+                                            <input
+                                              type="range"
+                                              min="8"
+                                              max="100"
+                                              step="1"
+                                              value={activeElement.height}
+                                              onChange={(event) => updateBroadcastElement(activeElement.id, { height: Number(event.target.value) })}
+                                              className="settings-range"
+                                            />
+                                          </div>
+                                        </div>
+
+                                        <div className="settings-group custom-color-grid">
+                                          <div>
+                                            <label className="settings-label">Background</label>
+                                            <input
+                                              type="color"
+                                              value={toHexColor(activeElement.background)}
+                                              onChange={(event) => updateBroadcastElement(activeElement.id, { background: hexToRgba(event.target.value, 0.18) })}
+                                              className="settings-color-input"
+                                            />
+                                          </div>
+                                          <div>
+                                            <label className="settings-label">Border</label>
+                                            <input
+                                              type="color"
+                                              value={toHexColor(activeElement.border)}
+                                              onChange={(event) => updateBroadcastElement(activeElement.id, { border: event.target.value })}
+                                              className="settings-color-input"
+                                            />
+                                          </div>
+                                          <div>
+                                            <label className="settings-label">Accent</label>
+                                            <input
+                                              type="color"
+                                              value={toHexColor(activeElement.accent)}
+                                              onChange={(event) => updateBroadcastElement(activeElement.id, { accent: event.target.value })}
+                                              className="settings-color-input"
+                                            />
+                                          </div>
+                                          <div>
+                                            <label className="settings-label">Text</label>
+                                            <input
+                                              type="color"
+                                              value={toHexColor(activeElement.text)}
+                                              onChange={(event) => updateBroadcastElement(activeElement.id, { text: event.target.value })}
+                                              className="settings-color-input"
+                                            />
+                                          </div>
+                                        </div>
+                                      </>
+                                    );
+                                  })()}
+                                </div>
+                              </div>
                             </div>
                           )}
 

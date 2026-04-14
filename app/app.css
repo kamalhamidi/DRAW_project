@@ -3615,6 +3615,58 @@ body.bg-none::before {
   padding: 80px 0 60px;
 }
 
+.broadcast-edit-stage {
+  width: 100%;
+  min-height: 100vh;
+  padding: 0;
+  position: relative;
+}
+
+.broadcast-edit-canvas {
+  position: relative;
+  width: 100vw;
+  min-height: 100vh;
+}
+
+.broadcast-edit-section {
+  position: absolute;
+  border: none;
+  border-radius: 0;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  backdrop-filter: none;
+  background: transparent !important;
+}
+
+.broadcast-edit-header-inner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.broadcast-edit-title {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(1.1rem, 2.4vw, 2rem);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.broadcast-edit-footer {
+  justify-content: center;
+  align-items: center;
+}
+
+.broadcast-edit-empty {
+  position: absolute;
+  inset: 0;
+}
+
 /* Sections (Pots / Groups) */
 .broadcast-section {
   display: flex;

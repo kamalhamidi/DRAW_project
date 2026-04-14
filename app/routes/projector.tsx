@@ -80,6 +80,16 @@ const createDefaultCustomLayout = (): CustomLayoutConfig => ({
   ],
 });
 
+const createDefaultBroadcastEditLayout = (): CustomLayoutConfig => ({
+  canvas: { width: 1280, height: 720 },
+  elements: [
+    { id: "header", label: "Header", x: 2, y: 2, width: 96, height: 13, background: "rgba(130,0,197,0.18)", border: "rgba(130,0,197,0.45)", accent: "#8200C5", text: "#FFFFFF" },
+    { id: "pots", label: "Pots", x: 2, y: 18, width: 96, height: 27, background: "rgba(255,60,73,0.12)", border: "rgba(255,60,73,0.38)", accent: "#FF3C49", text: "#FFFFFF" },
+    { id: "groups", label: "Groups", x: 2, y: 48, width: 96, height: 38, background: "rgba(10,253,9,0.09)", border: "rgba(10,253,9,0.33)", accent: "#0AFD09", text: "#FFFFFF" },
+    { id: "footer", label: "Footer", x: 2, y: 89, width: 96, height: 9, background: "rgba(255,255,255,0.05)", border: "rgba(255,255,255,0.12)", accent: "#38BDF8", text: "#FFFFFF" },
+  ],
+});
+
 const normalizeCustomLayout = (layout?: CustomLayoutConfig | null): CustomLayoutConfig => {
   const defaults = createDefaultCustomLayout();
   if (!layout) return defaults;
@@ -127,6 +137,7 @@ export default function ProjectorView() {
   const [galaOrientation, setGalaOrientation] = useState<"horizontal" | "vertical">("horizontal");
   const [galaColorSwap, setGalaColorSwap] = useState(false);
   const [customLayout, setCustomLayout] = useState<CustomLayoutConfig>(() => createDefaultCustomLayout());
+  const [broadcastEditLayout, setBroadcastEditLayout] = useState<CustomLayoutConfig>(() => createDefaultBroadcastEditLayout());
 
   const getGroupSlotPrefix = (groupName: string) =>
     (groupName.match(/[A-Za-z]+$/)?.[0] ?? groupName.match(/[A-Za-z]/)?.[0] ?? "G").toUpperCase();
@@ -211,7 +222,7 @@ export default function ProjectorView() {
     const channel = new BroadcastChannel("draw_sync");
 
     const applyIncomingState = (data: any) => {
-      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale: incomingPotFontScale, broadcastPotRows: incomingBroadcastPotRows, showSpotlight, matches: incomingMatches, roundNotes: incomingRoundNotes, projectorDisplayMode: incomingDisplayMode, matchesLayout: incomingMatchesLayout, galaOrientation: incomingGalaOrientation, galaColorSwap: incomingGalaColorSwap, customLayout: incomingCustomLayout } = data;
+      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale: incomingPotFontScale, broadcastPotRows: incomingBroadcastPotRows, showSpotlight, matches: incomingMatches, roundNotes: incomingRoundNotes, projectorDisplayMode: incomingDisplayMode, matchesLayout: incomingMatchesLayout, galaOrientation: incomingGalaOrientation, galaColorSwap: incomingGalaColorSwap, customLayout: incomingCustomLayout, broadcastEditLayout: incomingBroadcastEditLayout } = data;
       setDrawState({
         pots: pots || [],
         groups: groups || [],
@@ -274,6 +285,9 @@ export default function ProjectorView() {
       }
       if (incomingCustomLayout) {
         setCustomLayout(normalizeCustomLayout(incomingCustomLayout));
+      }
+      if (incomingBroadcastEditLayout) {
+        setBroadcastEditLayout(normalizeCustomLayout(incomingBroadcastEditLayout));
       }
       // Apply color palette from the home page
       if (colorPalette) {
@@ -856,177 +870,203 @@ export default function ProjectorView() {
 
   // ============ BROADCAST LAYOUT ============
   const renderBroadcastLayout = () => {
+    const layout = normalizeCustomLayout(broadcastEditLayout);
+    const getSection = (id: CustomLayoutElementKey) => layout.elements.find((element) => element.id === id);
+    const headerSection = getSection("header");
+    const potsSection = getSection("pots");
+    const groupsSection = getSection("groups");
+    const footerSection = getSection("footer");
+
+    const getSectionStyle = (section?: CustomLayoutElement): React.CSSProperties => {
+      if (!section) return {};
+      return {
+        left: `${section.x}%`,
+        top: `${section.y}%`,
+        width: `${section.width}%`,
+        height: `${section.height}%`,
+        background: section.background,
+        borderColor: section.border,
+        color: section.text,
+      };
+    };
+
     return (
-      <div className="broadcast-wrapper">
-        {/* Competition Logo */}
-        {competitionLogo && (
-          <div className="broadcast-logo-container">
-            <img src={competitionLogo} alt="" className="projector-logo broadcast-logo" style={{ height: `${logoSize}px` }} />
-          </div>
-        )}
-        {/* Pots Section */}
-        {pots.length > 0 && drawState.showProjectorPots && (
-          <motion.div
-            className={`broadcast-section broadcast-pots-section ${broadcastPotRows === 1 ? "rows-one-cards" : ""}`}
-            initial={{ opacity: 0, y: -30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            {pots.map((pot, index) => (
-              (() => {
-                const safeRows = Math.max(1, Math.min(broadcastPotRows, Math.max(1, pot.teams.length)));
-                const safeCols = Math.max(1, Math.ceil(pot.teams.length / safeRows));
+      <div className="broadcast-edit-stage">
+        <div className="broadcast-edit-canvas">
+          {headerSection && (
+            <motion.div
+              className="broadcast-edit-section"
+              style={getSectionStyle(headerSection)}
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              <div className="broadcast-edit-header-inner">
+                {competitionLogo && <img src={competitionLogo} alt="" className="projector-logo broadcast-logo" style={{ height: `${logoSize}px` }} />}
+                {projectorTitle.trim() && <h1 className="broadcast-edit-title">{projectorTitle}</h1>}
+              </div>
+            </motion.div>
+          )}
 
-                return (
-              <motion.div
-                key={pot.id}
-                className="broadcast-card broadcast-pot-card"
-                data-pot-cols={safeCols}
-                data-pot-rows={safeRows}
-                style={{
-                  "--broadcast-pot-cols": safeCols,
-                } as React.CSSProperties}
-                initial={{ opacity: 0, y: 25 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                {/* Floating Pill Header */}
-                <div className="broadcast-card-header red">
-                  <h3>{pot.name}</h3>
-                </div>
-                {/* Card Body */}
-                <div
-                  className="broadcast-card-body broadcast-card-body-pot-grid"
-                  style={{
-                    "--broadcast-pot-rows": safeRows,
-                    "--broadcast-pot-cols": safeCols,
-                  } as React.CSSProperties}
-                >
-                  {pot.teams.map((team) => {
-                    const isAssigned = team.assigned || assignedTeamIds.has(team.id);
+          {potsSection && pots.length > 0 && drawState.showProjectorPots && (
+            <motion.div
+              className="broadcast-edit-section"
+              style={getSectionStyle(potsSection)}
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45 }}
+            >
+              <div className={`broadcast-section broadcast-pots-section ${broadcastPotRows === 1 ? "rows-one-cards" : ""}`}>
+                {pots.map((pot, index) => {
+                  const safeRows = Math.max(1, Math.min(broadcastPotRows, Math.max(1, pot.teams.length)));
+                  const safeCols = Math.max(1, Math.ceil(pot.teams.length / safeRows));
 
-                    return (
-                      <motion.div
-                        key={team.id}
-                        className={`broadcast-team-row ${selectedTeam?.id === team.id ? "selected" : ""} ${isAssigned ? "assigned" : ""}`}
-                        layout
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        aria-disabled={isAssigned}
+                  return (
+                    <motion.div
+                      key={pot.id}
+                      className="broadcast-card broadcast-pot-card"
+                      data-pot-cols={safeCols}
+                      data-pot-rows={safeRows}
+                      style={{
+                        "--broadcast-pot-cols": safeCols,
+                      } as React.CSSProperties}
+                      initial={{ opacity: 0, y: 16 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.08 }}
+                    >
+                      <div className="broadcast-card-header red">
+                        <h3>{pot.name}</h3>
+                      </div>
+                      <div
+                        className="broadcast-card-body broadcast-card-body-pot-grid"
+                        style={{
+                          "--broadcast-pot-rows": safeRows,
+                          "--broadcast-pot-cols": safeCols,
+                        } as React.CSSProperties}
                       >
-                        <FlagImg src={team.customFlagImage} code={team.countryCode} size="sm" className="broadcast-team-flag" />
-                        <span className="broadcast-team-name">{team.name}</span>
-                      </motion.div>
-                    );
-                  })}
-                  {pot.teams.length === 0 && (
-                    <div className="broadcast-empty-text">All assigned \u2713</div>
-                  )}
-                </div>
-              </motion.div>
-                );
-              })()
-            ))}
-          </motion.div>
-        )}
+                        {pot.teams.map((team) => {
+                          const isAssigned = team.assigned || assignedTeamIds.has(team.id);
 
-        {/* Groups Section */}
-        {groups.length > 0 && (
-          <motion.div
-            className="broadcast-section broadcast-groups-section"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-          >
-            {groups.map((group, index) => {
-              const filledSlots = group.teams.filter((t) => t !== null).length;
-              const isGroupComplete = filledSlots === group.capacity;
+                          return (
+                            <motion.div
+                              key={team.id}
+                              className={`broadcast-team-row ${selectedTeam?.id === team.id ? "selected" : ""} ${isAssigned ? "assigned" : ""}`}
+                              layout
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              aria-disabled={isAssigned}
+                            >
+                              <FlagImg src={team.customFlagImage} code={team.countryCode} size="sm" className="broadcast-team-flag" />
+                              <span className="broadcast-team-name">{team.name}</span>
+                            </motion.div>
+                          );
+                        })}
+                        {pot.teams.length === 0 && <div className="broadcast-empty-text">All assigned ✓</div>}
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
 
-              return (
-                <motion.div
-                  key={group.id}
-                  className={`broadcast-card ${isGroupComplete ? "complete" : ""}`}
-                  initial={{ opacity: 0, y: 25 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  {/* Floating Pill Header */}
-                  <div className="broadcast-card-header green">
-                    <h3>{group.name}</h3>
-                  </div>
-                  {/* Card Body */}
-                  <div className="broadcast-card-body">
-                    {group.teams.map((team, slotIndex) => (
-                      <motion.div
-                        key={slotIndex}
-                        className={`broadcast-team-row ${team ? "filled" : "empty-slot"}`}
-                        layout
-                      >
-                        {team ? (
+          {groupsSection && groups.length > 0 && (
+            <motion.div
+              className="broadcast-edit-section"
+              style={getSectionStyle(groupsSection)}
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45, delay: 0.12 }}
+            >
+              <div className="broadcast-section broadcast-groups-section">
+                {groups.map((group, index) => {
+                  const filledSlots = group.teams.filter((t) => t !== null).length;
+                  const isGroupComplete = filledSlots === group.capacity;
+
+                  return (
+                    <motion.div
+                      key={group.id}
+                      className={`broadcast-card ${isGroupComplete ? "complete" : ""}`}
+                      initial={{ opacity: 0, y: 16 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.08 }}
+                    >
+                      <div className="broadcast-card-header green">
+                        <h3>{group.name}</h3>
+                      </div>
+                      <div className="broadcast-card-body">
+                        {group.teams.map((team, slotIndex) => (
                           <motion.div
-                            className="broadcast-slot-filled"
-                            initial={{ opacity: 0, x: -15 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ type: "spring", stiffness: 300 }}
+                            key={slotIndex}
+                            className={`broadcast-team-row ${team ? "filled" : "empty-slot"}`}
+                            layout
                           >
-                            <FlagImg src={team.customFlagImage} code={team.countryCode} size="sm" className="broadcast-team-flag" />
-                            <span className="broadcast-team-name">{team.name}</span>
+                            {team ? (
+                              <motion.div
+                                className="broadcast-slot-filled"
+                                initial={{ opacity: 0, x: -12 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ type: "spring", stiffness: 300 }}
+                              >
+                                <FlagImg src={team.customFlagImage} code={team.countryCode} size="sm" className="broadcast-team-flag" />
+                                <span className="broadcast-team-name">{team.name}</span>
+                              </motion.div>
+                            ) : (
+                              <span className="broadcast-slot-label">
+                                {group.name.charAt(group.name.length - 1)}{slotIndex + 1}
+                              </span>
+                            )}
                           </motion.div>
-                        ) : (
-                          <span className="broadcast-slot-label">
-                            {group.name.charAt(group.name.length - 1)}{slotIndex + 1}
-                          </span>
-                        )}
-                      </motion.div>
-                    ))}
-                  </div>
-                </motion.div>
-              );
-            })}
-          </motion.div>
-        )}
+                        ))}
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
 
-        {/* Footer Text */}
-        {footerText && (
-          <motion.div
-            className="projector-footer"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            <span className="projector-footer-text" style={{ fontSize: `${footerSize}rem` }}>{footerText}</span>
-          </motion.div>
-        )}
+          {footerSection && footerText && (
+            <motion.div
+              className="broadcast-edit-section broadcast-edit-footer"
+              style={getSectionStyle(footerSection)}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              <span className="projector-footer-text" style={{ fontSize: `${footerSize}rem` }}>{footerText}</span>
+            </motion.div>
+          )}
 
-        {/* Empty State */}
-        {pots.length === 0 && groups.length === 0 && (
-          <motion.div
-            className="broadcast-empty-state"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            {competitionLogo ? (
-              <motion.img
-                src={competitionLogo}
-                alt=""
-                className="empty-state-logo"
-                style={{ height: `${logoSize * 1.5}px` }}
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              />
-            ) : (
-              <div className="broadcast-empty-icon">📺</div>
-            )}
-            <h2>{projectorTitle || "Tournament Draw"}</h2>
-            <div className="empty-state-dots">
-              <span className="empty-dot" />
-              <span className="empty-dot" />
-              <span className="empty-dot" />
-            </div>
-            <p>Broadcasting will begin shortly</p>
-          </motion.div>
-        )}
+          {pots.length === 0 && groups.length === 0 && (
+            <motion.div
+              className="broadcast-empty-state broadcast-edit-empty"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+            >
+              {competitionLogo ? (
+                <motion.img
+                  src={competitionLogo}
+                  alt=""
+                  className="empty-state-logo"
+                  style={{ height: `${logoSize * 1.5}px` }}
+                  animate={{ scale: [1, 1.05, 1] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                />
+              ) : (
+                <div className="broadcast-empty-icon">📺</div>
+              )}
+              <h2>{projectorTitle || "Tournament Draw"}</h2>
+              <div className="empty-state-dots">
+                <span className="empty-dot" />
+                <span className="empty-dot" />
+                <span className="empty-dot" />
+              </div>
+              <p>Broadcasting will begin shortly</p>
+            </motion.div>
+          )}
+        </div>
       </div>
     );
   };
