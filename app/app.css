@@ -69,11 +69,11 @@ body::before {
 
 @keyframes rotateBackground {
   0% {
-    transform: rotate(0deg);
+    transform: translate(-50%, -50%) rotate(0deg);
   }
 
   100% {
-    transform: rotate(360deg);
+    transform: translate(-50%, -50%) rotate(360deg);
   }
 }
 
@@ -103,6 +103,15 @@ body.bg-zoom::before {
 
 body.bg-fade::before {
   animation: fadeBackground 6s infinite ease-in-out;
+}
+
+body.bg-rotate::before {
+  top: 50%;
+  left: 50%;
+  width: 170vmax;
+  height: 170vmax;
+  animation: rotateBackground 30s infinite linear;
+  transform-origin: center center;
 }
 
 body.bg-none::before {
@@ -3561,11 +3570,57 @@ body.bg-none::before {
 /* ===== GALA LAYOUT STYLES ===== */
 
 .projector-container.gala-mode {
+  --gala-groups-card-bg: rgba(255, 255, 255, 0.04);
+  --gala-groups-border: rgba(212, 175, 55, 0.2);
+  --gala-groups-border-complete: rgba(212, 175, 55, 0.6);
+  --gala-groups-header-bg: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.05) 100%);
+  --gala-groups-header-border: rgba(212, 175, 55, 0.15);
+  --gala-groups-title: #D4AF37;
+  --gala-groups-count-done-bg: rgba(212, 175, 55, 0.2);
+  --gala-groups-count-done-border: rgba(212, 175, 55, 0.4);
+  --gala-groups-row-hover: rgba(212, 175, 55, 0.06);
+
+  --gala-pots-card-bg: rgba(255, 255, 255, 0.04);
+  --gala-pots-border: rgba(255, 60, 73, 0.18);
+  --gala-pots-header-bg: linear-gradient(135deg, rgba(255, 60, 73, 0.15) 0%, rgba(255, 60, 73, 0.05) 100%);
+  --gala-pots-header-border: rgba(255, 60, 73, 0.15);
+  --gala-pots-title: #FF6B7A;
+  --gala-pots-done: #D4AF37;
+
+  --gala-row-bg: transparent;
+  --gala-row-alt-bg: rgba(255, 255, 255, 0.02);
+  --gala-pot-team-bg: rgba(255, 255, 255, 0.06);
+
   padding: 0;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   background: linear-gradient(170deg, rgba(10, 5, 20, 0.85) 0%, rgba(25, 10, 45, 0.75) 100%);
+}
+
+.projector-container.gala-mode.gala-colors-swapped {
+  --gala-groups-container-bg: rgba(255, 107, 122, 0.14);
+  --gala-pots-container-bg: rgba(212, 175, 55, 0.14);
+
+  --gala-groups-card-bg: var(--gala-groups-container-bg);
+  --gala-groups-border: rgba(255, 60, 73, 0.22);
+  --gala-groups-border-complete: rgba(255, 60, 73, 0.55);
+  --gala-groups-header-bg: var(--gala-groups-container-bg);
+  --gala-groups-header-border: rgba(255, 60, 73, 0.18);
+  --gala-groups-title: #FF6B7A;
+  --gala-groups-count-done-bg: rgba(255, 60, 73, 0.2);
+  --gala-groups-count-done-border: rgba(255, 60, 73, 0.4);
+  --gala-groups-row-hover: rgba(255, 60, 73, 0.08);
+
+  --gala-pots-card-bg: var(--gala-pots-container-bg);
+  --gala-pots-border: rgba(212, 175, 55, 0.22);
+  --gala-pots-header-bg: var(--gala-pots-container-bg);
+  --gala-pots-header-border: rgba(212, 175, 55, 0.18);
+  --gala-pots-title: #D4AF37;
+
+  --gala-row-bg: var(--gala-groups-container-bg);
+  --gala-row-alt-bg: var(--gala-groups-container-bg);
+  --gala-pot-team-bg: var(--gala-pots-container-bg);
 }
 
 .projector-container.gala-mode > div {
@@ -3804,17 +3859,17 @@ body.bg-none::before {
 }
 
 .gala-group-card {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--gala-groups-card-bg);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  border: 1px solid var(--gala-groups-border);
   border-radius: 16px;
   overflow: hidden;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .gala-group-card.complete {
-  border-color: rgba(212, 175, 55, 0.6);
+  border-color: var(--gala-groups-border-complete);
   box-shadow: 0 0 25px rgba(212, 175, 55, 0.1);
 }
 
@@ -3823,14 +3878,14 @@ body.bg-none::before {
   justify-content: space-between;
   align-items: center;
   padding: 0.85rem 1.25rem;
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.05) 100%);
-  border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+  background: var(--gala-groups-header-bg);
+  border-bottom: 1px solid var(--gala-groups-header-border);
 }
 
 .gala-group-header h3 {
   font-size: 1.15rem;
   font-weight: 900;
-  color: #D4AF37;
+  color: var(--gala-groups-title);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin: 0;
@@ -3847,9 +3902,9 @@ body.bg-none::before {
 }
 
 .gala-group-count.done {
-  background: rgba(212, 175, 55, 0.2);
-  color: #D4AF37;
-  border-color: rgba(212, 175, 55, 0.4);
+  background: var(--gala-groups-count-done-bg);
+  color: var(--gala-groups-title);
+  border-color: var(--gala-groups-count-done-border);
 }
 
 /* Group Rows */
@@ -3863,6 +3918,7 @@ body.bg-none::before {
   align-items: center;
   gap: 0.85rem;
   padding: 0.7rem 1.25rem;
+  background: var(--gala-row-bg);
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   transition: background 0.2s ease;
 }
@@ -3872,11 +3928,11 @@ body.bg-none::before {
 }
 
 .gala-row:nth-child(odd) {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--gala-row-alt-bg);
 }
 
 .gala-row.filled:hover {
-  background: rgba(212, 175, 55, 0.06);
+  background: var(--gala-groups-row-hover);
 }
 
 .gala-row-num {
@@ -3919,24 +3975,24 @@ body.bg-none::before {
 }
 
 .gala-pot-card {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--gala-pots-card-bg);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(212, 175, 55, 0.15);
+  border: 1px solid var(--gala-pots-border);
   border-radius: 14px;
   overflow: hidden;
 }
 
 .gala-pot-header {
   padding: 0.65rem 1.1rem;
-  background: linear-gradient(135deg, rgba(255, 60, 73, 0.15) 0%, rgba(255, 60, 73, 0.05) 100%);
-  border-bottom: 1px solid rgba(255, 60, 73, 0.15);
+  background: var(--gala-pots-header-bg);
+  border-bottom: 1px solid var(--gala-pots-header-border);
 }
 
 .gala-pot-header h4 {
   font-size: 0.95rem;
   font-weight: 900;
-  color: #FF6B7A;
+  color: var(--gala-pots-title);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin: 0;
@@ -3955,7 +4011,7 @@ body.bg-none::before {
   gap: 0.4rem;
   padding: 0.35rem 0.7rem;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--gala-pot-team-bg);
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.2s ease;
 }
@@ -3987,7 +4043,7 @@ body.bg-none::before {
 
 .gala-pot-done {
   font-size: 0.8rem;
-  color: #D4AF37;
+  color: var(--gala-pots-done);
   font-weight: 600;
 }
 

@@ -58,7 +58,7 @@ export default function ProjectorView() {
   });
 
   const [hydrated, setHydrated] = useState(false);
-  const [bgAnimation, setBgAnimation] = useState<"none" | "slide" | "zoom" | "fade">("zoom");
+  const [bgAnimation, setBgAnimation] = useState<"none" | "slide" | "zoom" | "fade" | "rotate">("zoom");
   const [projectorLayout, setProjectorLayout] = useState<"classic" | "stadium" | "broadcast" | "gala" | "minimal" | "cinematic">("broadcast");
   const [projectorTitle, setProjectorTitle] = useState("Tournament Draw");
   const [bgImage, setBgImage] = useState<string>("/bg.png");
@@ -76,6 +76,7 @@ export default function ProjectorView() {
   const [projectorDisplayMode, setProjectorDisplayMode] = useState<"groups" | "matches">("groups");
   const [matchesLayout, setMatchesLayout] = useState<"default" | "gala" | "ultra" | "broadcast">("default");
   const [galaOrientation, setGalaOrientation] = useState<"horizontal" | "vertical">("horizontal");
+  const [galaColorSwap, setGalaColorSwap] = useState(false);
 
   const getGroupSlotPrefix = (groupName: string) =>
     (groupName.match(/[A-Za-z]+$/)?.[0] ?? groupName.match(/[A-Za-z]/)?.[0] ?? "G").toUpperCase();
@@ -160,7 +161,7 @@ export default function ProjectorView() {
     const channel = new BroadcastChannel("draw_sync");
 
     const applyIncomingState = (data: any) => {
-      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale: incomingPotFontScale, broadcastPotRows: incomingBroadcastPotRows, showSpotlight, matches: incomingMatches, roundNotes: incomingRoundNotes, projectorDisplayMode: incomingDisplayMode, matchesLayout: incomingMatchesLayout, galaOrientation: incomingGalaOrientation } = data;
+      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale: incomingPotFontScale, broadcastPotRows: incomingBroadcastPotRows, showSpotlight, matches: incomingMatches, roundNotes: incomingRoundNotes, projectorDisplayMode: incomingDisplayMode, matchesLayout: incomingMatchesLayout, galaOrientation: incomingGalaOrientation, galaColorSwap: incomingGalaColorSwap } = data;
       setDrawState({
         pots: pots || [],
         groups: groups || [],
@@ -218,6 +219,9 @@ export default function ProjectorView() {
       if (incomingGalaOrientation !== undefined) {
         setGalaOrientation(incomingGalaOrientation);
       }
+      if (incomingGalaColorSwap !== undefined) {
+        setGalaColorSwap(Boolean(incomingGalaColorSwap));
+      }
       // Apply color palette from the home page
       if (colorPalette) {
         applyColorPalette(colorPalette as ColorPalette);
@@ -257,7 +261,7 @@ export default function ProjectorView() {
 
   useEffect(() => {
     // Apply background animation
-    document.body.classList.remove("bg-slide", "bg-zoom", "bg-fade", "bg-none");
+    document.body.classList.remove("bg-slide", "bg-zoom", "bg-fade", "bg-rotate", "bg-none");
     document.body.classList.add(`bg-${bgAnimation}`);
   }, [bgAnimation]);
 
@@ -2161,6 +2165,7 @@ export default function ProjectorView() {
     projectorLayout === "stadium" ? "stadium-mode" : "",
     projectorLayout === "broadcast" ? "broadcast-mode" : "",
     projectorLayout === "gala" ? "gala-mode" : "",
+    projectorLayout === "gala" && galaColorSwap ? "gala-colors-swapped" : "",
     projectorLayout === "minimal" ? "minimal-mode" : "",
     projectorLayout === "cinematic" ? "cinematic-mode" : "",
     projectorDisplayMode === "matches" ? "matches-mode" : "",
