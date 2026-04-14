@@ -1173,6 +1173,27 @@ export default function TournamentManager() {
                   <div className="settings-sidebar-head">
                     <h3>Projector Settings</h3>
                     <p>Organized by section for faster setup</p>
+                    <div className="settings-sidebar-meta">
+                      <span className="settings-sidebar-chip">Layout: {projectorLayout}</span>
+                      <span className="settings-sidebar-chip">Animation: {bgAnimation}</span>
+                      <span className="settings-sidebar-chip">Pots: {showProjectorPots ? "Visible" : "Hidden"}</span>
+                    </div>
+                    <div className="settings-sidebar-actions">
+                      <button
+                        type="button"
+                        className="settings-layout-btn"
+                        onClick={() => window.open("/projector", "projector", "width=1600,height=900")}
+                      >
+                        🎬 Open
+                      </button>
+                      <button
+                        type="button"
+                        className="settings-layout-btn"
+                        onClick={exportProjectorDesign}
+                      >
+                        📸 Export
+                      </button>
+                    </div>
                   </div>
                   <div className="settings-nav-list">
                     {([
@@ -1355,6 +1376,7 @@ export default function TournamentManager() {
                       >
                         <div className="settings-card">
                           <h4 className="settings-card-title">Layout & Background</h4>
+                          <div className="visual-settings-scroll">
 
                           <div className="settings-group">
                             <label className="settings-label">Layout</label>
@@ -1436,8 +1458,9 @@ export default function TournamentManager() {
                           )}
 
                           {projectorLayout === "broadcast" && (
-                            <div className="settings-group settings-layout-option-card custom-layout-editor-card">
+                            <div className="settings-group settings-layout-option-card custom-layout-editor-card broadcast-settings-card">
                               <label className="settings-label">Broadcast Layout Options</label>
+                              <div className="broadcast-settings-scroll">
                               <div className="settings-inline-field-row">
                                 <label className="settings-inline-field-label" htmlFor="broadcast-pot-rows-input">
                                   Pot Rows
@@ -1455,6 +1478,12 @@ export default function TournamentManager() {
                               <p className="settings-inline-help">
                                 Set rows per pot card. Columns are calculated automatically.
                               </p>
+
+                              <div className="broadcast-settings-pills">
+                                <span className="broadcast-settings-pill">Drag blocks</span>
+                                <span className="broadcast-settings-pill">Resize corner ↘</span>
+                                <span className="broadcast-settings-pill">Live projector sync</span>
+                              </div>
 
                               <div className="settings-layout-editor-header">
                                 <div>
@@ -1643,6 +1672,7 @@ export default function TournamentManager() {
                                     );
                                   })()}
                                 </div>
+                              </div>
                               </div>
                             </div>
                           )}
@@ -1896,6 +1926,7 @@ export default function TournamentManager() {
                                 </motion.button>
                               )}
                             </div>
+                          </div>
                           </div>
                         </div>
                       </motion.div>
