@@ -47,6 +47,55 @@ interface DrawState {
   showProjectorPots: boolean;
 }
 
+type CustomLayoutElementKey = "header" | "pots" | "groups" | "footer";
+
+interface CustomLayoutElement {
+  id: CustomLayoutElementKey;
+  label: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  background: string;
+  border: string;
+  accent: string;
+  text: string;
+}
+
+interface CustomLayoutConfig {
+  canvas: {
+    width: number;
+    height: number;
+  };
+  elements: CustomLayoutElement[];
+}
+
+const createDefaultCustomLayout = (): CustomLayoutConfig => ({
+  canvas: { width: 1280, height: 720 },
+  elements: [
+    { id: "header", label: "Header", x: 3, y: 3, width: 94, height: 13, background: "rgba(255,255,255,0.06)", border: "rgba(255,255,255,0.12)", accent: "#38BDF8", text: "#FFFFFF" },
+    { id: "pots", label: "Pots", x: 3, y: 19, width: 30, height: 60, background: "rgba(255,60,73,0.12)", border: "rgba(255,60,73,0.42)", accent: "#FF3C49", text: "#FFFFFF" },
+    { id: "groups", label: "Groups", x: 35, y: 19, width: 62, height: 60, background: "rgba(10,253,9,0.08)", border: "rgba(10,253,9,0.35)", accent: "#0AFD09", text: "#FFFFFF" },
+    { id: "footer", label: "Footer", x: 3, y: 84, width: 94, height: 10, background: "rgba(255,255,255,0.04)", border: "rgba(255,255,255,0.10)", accent: "#D4AF37", text: "#FFFFFF" },
+  ],
+});
+
+const normalizeCustomLayout = (layout?: CustomLayoutConfig | null): CustomLayoutConfig => {
+  const defaults = createDefaultCustomLayout();
+  if (!layout) return defaults;
+
+  return {
+    canvas: {
+      width: layout.canvas?.width ?? defaults.canvas.width,
+      height: layout.canvas?.height ?? defaults.canvas.height,
+    },
+    elements: defaults.elements.map((fallback) => {
+      const found = layout.elements?.find((element) => element.id === fallback.id);
+      return found ? { ...fallback, ...found } : fallback;
+    }),
+  };
+};
+
 export default function ProjectorView() {
   const projectorCaptureRef = useRef<HTMLDivElement | null>(null);
   const isExportingRef = useRef(false);
@@ -59,7 +108,7 @@ export default function ProjectorView() {
 
   const [hydrated, setHydrated] = useState(false);
   const [bgAnimation, setBgAnimation] = useState<"none" | "slide" | "zoom" | "fade" | "rotate">("zoom");
-  const [projectorLayout, setProjectorLayout] = useState<"classic" | "stadium" | "broadcast" | "gala" | "minimal" | "cinematic">("broadcast");
+  const [projectorLayout, setProjectorLayout] = useState<"classic" | "stadium" | "broadcast" | "gala" | "minimal" | "cinematic" | "custom">("broadcast");
   const [projectorTitle, setProjectorTitle] = useState("Tournament Draw");
   const [bgImage, setBgImage] = useState<string>("/bg.png");
   const [competitionLogo, setCompetitionLogo] = useState<string>("");
@@ -77,6 +126,7 @@ export default function ProjectorView() {
   const [matchesLayout, setMatchesLayout] = useState<"default" | "gala" | "ultra" | "broadcast">("default");
   const [galaOrientation, setGalaOrientation] = useState<"horizontal" | "vertical">("horizontal");
   const [galaColorSwap, setGalaColorSwap] = useState(false);
+  const [customLayout, setCustomLayout] = useState<CustomLayoutConfig>(() => createDefaultCustomLayout());
 
   const getGroupSlotPrefix = (groupName: string) =>
     (groupName.match(/[A-Za-z]+$/)?.[0] ?? groupName.match(/[A-Za-z]/)?.[0] ?? "G").toUpperCase();
@@ -161,7 +211,7 @@ export default function ProjectorView() {
     const channel = new BroadcastChannel("draw_sync");
 
     const applyIncomingState = (data: any) => {
-      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale: incomingPotFontScale, broadcastPotRows: incomingBroadcastPotRows, showSpotlight, matches: incomingMatches, roundNotes: incomingRoundNotes, projectorDisplayMode: incomingDisplayMode, matchesLayout: incomingMatchesLayout, galaOrientation: incomingGalaOrientation, galaColorSwap: incomingGalaColorSwap } = data;
+      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale: incomingPotFontScale, broadcastPotRows: incomingBroadcastPotRows, showSpotlight, matches: incomingMatches, roundNotes: incomingRoundNotes, projectorDisplayMode: incomingDisplayMode, matchesLayout: incomingMatchesLayout, galaOrientation: incomingGalaOrientation, galaColorSwap: incomingGalaColorSwap, customLayout: incomingCustomLayout } = data;
       setDrawState({
         pots: pots || [],
         groups: groups || [],
@@ -221,6 +271,9 @@ export default function ProjectorView() {
       }
       if (incomingGalaColorSwap !== undefined) {
         setGalaColorSwap(Boolean(incomingGalaColorSwap));
+      }
+      if (incomingCustomLayout) {
+        setCustomLayout(normalizeCustomLayout(incomingCustomLayout));
       }
       // Apply color palette from the home page
       if (colorPalette) {
@@ -2159,6 +2212,100 @@ export default function ProjectorView() {
     );
   };
 
+  const renderCustomLayout = () => {
+    const layout = normalizeCustomLayout(customLayout);
+
+    const renderElementBody = (element: CustomLayoutElement) => {
+      switch (element.id) {
+        case "header":
+          return (
+            <div className="custom-projector-header">
+              {competitionLogo ? <img src={competitionLogo} alt="" className="custom-projector-logo" /> : <div className="custom-projector-logo-placeholder">🎬</div>}
+              <div className="custom-projector-header-copy">
+                <span className="custom-projector-kicker">Editable Layout</span>
+                <h1 style={{ fontSize: `${Math.max(1.2, Math.min(3.2, element.height / 4))}rem`, color: element.text }}>{projectorTitle || "Tournament Draw"}</h1>
+              </div>
+            </div>
+          );
+        case "pots":
+          return drawState.showProjectorPots ? (
+            <div className="custom-projector-pots-grid">
+              {drawState.pots.slice(0, 4).map((pot) => (
+                <div key={pot.id} className="custom-projector-mini-card">
+                  <strong>{pot.name}</strong>
+                  <span>{pot.teams.length} teams</span>
+                </div>
+              ))}
+              {drawState.pots.length === 0 && <div className="custom-projector-empty">No pots yet</div>}
+            </div>
+          ) : (
+            <div className="custom-projector-empty">Pots hidden</div>
+          );
+        case "groups":
+          return (
+            <div className="custom-projector-groups-grid">
+              {drawState.groups.slice(0, 4).map((group) => (
+                <div key={group.id} className="custom-projector-group-column">
+                  <div className="custom-projector-group-label">{group.name}</div>
+                  <div className="custom-projector-slot-list">
+                    {group.teams.slice(0, 4).map((team, slotIndex) => (
+                      <div key={`${group.id}-${slotIndex}`} className={`custom-projector-slot ${team ? "filled" : "empty"}`}>
+                        {team ? (
+                          <>
+                            <FlagImg src={team.customFlagImage} code={team.countryCode} size="xs" className="custom-projector-slot-flag" />
+                            <span>{team.name}</span>
+                          </>
+                        ) : (
+                          <span>{`${group.name.charAt(group.name.length - 1)}${slotIndex + 1}`}</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          );
+        case "footer":
+          return <div className="custom-projector-footer-copy">{footerText || "Edit me from the home panel."}</div>;
+        default:
+          return null;
+      }
+    };
+
+    return (
+      <div className="custom-projector-stage">
+        <div className="custom-projector-canvas">
+          {layout.elements.map((element) => (
+            <motion.div
+              key={element.id}
+              className="custom-projector-element"
+              style={{
+                left: `${element.x}%`,
+                top: `${element.y}%`,
+                width: `${element.width}%`,
+                height: `${element.height}%`,
+                background: element.background,
+                borderColor: element.border,
+                color: element.text,
+              }}
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="custom-projector-element-bar">
+                <span>{element.label}</span>
+                <span className="custom-projector-accent" style={{ background: element.accent }} />
+              </div>
+              <div className="custom-projector-element-body">
+                {renderElementBody(element)}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   // Determine container class
   const containerClass = [
     "projector-container",
@@ -2168,6 +2315,7 @@ export default function ProjectorView() {
     projectorLayout === "gala" && galaColorSwap ? "gala-colors-swapped" : "",
     projectorLayout === "minimal" ? "minimal-mode" : "",
     projectorLayout === "cinematic" ? "cinematic-mode" : "",
+    projectorLayout === "custom" ? "custom-mode" : "",
     projectorDisplayMode === "matches" ? "matches-mode" : "",
   ].filter(Boolean).join(" ");
 
@@ -2265,6 +2413,17 @@ export default function ProjectorView() {
                 transition={{ duration: 0.6 }}
               >
                 {renderCinematicLayout()}
+              </motion.div>
+            )}
+            {projectorLayout === "custom" && (
+              <motion.div
+                key="custom"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                {renderCustomLayout()}
               </motion.div>
             )}
           </>

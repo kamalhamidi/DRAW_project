@@ -32,7 +32,140 @@ interface SavedTournament {
   galaOrientation?: "horizontal" | "vertical";
   galaColorSwap?: boolean;
   roundNotes?: Record<number, string>;
+  customLayout?: CustomLayoutConfig;
 }
+
+type CustomLayoutElementKey = "header" | "pots" | "groups" | "footer";
+
+interface CustomLayoutElement {
+  id: CustomLayoutElementKey;
+  label: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  background: string;
+  border: string;
+  accent: string;
+  text: string;
+}
+
+interface CustomLayoutConfig {
+  canvas: {
+    width: number;
+    height: number;
+  };
+  elements: CustomLayoutElement[];
+}
+
+const createDefaultCustomLayout = (): CustomLayoutConfig => ({
+  canvas: { width: 1280, height: 720 },
+  elements: [
+    {
+      id: "header",
+      label: "Header",
+      x: 3,
+      y: 3,
+      width: 94,
+      height: 13,
+      background: "rgba(255, 255, 255, 0.06)",
+      border: "rgba(255, 255, 255, 0.12)",
+      accent: "#38BDF8",
+      text: "#FFFFFF",
+    },
+    {
+      id: "pots",
+      label: "Pots",
+      x: 3,
+      y: 19,
+      width: 30,
+      height: 60,
+      background: "rgba(255, 60, 73, 0.12)",
+      border: "rgba(255, 60, 73, 0.42)",
+      accent: "#FF3C49",
+      text: "#FFFFFF",
+    },
+    {
+      id: "groups",
+      label: "Groups",
+      x: 35,
+      y: 19,
+      width: 62,
+      height: 60,
+      background: "rgba(10, 253, 9, 0.08)",
+      border: "rgba(10, 253, 9, 0.35)",
+      accent: "#0AFD09",
+      text: "#FFFFFF",
+    },
+    {
+      id: "footer",
+      label: "Footer",
+      x: 3,
+      y: 84,
+      width: 94,
+      height: 10,
+      background: "rgba(255, 255, 255, 0.04)",
+      border: "rgba(255, 255, 255, 0.10)",
+      accent: "#D4AF37",
+      text: "#FFFFFF",
+    },
+  ],
+});
+
+const normalizeCustomLayout = (layout?: CustomLayoutConfig | null): CustomLayoutConfig => {
+  const defaults = createDefaultCustomLayout();
+  if (!layout) return defaults;
+
+  return {
+    canvas: {
+      width: layout.canvas?.width ?? defaults.canvas.width,
+      height: layout.canvas?.height ?? defaults.canvas.height,
+    },
+    elements: defaults.elements.map((fallback) => {
+      const found = layout.elements?.find((element) => element.id === fallback.id);
+      return found ? { ...fallback, ...found } : fallback;
+    }),
+  };
+};
+
+const toHexColor = (value: string) => {
+  const hexMatch = value.trim().match(/^#([0-9a-f]{3,8})$/i);
+  if (hexMatch) {
+    const hex = hexMatch[1];
+    if (hex.length === 3) {
+      return `#${hex
+        .split("")
+        .map((char) => char + char)
+        .join("")}`;
+    }
+    if (hex.length >= 6) {
+      return `#${hex.slice(0, 6)}`;
+    }
+  }
+
+  const rgbaMatch = value.trim().match(/^rgba?\(([^)]+)\)$/i);
+  if (rgbaMatch) {
+    const parts = rgbaMatch[1].split(",").map((part) => Number(part.trim()));
+    const [red = 255, green = 255, blue = 255] = parts;
+    const clamp = (input: number) => Math.max(0, Math.min(255, input));
+    return `#${[clamp(red), clamp(green), clamp(blue)]
+      .map((component) => component.toString(16).padStart(2, "0"))
+      .join("")}`;
+  }
+
+  return "#ffffff";
+};
+
+const hexToRgba = (hex: string, alpha: number) => {
+  const normalized = hex.replace("#", "");
+  const expanded = normalized.length === 3
+    ? normalized.split("").map((char) => char + char).join("")
+    : normalized.padEnd(6, "0").slice(0, 6);
+  const red = Number.parseInt(expanded.slice(0, 2), 16) || 0;
+  const green = Number.parseInt(expanded.slice(2, 4), 16) || 0;
+  const blue = Number.parseInt(expanded.slice(4, 6), 16) || 0;
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+};
 
 export default function TournamentManager() {
   const {
@@ -79,7 +212,7 @@ export default function TournamentManager() {
   const [hydrated, setHydrated] = useState(false);
   const [showProjectorPots, setShowProjectorPots] = useState(true);
   const [bgAnimation, setBgAnimation] = useState<"none" | "slide" | "zoom" | "fade" | "rotate">("zoom");
-  const [projectorLayout, setProjectorLayout] = useState<"stadium" | "broadcast" | "gala" | "minimal" | "cinematic">("broadcast");
+  const [projectorLayout, setProjectorLayout] = useState<"stadium" | "broadcast" | "gala" | "minimal" | "cinematic" | "custom">("broadcast");
   const [projectorTitle, setProjectorTitle] = useState("Tournament Draw");
   const [showProjectorSettings, setShowProjectorSettings] = useState(false);
   const [activeSettingsSection, setActiveSettingsSection] = useState<"general" | "branding" | "visual" | "colors" | "behavior">("general");
@@ -105,6 +238,9 @@ export default function TournamentManager() {
   const [matchesLayout, setMatchesLayout] = useState<"default" | "gala" | "ultra" | "broadcast">("default");
   const [galaOrientation, setGalaOrientation] = useState<"horizontal" | "vertical">("horizontal");
   const [galaColorSwap, setGalaColorSwap] = useState(false);
+  const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
+  const [customLayout, setCustomLayout] = useState<CustomLayoutConfig>(() => createDefaultCustomLayout());
+  const [selectedCustomElementId, setSelectedCustomElementId] = useState<CustomLayoutElementKey>("groups");
   const [colorPalette, setColorPalette] = useState<ColorPalette | null>(null);
   const [manualPalette, setManualPalette] = useState<ColorPalette>({
     primary: "#8200C5",
@@ -128,6 +264,14 @@ export default function TournamentManager() {
   const settingsPanelRef = useRef<HTMLDivElement | null>(null);
   const savePanelRef = useRef<HTMLDivElement | null>(null);
   const matchesPanelRef = useRef<HTMLDivElement | null>(null);
+  const customEditorCanvasRef = useRef<HTMLDivElement | null>(null);
+  const customInteractionRef = useRef<{
+    id: CustomLayoutElementKey;
+    mode: "drag" | "resize";
+    startX: number;
+    startY: number;
+    startLayout: CustomLayoutConfig;
+  } | null>(null);
 
   // Custom Confirm Modal
   const [confirmModal, setConfirmModal] = useState<{
@@ -199,6 +343,138 @@ export default function TournamentManager() {
     }
   };
 
+  const updateCustomElement = useCallback((elementId: CustomLayoutElementKey, patch: Partial<CustomLayoutElement>) => {
+    setCustomLayout((current) => ({
+      ...current,
+      elements: current.elements.map((element) =>
+        element.id === elementId ? { ...element, ...patch } : element
+      ),
+    }));
+  }, []);
+
+  const clampLayoutNumber = (value: number, minValue: number, maxValue: number) =>
+    Math.max(minValue, Math.min(maxValue, value));
+
+  const startCustomInteraction = (event: React.PointerEvent<HTMLElement>, elementId: CustomLayoutElementKey, mode: "drag" | "resize") => {
+    event.preventDefault();
+    event.stopPropagation();
+    const canvas = customEditorCanvasRef.current;
+    if (!canvas) return;
+
+    const layoutSnapshot = normalizeCustomLayout(customLayout);
+    customInteractionRef.current = {
+      id: elementId,
+      mode,
+      startX: event.clientX,
+      startY: event.clientY,
+      startLayout: layoutSnapshot,
+    };
+    setSelectedCustomElementId(elementId);
+  };
+
+  useEffect(() => {
+    const handlePointerMove = (event: PointerEvent) => {
+      const interaction = customInteractionRef.current;
+      const canvas = customEditorCanvasRef.current;
+      if (!interaction || !canvas) return;
+
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
+
+      const dxPercent = ((event.clientX - interaction.startX) / rect.width) * 100;
+      const dyPercent = ((event.clientY - interaction.startY) / rect.height) * 100;
+
+      setCustomLayout((current) => ({
+        ...current,
+        elements: current.elements.map((element) => {
+          if (element.id !== interaction.id) return element;
+
+          if (interaction.mode === "drag") {
+            return {
+              ...element,
+              x: clampLayoutNumber(interaction.startLayout.elements.find((item) => item.id === element.id)?.x ?? element.x + dxPercent, 0, 100 - element.width),
+              y: clampLayoutNumber(interaction.startLayout.elements.find((item) => item.id === element.id)?.y ?? element.y + dyPercent, 0, 100 - element.height),
+            };
+          }
+
+          const startElement = interaction.startLayout.elements.find((item) => item.id === element.id) ?? element;
+          return {
+            ...element,
+            width: clampLayoutNumber(startElement.width + dxPercent, 12, 100 - startElement.x),
+            height: clampLayoutNumber(startElement.height + dyPercent, 8, 100 - startElement.y),
+          };
+        }),
+      }));
+    };
+
+    const handlePointerUp = () => {
+      customInteractionRef.current = null;
+    };
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
+
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+    };
+  }, [customLayout]);
+
+  const renderCustomCanvasSection = (element: CustomLayoutElement) => {
+    switch (element.id) {
+      case "header":
+        return (
+          <div className="custom-header-content">
+            {competitionLogo ? <img src={competitionLogo} alt="" className="custom-header-logo" /> : <div className="custom-header-logo-placeholder">📺</div>}
+            <div className="custom-header-copy">
+              <span className="custom-element-kicker">Editable Broadcast</span>
+              <h3>{projectorTitle || "Tournament Draw"}</h3>
+            </div>
+          </div>
+        );
+      case "pots":
+        return (
+          <div className="custom-section-list">
+            {pots.slice(0, 4).map((pot: any) => (
+              <div key={pot.id} className="custom-mini-card">
+                <strong>{pot.name}</strong>
+                <span>{pot.teams.length} teams</span>
+              </div>
+            ))}
+            {pots.length === 0 && <div className="custom-empty-copy">Add pots to preview this panel.</div>}
+          </div>
+        );
+      case "groups":
+        return (
+          <div className="custom-groups-grid">
+            {groups.slice(0, 4).map((group: any) => (
+              <div key={group.id} className="custom-group-column">
+                <div className="custom-group-label">{group.name}</div>
+                <div className="custom-slot-list">
+                  {group.teams.slice(0, 4).map((team: any, slotIndex: number) => (
+                    <div key={`${group.id}-${slotIndex}`} className={`custom-slot-row ${team ? "filled" : "empty"}`}>
+                      {team ? (
+                        <>
+                          <FlagImg src={team.customFlagImage} code={team.countryCode} size="xs" className="custom-slot-flag" />
+                          <span>{team.name}</span>
+                        </>
+                      ) : (
+                        <span>{`${group.name.charAt(group.name.length - 1)}${slotIndex + 1}`}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      case "footer":
+        return <div className="custom-footer-copy">{footerText || "Customize this footer text from the controls."}</div>;
+      default:
+        return null;
+    }
+  };
+
   // Restore all settings from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem("saved-tournaments");
@@ -230,6 +506,7 @@ export default function TournamentManager() {
         if (s.galaOrientation) setGalaOrientation(s.galaOrientation);
         if (s.galaColorSwap !== undefined) setGalaColorSwap(Boolean(s.galaColorSwap));
         if (s.roundNotes) setRoundNotes(s.roundNotes);
+        if (s.customLayout) setCustomLayout(normalizeCustomLayout(s.customLayout));
       } catch { }
     }
   }, []);
@@ -259,9 +536,10 @@ export default function TournamentManager() {
       galaOrientation,
       galaColorSwap,
       roundNotes,
+      customLayout,
     };
     localStorage.setItem("tournament-settings", JSON.stringify(settings));
-  }, [hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, colorMode, manualPalette, currentPhase, projectorDisplayMode, matchesLayout, galaOrientation, galaColorSwap, roundNotes]);
+  }, [hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, colorMode, manualPalette, currentPhase, projectorDisplayMode, matchesLayout, galaOrientation, galaColorSwap, roundNotes, customLayout]);
 
   const saveTournament = useCallback(() => {
     if (!saveName.trim()) return;
@@ -292,12 +570,13 @@ export default function TournamentManager() {
       galaOrientation,
       galaColorSwap,
       roundNotes,
+      customLayout,
     };
     const updated = [...savedTournaments, preset];
     setSavedTournaments(updated);
     localStorage.setItem("saved-tournaments", JSON.stringify(updated));
     setSaveName("");
-  }, [saveName, pots, groups, potsFinalized, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, showProjectorPots, colorMode, manualPalette, numberOfGroups, teamsPerGroup, galaOrientation, galaColorSwap, roundNotes, savedTournaments]);
+  }, [saveName, pots, groups, potsFinalized, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, showProjectorPots, colorMode, manualPalette, numberOfGroups, teamsPerGroup, galaOrientation, galaColorSwap, roundNotes, customLayout, savedTournaments]);
 
   const loadTournament = useCallback((preset: SavedTournament) => {
     showConfirm(
@@ -333,6 +612,7 @@ export default function TournamentManager() {
         setGalaOrientation(preset.galaOrientation ?? "horizontal");
         setGalaColorSwap(preset.galaColorSwap ?? false);
         setRoundNotes(preset.roundNotes ?? {});
+        setCustomLayout(normalizeCustomLayout(preset.customLayout));
         setCurrentPhase(preset.potsFinalized ? "draw" : "setup");
         setShowSavePanel(false);
       }
@@ -467,6 +747,7 @@ export default function TournamentManager() {
         matchesLayout,
         galaOrientation,
         galaColorSwap,
+        customLayout,
       };
 
       broadcastChannelRef.current.postMessage(syncPayload);
@@ -477,7 +758,7 @@ export default function TournamentManager() {
         // Ignore storage errors
       }
     }
-  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, matches, roundNotes, projectorDisplayMode, matchesLayout, galaOrientation, galaColorSwap]);
+  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, matches, roundNotes, projectorDisplayMode, matchesLayout, galaOrientation, galaColorSwap, customLayout]);
 
   const handleCreatePot = (e: React.FormEvent) => {
     e.preventDefault();
@@ -940,6 +1221,7 @@ export default function TournamentManager() {
                                 { key: "gala", icon: "✨", label: "Gala" },
                                 { key: "minimal", icon: "◈", label: "Minimal" },
                                 { key: "cinematic", icon: "🎬", label: "Cinematic" },
+                                { key: "custom", icon: "🧩", label: "Custom" },
                               ] as const).map((layout) => (
                                 <motion.button
                                   key={layout.key}
@@ -1029,6 +1311,199 @@ export default function TournamentManager() {
                               <p className="settings-inline-help">
                                 Set rows per pot card. Columns are calculated automatically.
                               </p>
+                            </div>
+                          )}
+
+                          {projectorLayout === "custom" && (
+                            <div className="settings-group settings-layout-option-card custom-layout-editor-card">
+                              <div className="settings-layout-editor-header">
+                                <div>
+                                  <label className="settings-label">Custom Layout Editor</label>
+                                  <p className="settings-inline-help">
+                                    Drag the panels, resize them from the corner, and change colors from the controls.
+                                  </p>
+                                </div>
+                                <button
+                                  type="button"
+                                  className="settings-layout-btn"
+                                  onClick={() => setCustomLayout(createDefaultCustomLayout())}
+                                >
+                                  Reset Layout
+                                </button>
+                              </div>
+
+                              <div className="custom-layout-editor">
+                                <div className="custom-layout-canvas-wrap">
+                                  <div className="custom-layout-canvas" ref={customEditorCanvasRef}>
+                                    {customLayout.elements.map((element) => {
+                                      const isActive = selectedCustomElementId === element.id;
+                                      return (
+                                        <motion.div
+                                          key={element.id}
+                                          className={`custom-layout-element ${isActive ? "active" : ""}`}
+                                          style={{
+                                            left: `${element.x}%`,
+                                            top: `${element.y}%`,
+                                            width: `${element.width}%`,
+                                            height: `${element.height}%`,
+                                            background: element.background,
+                                            borderColor: element.border,
+                                            color: element.text,
+                                          }}
+                                          onPointerDown={(event) => startCustomInteraction(event, element.id, "drag")}
+                                          onClick={() => setSelectedCustomElementId(element.id)}
+                                        >
+                                          <div className="custom-layout-element-bar">
+                                            <span>{element.label}</span>
+                                            <button
+                                              type="button"
+                                              className="custom-layout-select-btn"
+                                              onClick={(event) => {
+                                                event.stopPropagation();
+                                                setSelectedCustomElementId(element.id);
+                                              }}
+                                            >
+                                              Edit
+                                            </button>
+                                          </div>
+                                          <div className="custom-layout-element-body">
+                                            {renderCustomCanvasSection(element)}
+                                          </div>
+                                          <button
+                                            type="button"
+                                            className="custom-layout-resize-handle"
+                                            onPointerDown={(event) => startCustomInteraction(event, element.id, "resize")}
+                                          >
+                                            ↘
+                                          </button>
+                                        </motion.div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+
+                                <div className="custom-layout-controls">
+                                  <div className="settings-group">
+                                    <label className="settings-label">Selected Element</label>
+                                    <div className="settings-layout-btns settings-layout-wrap">
+                                      {customLayout.elements.map((element) => (
+                                        <button
+                                          key={element.id}
+                                          type="button"
+                                          className={`settings-layout-btn ${selectedCustomElementId === element.id ? "active" : ""}`}
+                                          onClick={() => setSelectedCustomElementId(element.id)}
+                                        >
+                                          {element.label}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+
+                                  {(() => {
+                                    const activeElement = customLayout.elements.find((element) => element.id === selectedCustomElementId) ?? customLayout.elements[0];
+                                    if (!activeElement) return null;
+
+                                    return (
+                                      <>
+                                        <div className="settings-group">
+                                          <label className="settings-label">Position</label>
+                                          <div className="settings-inline-field-row custom-range-row">
+                                            <span className="settings-inline-field-label">X</span>
+                                            <input
+                                              type="range"
+                                              min="0"
+                                              max="100"
+                                              step="1"
+                                              value={activeElement.x}
+                                              onChange={(event) => updateCustomElement(activeElement.id, { x: Number(event.target.value) })}
+                                              className="settings-range"
+                                            />
+                                          </div>
+                                          <div className="settings-inline-field-row custom-range-row">
+                                            <span className="settings-inline-field-label">Y</span>
+                                            <input
+                                              type="range"
+                                              min="0"
+                                              max="100"
+                                              step="1"
+                                              value={activeElement.y}
+                                              onChange={(event) => updateCustomElement(activeElement.id, { y: Number(event.target.value) })}
+                                              className="settings-range"
+                                            />
+                                          </div>
+                                        </div>
+
+                                        <div className="settings-group">
+                                          <label className="settings-label">Size</label>
+                                          <div className="settings-inline-field-row custom-range-row">
+                                            <span className="settings-inline-field-label">W</span>
+                                            <input
+                                              type="range"
+                                              min="10"
+                                              max="100"
+                                              step="1"
+                                              value={activeElement.width}
+                                              onChange={(event) => updateCustomElement(activeElement.id, { width: Number(event.target.value) })}
+                                              className="settings-range"
+                                            />
+                                          </div>
+                                          <div className="settings-inline-field-row custom-range-row">
+                                            <span className="settings-inline-field-label">H</span>
+                                            <input
+                                              type="range"
+                                              min="8"
+                                              max="100"
+                                              step="1"
+                                              value={activeElement.height}
+                                              onChange={(event) => updateCustomElement(activeElement.id, { height: Number(event.target.value) })}
+                                              className="settings-range"
+                                            />
+                                          </div>
+                                        </div>
+
+                                        <div className="settings-group custom-color-grid">
+                                          <div>
+                                            <label className="settings-label">Background</label>
+                                            <input
+                                              type="color"
+                                              value={toHexColor(activeElement.background)}
+                                              onChange={(event) => updateCustomElement(activeElement.id, { background: hexToRgba(event.target.value, 0.18) })}
+                                              className="settings-color-input"
+                                            />
+                                          </div>
+                                          <div>
+                                            <label className="settings-label">Border</label>
+                                            <input
+                                              type="color"
+                                              value={toHexColor(activeElement.border)}
+                                              onChange={(event) => updateCustomElement(activeElement.id, { border: event.target.value })}
+                                              className="settings-color-input"
+                                            />
+                                          </div>
+                                          <div>
+                                            <label className="settings-label">Accent</label>
+                                            <input
+                                              type="color"
+                                              value={toHexColor(activeElement.accent)}
+                                              onChange={(event) => updateCustomElement(activeElement.id, { accent: event.target.value })}
+                                              className="settings-color-input"
+                                            />
+                                          </div>
+                                          <div>
+                                            <label className="settings-label">Text</label>
+                                            <input
+                                              type="color"
+                                              value={toHexColor(activeElement.text)}
+                                              onChange={(event) => updateCustomElement(activeElement.id, { text: event.target.value })}
+                                              className="settings-color-input"
+                                            />
+                                          </div>
+                                        </div>
+                                      </>
+                                    );
+                                  })()}
+                                </div>
+                              </div>
                             </div>
                           )}
 
@@ -2089,10 +2564,11 @@ export default function TournamentManager() {
                       return (
                         <motion.div
                           key={group.id}
-                          className={`draw-group-card ${isGroupComplete ? "complete" : ""}`}
+                          className={`draw-group-card ${isGroupComplete ? "complete" : ""} ${selectedGroupId === group.id ? "selected" : ""}`}
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: index * 0.1 }}
+                          onClick={() => setSelectedGroupId(group.id)}
                         >
                           <div className="group-header">
                             <h3 className="draw-group-title">{group.name}</h3>
