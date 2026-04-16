@@ -3391,6 +3391,7 @@ body.bg-none::before {
   margin: 0 auto;
   width: 100%;
   align-items: start;
+  transition: grid-template-columns 0.35s ease, justify-items 0.35s ease, align-content 0.35s ease;
 }
 
 /* Stadium Panel Headers */
@@ -3438,6 +3439,10 @@ body.bg-none::before {
   justify-items: center;
   align-content: center;
   min-height: 0;
+}
+
+.stadium-groups-panel {
+  transition: max-width 0.35s ease, width 0.35s ease, transform 0.35s ease;
 }
 
 .stadium-content.pots-hidden .stadium-groups-panel {
@@ -3821,6 +3826,20 @@ body.bg-none::before {
 .broadcast-groups-section {
   margin-top: 100px;
   flex-wrap: nowrap;
+}
+
+.broadcast-edit-canvas.pots-hidden .broadcast-groups-section {
+  margin-top: 0;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.45s ease;
+}
+
+.broadcast-edit-canvas.pots-hidden .broadcast-groups-section .broadcast-card {
+  flex: 1 1 300px;
+  min-width: 300px;
+  max-width: none;
 }
 
 /* ---- Broadcast Card ---- */
@@ -4345,6 +4364,7 @@ body.bg-none::before {
   width: 100%;
   align-items: start;
   flex: 1;
+  transition: grid-template-columns 0.35s ease, justify-items 0.35s ease, align-content 0.35s ease, gap 0.35s ease;
 }
 
 /* Center groups when pots are hidden */
@@ -4353,6 +4373,10 @@ body.bg-none::before {
   justify-items: center;
   align-content: center;
   flex: 1;
+}
+
+.gala-groups-panel {
+  transition: max-width 0.35s ease, width 0.35s ease, transform 0.35s ease;
 }
 
 .gala-content.pots-hidden .gala-groups-panel {

@@ -726,9 +726,9 @@ export default function ProjectorView() {
                     <motion.div
                       key={group.id}
                       className={`stadium-group-card ${isGroupComplete ? "complete" : ""}`}
-                      initial={{ opacity: 0, y: 20 }}
+                      initial={{ opacity: 0, y: 12 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
+                      transition={{ duration: 0.25, delay: index * 0.05, ease: "easeOut" }}
                     >
                       <div className="stadium-group-top">
                         <h3 className="stadium-group-name">{group.name}</h3>
@@ -741,7 +741,6 @@ export default function ProjectorView() {
                           <motion.div
                             key={slotIndex}
                             className={`stadium-slot ${team ? "filled" : "empty"}`}
-                            layout
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: slotIndex * 0.05 }}
@@ -777,50 +776,45 @@ export default function ProjectorView() {
           </motion.div>
 
           {/* Right: Pots */}
-          <AnimatePresence mode="wait">
-            {drawState.showProjectorPots && pots.length > 0 && (
-              <motion.div
-                className="stadium-pots-panel"
-                initial={{ opacity: 0, x: 40 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 40 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-              >
-                <div className="stadium-pots-list">
-                  {pots.map((pot, potIndex) => (
-                    <motion.div
-                      key={pot.id}
-                      className="stadium-pot-card"
-                      initial={{ opacity: 0, y: 15 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: potIndex * 0.1 }}
-                    >
-                      <h4 className="stadium-pot-name">{pot.name}</h4>
-                      <div className="stadium-pot-teams">
-                        {pot.teams.map((team) => (
-                          <motion.div
-                            key={team.id}
-                            className={`stadium-pot-pill ${selectedTeam?.id === team.id ? "selected" : ""} ${team.assigned ? "assigned" : ""}`}
-                            layout
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.5 }}
-                            whileHover={{ scale: team.assigned ? 1 : 1.05 }}
-                          >
-                            <FlagImg src={team.customFlagImage} code={team.countryCode} size="xs" className="pill-flag" />
-                            <span className="pill-name">{team.name}</span>
-                          </motion.div>
-                        ))}
-                        {pot.teams.length === 0 && (
-                          <span className="stadium-pot-done">All assigned ✓</span>
-                        )}
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {drawState.showProjectorPots && pots.length > 0 && (
+            <motion.div
+              className="stadium-pots-panel"
+              initial={{ opacity: 0, x: 40 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
+            >
+              <div className="stadium-pots-list">
+                {pots.map((pot, potIndex) => (
+                  <motion.div
+                    key={pot.id}
+                    className="stadium-pot-card"
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: potIndex * 0.08, duration: 0.25, ease: "easeOut" }}
+                  >
+                    <h4 className="stadium-pot-name">{pot.name}</h4>
+                    <div className="stadium-pot-teams">
+                      {pot.teams.map((team) => (
+                        <motion.div
+                          key={team.id}
+                          className={`stadium-pot-pill ${selectedTeam?.id === team.id ? "selected" : ""} ${team.assigned ? "assigned" : ""}`}
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          whileHover={{ scale: team.assigned ? 1 : 1.05 }}
+                        >
+                          <FlagImg src={team.customFlagImage} code={team.countryCode} size="xs" className="pill-flag" />
+                          <span className="pill-name">{team.name}</span>
+                        </motion.div>
+                      ))}
+                      {pot.teams.length === 0 && (
+                        <span className="stadium-pot-done">All assigned ✓</span>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          )}
         </div>
 
         {/* Footer Text */}
@@ -876,6 +870,7 @@ export default function ProjectorView() {
     const potsSection = getSection("pots");
     const groupsSection = getSection("groups");
     const footerSection = getSection("footer");
+    const isBroadcastPotsHidden = !drawState.showProjectorPots;
 
     const getSectionStyle = (section?: CustomLayoutElement): React.CSSProperties => {
       if (!section) return {};
@@ -890,9 +885,21 @@ export default function ProjectorView() {
       };
     };
 
+    const groupsSectionStyle: React.CSSProperties = {
+      ...getSectionStyle(groupsSection),
+      ...(isBroadcastPotsHidden
+        ? {
+            left: "2%",
+            top: "18%",
+            width: "96%",
+            height: "68%",
+          }
+        : {}),
+    };
+
     return (
       <div className="broadcast-edit-stage">
-        <div className="broadcast-edit-canvas">
+        <div className={`broadcast-edit-canvas ${isBroadcastPotsHidden ? "pots-hidden" : ""}`}>
           {headerSection && (
             <motion.div
               className="broadcast-edit-section"
@@ -973,7 +980,8 @@ export default function ProjectorView() {
           {groupsSection && groups.length > 0 && (
             <motion.div
               className="broadcast-edit-section"
-              style={getSectionStyle(groupsSection)}
+              style={groupsSectionStyle}
+              layout
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, delay: 0.12 }}
@@ -987,6 +995,7 @@ export default function ProjectorView() {
                     <motion.div
                       key={group.id}
                       className={`broadcast-card ${isGroupComplete ? "complete" : ""}`}
+                      layout
                       initial={{ opacity: 0, y: 16 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.08 }}
@@ -1201,46 +1210,42 @@ export default function ProjectorView() {
           </div>
 
           {/* Pots Panel */}
-          <AnimatePresence>
-            {drawState.showProjectorPots && pots.length > 0 && (
-              <motion.div
-                className="gala-panel gala-pots-panel"
-                initial={{ opacity: 0, x: 30 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 30 }}
-                transition={{ duration: 0.4 }}
-              >
-                {pots.map((pot, potIndex) => (
-                  <motion.div
-                    key={pot.id}
-                    className="gala-pot-card"
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: potIndex * 0.1 }}
-                  >
-                    <div className="gala-pot-header">
-                      <h4>{pot.name}</h4>
-                    </div>
-                    <div className="gala-pot-teams">
-                      {pot.teams.map((team) => (
-                        <motion.div
-                          key={team.id}
-                          className={`gala-pot-team ${selectedTeam?.id === team.id ? "active" : ""} ${team.assigned ? "used" : ""}`}
-                          layout
-                        >
-                          <FlagImg src={team.customFlagImage} code={team.countryCode} size="xs" className="gala-pot-flag" />
-                          <span className="gala-pot-name">{team.name}</span>
-                        </motion.div>
-                      ))}
-                      {pot.teams.length === 0 && (
-                        <span className="gala-pot-done">All assigned ✓</span>
-                      )}
-                    </div>
-                  </motion.div>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {drawState.showProjectorPots && pots.length > 0 && (
+            <motion.div
+              className="gala-panel gala-pots-panel"
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
+            >
+              {pots.map((pot, potIndex) => (
+                <motion.div
+                  key={pot.id}
+                  className="gala-pot-card"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: potIndex * 0.08, duration: 0.25, ease: "easeOut" }}
+                >
+                  <div className="gala-pot-header">
+                    <h4>{pot.name}</h4>
+                  </div>
+                  <div className="gala-pot-teams">
+                    {pot.teams.map((team) => (
+                      <motion.div
+                        key={team.id}
+                        className={`gala-pot-team ${selectedTeam?.id === team.id ? "active" : ""} ${team.assigned ? "used" : ""}`}
+                      >
+                        <FlagImg src={team.customFlagImage} code={team.countryCode} size="xs" className="gala-pot-flag" />
+                        <span className="gala-pot-name">{team.name}</span>
+                      </motion.div>
+                    ))}
+                    {pot.teams.length === 0 && (
+                      <span className="gala-pot-done">All assigned ✓</span>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
         </div>
 
         {/* Footer Text */}
