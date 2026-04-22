@@ -844,22 +844,112 @@ export default function TournamentManager() {
     document.body.classList.add(`bg-${bgAnimation}`);
   }, [bgAnimation]);
 
+  const createAutoPaletteVariant = useCallback((base: ColorPalette): ColorPalette => {
+    const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+
+    const hexToRgb = (hex: string) => {
+      const clean = hex.replace("#", "").trim();
+      const normalized = clean.length === 3
+        ? clean.split("").map((ch) => ch + ch).join("")
+        : clean.padEnd(6, "0").slice(0, 6);
+
+      const red = Number.parseInt(normalized.slice(0, 2), 16);
+      const green = Number.parseInt(normalized.slice(2, 4), 16);
+      const blue = Number.parseInt(normalized.slice(4, 6), 16);
+
+      if ([red, green, blue].some((value) => Number.isNaN(value))) {
+        return null;
+      }
+
+      return { red, green, blue };
+    };
+
+    const rgbToHsl = (red: number, green: number, blue: number): [number, number, number] => {
+      const r = red / 255;
+      const g = green / 255;
+      const b = blue / 255;
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      let h = 0;
+      let s = 0;
+      const l = (max + min) / 2;
+
+      if (max !== min) {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+          case r:
+            h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+            break;
+          case g:
+            h = ((b - r) / d + 2) / 6;
+            break;
+          default:
+            h = ((r - g) / d + 4) / 6;
+            break;
+        }
+      }
+
+      return [h * 360, s * 100, l * 100];
+    };
+
+    const hslToHex = (hue: number, sat: number, light: number) => {
+      const s = sat / 100;
+      const l = light / 100;
+      const a = s * Math.min(l, 1 - l);
+      const f = (n: number) => {
+        const k = (n + hue / 30) % 12;
+        const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+        return Math.round(255 * color).toString(16).padStart(2, "0");
+      };
+      return `#${f(0)}${f(8)}${f(4)}`;
+    };
+
+    const varyHex = (hex: string, hueDelta: number, satDelta: number, lightDelta: number) => {
+      const rgb = hexToRgb(hex);
+      if (!rgb) return hex;
+
+      const [h, s, l] = rgbToHsl(rgb.red, rgb.green, rgb.blue);
+      const nextHue = (h + hueDelta + 360) % 360;
+      const nextSat = clamp(s + satDelta, 18, 96);
+      const nextLight = clamp(l + lightDelta, 20, 78);
+
+      return hslToHex(nextHue, nextSat, nextLight);
+    };
+
+    const rand = (min: number, max: number) => Math.random() * (max - min) + min;
+
+    return {
+      primary: varyHex(base.primary, rand(-18, 18), rand(-6, 8), rand(-4, 4)),
+      primaryDark: varyHex(base.primaryDark, rand(-12, 12), rand(-8, 6), rand(-6, 2)),
+      accent1: varyHex(base.accent1, rand(-26, 26), rand(-4, 10), rand(-5, 5)),
+      accent2: varyHex(base.accent2, rand(-26, 26), rand(-4, 10), rand(-5, 5)),
+      highlight: varyHex(base.highlight, rand(-30, 30), rand(-6, 10), rand(-5, 5)),
+      accent2Text: varyHex(base.accent2Text, rand(-16, 16), rand(-8, 6), rand(-6, 2)),
+    };
+  }, []);
+
+  const regenerateAutoColors = useCallback((asVariant = false) => {
+    extractColorsFromImage(bgImage).then((palette) => {
+      if (palette) {
+        const nextPalette = asVariant ? createAutoPaletteVariant(palette) : palette;
+        setColorPalette(nextPalette);
+        applyColorPalette(nextPalette);
+      } else {
+        setColorPalette(null);
+        resetColorPalette();
+      }
+    });
+  }, [bgImage, createAutoPaletteVariant]);
+
   useEffect(() => {
     document.documentElement.style.setProperty("--bg-image", `url("${bgImage}")`);
 
     // Only auto-extract when in auto mode
     if (colorMode === "auto") {
-      extractColorsFromImage(bgImage).then((palette) => {
-        if (palette) {
-          setColorPalette(palette);
-          applyColorPalette(palette);
-        } else {
-          setColorPalette(null);
-          resetColorPalette();
-        }
-      });
+      regenerateAutoColors(false);
     }
-  }, [bgImage, colorMode]);
+  }, [bgImage, colorMode, regenerateAutoColors]);
 
   // Apply manual palette when in manual mode or when manualPalette changes
   useEffect(() => {
@@ -1978,6 +2068,25 @@ export default function TournamentManager() {
                               </motion.button>
                             </div>
                           </div>
+
+                          {colorMode === "auto" && (
+                            <div className="settings-group">
+                              <label className="settings-label">Auto Palette</label>
+                              <div className="settings-layout-btns">
+                                <motion.button
+                                  className="settings-layout-btn"
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={() => regenerateAutoColors(true)}
+                                >
+                                  🔄 Regenerate Auto Colors
+                                </motion.button>
+                              </div>
+                              <p className="settings-inline-help">
+                                Generate another automatic palette from the current background image.
+                              </p>
+                            </div>
+                          )}
 
                           {colorMode === "manual" && (
                             <div className="settings-group">
