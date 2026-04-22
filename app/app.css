@@ -3619,9 +3619,18 @@ body.bg-none::before {
 }
 
 .stadium-pot-pill.assigned {
-  opacity: 0.3;
+  opacity: 1;
   background: rgba(50, 50, 50, 0.3);
   border-color: rgba(255, 255, 255, 0.1);
+  cursor: default;
+}
+
+.stadium-pot-pill.assigned .pill-name {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.stadium-pot-pill.assigned .pill-flag {
+  opacity: 0.45;
 }
 
 .pill-flag {

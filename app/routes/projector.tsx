@@ -798,18 +798,22 @@ export default function ProjectorView() {
                   >
                     <h4 className="stadium-pot-name">{pot.name}</h4>
                     <div className="stadium-pot-teams">
-                      {pot.teams.map((team) => (
-                        <motion.div
-                          key={team.id}
-                          className={`stadium-pot-pill ${selectedTeam?.id === team.id ? "selected" : ""} ${team.assigned ? "assigned" : ""}`}
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          whileHover={{ scale: team.assigned ? 1 : 1.05 }}
-                        >
-                          <FlagImg src={team.customFlagImage} code={team.countryCode} size="xs" className="pill-flag" />
-                          <span className="pill-name">{team.name}</span>
-                        </motion.div>
-                      ))}
+                      {pot.teams.map((team) => {
+                        const isAssigned = team.assigned || assignedTeamIds.has(team.id);
+
+                        return (
+                          <motion.div
+                            key={team.id}
+                            className={`stadium-pot-pill ${selectedTeam?.id === team.id ? "selected" : ""} ${isAssigned ? "assigned" : ""}`}
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            whileHover={{ scale: isAssigned ? 1 : 1.05 }}
+                          >
+                            <FlagImg src={team.customFlagImage} code={team.countryCode} size="xs" className="pill-flag" />
+                            <span className="pill-name">{team.name}</span>
+                          </motion.div>
+                        );
+                      })}
                       {pot.teams.length === 0 && (
                         <span className="stadium-pot-done">All assigned ✓</span>
                       )}
