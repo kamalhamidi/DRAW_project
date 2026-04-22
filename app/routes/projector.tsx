@@ -2271,94 +2271,267 @@ export default function ProjectorView() {
 
   const renderCustomLayout = () => {
     const layout = normalizeCustomLayout(customLayout);
+    const getEl = (id: CustomLayoutElementKey) => layout.elements.find((e) => e.id === id)!;
+    const headerEl = getEl("header");
+    const potsEl = getEl("pots");
+    const groupsEl = getEl("groups");
+    const footerEl = getEl("footer");
+    const progressPercent = totalTeams > 0 ? Math.round((assignedTeams / totalTeams) * 100) : 0;
+    const groupPrefix = (name: string) =>
+      (name.match(/[A-Za-z]+$/)?.[0] ?? name.match(/[A-Za-z]/)?.[0] ?? "G").toUpperCase();
 
-    const renderElementBody = (element: CustomLayoutElement) => {
-      switch (element.id) {
-        case "header":
-          return (
-            <div className="custom-projector-header">
-              {competitionLogo ? <img src={competitionLogo} alt="" className="custom-projector-logo" /> : <div className="custom-projector-logo-placeholder">🎬</div>}
-              <div className="custom-projector-header-copy">
-                <span className="custom-projector-kicker">Editable Layout</span>
-                <h1 style={{ fontSize: `${Math.max(1.2, Math.min(3.2, element.height / 4))}rem`, color: element.text }}>{projectorTitle || "Tournament Draw"}</h1>
-              </div>
-            </div>
-          );
-        case "pots":
-          return drawState.showProjectorPots ? (
-            <div className="custom-projector-pots-grid">
-              {drawState.pots.slice(0, 4).map((pot) => (
-                <div key={pot.id} className="custom-projector-mini-card">
-                  <strong>{pot.name}</strong>
-                  <span>{pot.teams.length} teams</span>
-                </div>
-              ))}
-              {drawState.pots.length === 0 && <div className="custom-projector-empty">No pots yet</div>}
-            </div>
-          ) : (
-            <div className="custom-projector-empty">Pots hidden</div>
-          );
-        case "groups":
-          return (
-            <div className="custom-projector-groups-grid">
-              {drawState.groups.slice(0, 4).map((group) => (
-                <div key={group.id} className="custom-projector-group-column">
-                  <div className="custom-projector-group-label">{group.name}</div>
-                  <div className="custom-projector-slot-list">
-                    {group.teams.slice(0, 4).map((team, slotIndex) => (
-                      <div key={`${group.id}-${slotIndex}`} className={`custom-projector-slot ${team ? "filled" : "empty"}`}>
-                        {team ? (
-                          <>
-                            <FlagImg src={team.customFlagImage} code={team.countryCode} size="xs" className="custom-projector-slot-flag" />
-                            <span>{team.name}</span>
-                          </>
-                        ) : (
-                          <span>{`${group.name.charAt(group.name.length - 1)}${slotIndex + 1}`}</span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          );
-        case "footer":
-          return <div className="custom-projector-footer-copy">{footerText || "Edit me from the home panel."}</div>;
-        default:
-          return null;
-      }
-    };
+    const elStyle = (el: CustomLayoutElement): React.CSSProperties => ({
+      left: `${el.x}%`,
+      top: `${el.y}%`,
+      width: `${el.width}%`,
+      height: `${el.height}%`,
+      "--cle-bg": el.background,
+      "--cle-border": el.border,
+      "--cle-accent": el.accent,
+      "--cle-text": el.text,
+    } as React.CSSProperties);
 
     return (
-      <div className="custom-projector-stage">
-        <div className="custom-projector-canvas">
-          {layout.elements.map((element) => (
-            <motion.div
-              key={element.id}
-              className="custom-projector-element"
-              style={{
-                left: `${element.x}%`,
-                top: `${element.y}%`,
-                width: `${element.width}%`,
-                height: `${element.height}%`,
-                background: element.background,
-                borderColor: element.border,
-                color: element.text,
-              }}
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="custom-projector-element-bar">
-                <span>{element.label}</span>
-                <span className="custom-projector-accent" style={{ background: element.accent }} />
+      <div className="cpl-stage">
+        {/* ── HEADER ── */}
+        <motion.div
+          className="cpl-panel cpl-header"
+          style={elStyle(headerEl)}
+          initial={{ opacity: 0, y: -30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        >
+          <div className="cpl-header-inner">
+            <div className="cpl-header-brand">
+              {competitionLogo && (
+                <motion.img
+                  src={competitionLogo}
+                  alt=""
+                  className="cpl-header-logo"
+                  style={{ height: `${logoSize}px` }}
+                  animate={{ rotate: [0, 1, -1, 0] }}
+                  transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                />
+              )}
+              <div className="cpl-header-text">
+                <h1 className="cpl-title">{projectorTitle || "Tournament Draw"}</h1>
+                <div className="cpl-header-stats">
+                  <span className="cpl-stat-chip">{groups.length} Groups</span>
+                  <span className="cpl-stat-chip">{pots.length} Pots</span>
+                  <span className="cpl-stat-chip cpl-stat-live">
+                    <span className="cpl-live-dot" />
+                    {assignedTeams}/{totalTeams} Drawn
+                  </span>
+                </div>
               </div>
-              <div className="custom-projector-element-body">
-                {renderElementBody(element)}
-              </div>
-            </motion.div>
-          ))}
-        </div>
+            </div>
+            {/* Progress bar */}
+            <div className="cpl-progress-wrap">
+              <motion.div
+                className="cpl-progress-fill"
+                initial={{ width: 0 }}
+                animate={{ width: `${progressPercent}%` }}
+                transition={{ type: "spring", stiffness: 60, damping: 18 }}
+              />
+              {allTeamsAssigned && (
+                <motion.span
+                  className="cpl-progress-label"
+                  initial={{ opacity: 0, scale: 0.7 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.3, type: "spring" }}
+                >
+                  ✅ DRAW COMPLETE
+                </motion.span>
+              )}
+            </div>
+          </div>
+          {/* Selected Team Spotlight — embedded in header */}
+          <AnimatePresence mode="wait">
+            {selectedTeam && showSpotlight && (() => {
+              const [tc1, tc2] = selectedTeamColors;
+              return (
+                <motion.div
+                  key={`spotlight-${selectedTeam.id}`}
+                  className="cpl-spotlight"
+                  initial={{ opacity: 0, x: 40, scale: 0.85 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: -30, scale: 0.85 }}
+                  transition={{ type: "spring", stiffness: 260, damping: 22 }}
+                  style={{
+                    "--spot-c1": tc1,
+                    "--spot-c2": tc2,
+                  } as React.CSSProperties}
+                >
+                  <div className="cpl-spotlight-glow" />
+                  <FlagImg src={selectedTeam.customFlagImage} code={selectedTeam.countryCode} size="xl" className="cpl-spotlight-flag" />
+                  <div className="cpl-spotlight-info">
+                    <span className="cpl-spotlight-label">SELECTED</span>
+                    <span className="cpl-spotlight-name">{selectedTeam.name}</span>
+                  </div>
+                </motion.div>
+              );
+            })()}
+          </AnimatePresence>
+        </motion.div>
+
+        {/* ── POTS ── */}
+        {drawState.showProjectorPots && pots.length > 0 && (
+          <motion.div
+            className="cpl-panel cpl-pots"
+            style={elStyle(potsEl)}
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.45, delay: 0.1 }}
+          >
+            <div className="cpl-pots-scroll">
+              {pots.map((pot, pi) => {
+                const potAssigned = pot.teams.filter((t) => t.assigned || assignedTeamIds.has(t.id)).length;
+                const potDone = potAssigned === pot.teams.length && pot.teams.length > 0;
+                return (
+                  <motion.div
+                    key={pot.id}
+                    className={`cpl-pot-card ${potDone ? "done" : ""}`}
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: pi * 0.06 }}
+                  >
+                    <div className="cpl-pot-head">
+                      <span className="cpl-pot-name">{pot.name}</span>
+                      <span className="cpl-pot-badge">{potAssigned}/{pot.teams.length}</span>
+                    </div>
+                    <div className="cpl-pot-teams">
+                      <AnimatePresence>
+                        {pot.teams.map((team) => {
+                          const isAssigned = team.assigned || assignedTeamIds.has(team.id);
+                          const isSelected = selectedTeam?.id === team.id;
+                          return (
+                            <motion.div
+                              key={team.id}
+                              className={`cpl-pot-pill ${isAssigned ? "assigned" : ""} ${isSelected ? "selected" : ""}`}
+                              layout
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.6, transition: { duration: 0.25 } }}
+                            >
+                              <FlagImg src={team.customFlagImage} code={team.countryCode} size="xs" className="cpl-pill-flag" />
+                              <span className="cpl-pill-name">{team.name}</span>
+                            </motion.div>
+                          );
+                        })}
+                      </AnimatePresence>
+                      {pot.teams.length === 0 && <span className="cpl-pot-done-text">All assigned ✓</span>}
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+
+        {/* ── GROUPS ── */}
+        {groups.length > 0 && (
+          <motion.div
+            className="cpl-panel cpl-groups"
+            style={elStyle(groupsEl)}
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.45, delay: 0.18 }}
+          >
+            <div className="cpl-groups-grid">
+              {groups.map((group, gi) => {
+                const filled = group.teams.filter((t) => t !== null).length;
+                const complete = filled === group.capacity;
+                const gp = groupPrefix(group.name);
+
+                return (
+                  <motion.div
+                    key={group.id}
+                    className={`cpl-group-card ${complete ? "complete" : ""}`}
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: gi * 0.06 }}
+                  >
+                    <div className="cpl-group-head">
+                      <span className="cpl-group-name">{group.name}</span>
+                      <span className={`cpl-group-badge ${complete ? "full" : ""}`}>
+                        {filled}/{group.capacity}
+                      </span>
+                    </div>
+                    <div className="cpl-group-slots">
+                      {group.teams.map((team, si) => (
+                        <motion.div
+                          key={si}
+                          className={`cpl-slot ${team ? "filled" : "empty"}`}
+                          layout
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: si * 0.04 }}
+                        >
+                          {team ? (
+                            <motion.div
+                              className="cpl-slot-team"
+                              initial={{ opacity: 0, x: -16 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ type: "spring", stiffness: 300, damping: 18 }}
+                            >
+                              <FlagImg src={team.customFlagImage} code={team.countryCode} size="sm" className="cpl-slot-flag" />
+                              <span className="cpl-slot-name">{team.name}</span>
+                            </motion.div>
+                          ) : (
+                            <span className="cpl-slot-placeholder">{`${gp}${si + 1}`}</span>
+                          )}
+                        </motion.div>
+                      ))}
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+
+        {/* ── FOOTER ── */}
+        {(footerText || allTeamsAssigned) && (
+          <motion.div
+            className="cpl-panel cpl-footer"
+            style={elStyle(footerEl)}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.25 }}
+          >
+            <span className="cpl-footer-text" style={{ fontSize: `${footerSize}rem` }}>
+              {allTeamsAssigned ? "🏆 " : ""}{footerText || (allTeamsAssigned ? "The draw is complete!" : "")}
+            </span>
+          </motion.div>
+        )}
+
+        {/* ── EMPTY STATE ── */}
+        {pots.length === 0 && groups.length === 0 && (
+          <motion.div
+            className="cpl-empty"
+            initial={{ opacity: 0, scale: 0.9, y: 30 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.8, type: "spring" }}
+          >
+            {competitionLogo && (
+              <motion.img
+                src={competitionLogo}
+                alt=""
+                className="cpl-empty-logo"
+                style={{ height: `${logoSize * 1.8}px` }}
+                animate={{ scale: [1, 1.06, 1], rotate: [0, 1, -1, 0] }}
+                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+              />
+            )}
+            <h2 className="cpl-empty-title">{projectorTitle || "Tournament Draw"}</h2>
+            <div className="cpl-empty-dots">
+              <motion.span className="cpl-empty-dot" animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }} />
+              <motion.span className="cpl-empty-dot" animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.4, repeat: Infinity, delay: 0.2, ease: "easeInOut" }} />
+              <motion.span className="cpl-empty-dot" animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.4, repeat: Infinity, delay: 0.4, ease: "easeInOut" }} />
+            </div>
+            <p className="cpl-empty-sub">Waiting for the draw to begin</p>
+          </motion.div>
+        )}
       </div>
     );
   };
