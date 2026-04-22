@@ -32,6 +32,7 @@ interface SavedTournament {
   galaOrientation?: "horizontal" | "vertical";
   galaColorSwap?: boolean;
   roundNotes?: Record<number, string>;
+  roundTitles?: Record<number, string>;
   customLayout?: CustomLayoutConfig;
   broadcastEditLayout?: CustomLayoutConfig;
 }
@@ -287,6 +288,7 @@ export default function TournamentManager() {
   const [pairingSlotA, setPairingSlotA] = useState<number | null>(null);
   const [currentPairings, setCurrentPairings] = useState<[number, number][]>([]);
   const [roundNotes, setRoundNotes] = useState<Record<number, string>>({});
+  const [roundTitles, setRoundTitles] = useState<Record<number, string>>({});
   const [showMatchesPanel, setShowMatchesPanel] = useState(false);
   const [matchesFilterRound, setMatchesFilterRound] = useState<number | "all">("all");
   const [projectorDisplayMode, setProjectorDisplayMode] = useState<"groups" | "matches">("groups");
@@ -363,6 +365,11 @@ export default function TournamentManager() {
     potId: null,
     potName: "",
   });
+
+  const getRoundLabel = useCallback(
+    (round: number) => roundTitles[round]?.trim() || `Round ${round}`,
+    [roundTitles]
+  );
 
   const showConfirm = (title: string, message: string, action: () => void, isDestructive = false) => {
     setConfirmModal({
@@ -645,6 +652,7 @@ export default function TournamentManager() {
         if (s.galaOrientation) setGalaOrientation(s.galaOrientation);
         if (s.galaColorSwap !== undefined) setGalaColorSwap(Boolean(s.galaColorSwap));
         if (s.roundNotes) setRoundNotes(s.roundNotes);
+        if (s.roundTitles) setRoundTitles(s.roundTitles);
         if (s.customLayout) setCustomLayout(normalizeCustomLayout(s.customLayout));
         if (s.broadcastEditLayout) setBroadcastEditLayout(normalizeCustomLayout(s.broadcastEditLayout));
       } catch { }
@@ -676,11 +684,12 @@ export default function TournamentManager() {
       galaOrientation,
       galaColorSwap,
       roundNotes,
+      roundTitles,
       customLayout,
       broadcastEditLayout,
     };
     localStorage.setItem("tournament-settings", JSON.stringify(settings));
-  }, [hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, colorMode, manualPalette, currentPhase, projectorDisplayMode, matchesLayout, galaOrientation, galaColorSwap, roundNotes, customLayout, broadcastEditLayout]);
+  }, [hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, colorMode, manualPalette, currentPhase, projectorDisplayMode, matchesLayout, galaOrientation, galaColorSwap, roundNotes, roundTitles, customLayout, broadcastEditLayout]);
 
   const saveTournament = useCallback(() => {
     if (!saveName.trim()) return;
@@ -711,6 +720,7 @@ export default function TournamentManager() {
       galaOrientation,
       galaColorSwap,
       roundNotes,
+      roundTitles,
       customLayout,
       broadcastEditLayout,
     };
@@ -718,7 +728,7 @@ export default function TournamentManager() {
     setSavedTournaments(updated);
     localStorage.setItem("saved-tournaments", JSON.stringify(updated));
     setSaveName("");
-  }, [saveName, pots, groups, potsFinalized, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, showProjectorPots, colorMode, manualPalette, numberOfGroups, teamsPerGroup, galaOrientation, galaColorSwap, roundNotes, customLayout, broadcastEditLayout, savedTournaments]);
+  }, [saveName, pots, groups, potsFinalized, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, showProjectorPots, colorMode, manualPalette, numberOfGroups, teamsPerGroup, galaOrientation, galaColorSwap, roundNotes, roundTitles, customLayout, broadcastEditLayout, savedTournaments]);
 
   const loadTournament = useCallback((preset: SavedTournament) => {
     showConfirm(
@@ -754,6 +764,7 @@ export default function TournamentManager() {
         setGalaOrientation(preset.galaOrientation ?? "horizontal");
         setGalaColorSwap(preset.galaColorSwap ?? false);
         setRoundNotes(preset.roundNotes ?? {});
+        setRoundTitles(preset.roundTitles ?? {});
         setCustomLayout(normalizeCustomLayout(preset.customLayout));
         setBroadcastEditLayout(normalizeCustomLayout(preset.broadcastEditLayout));
         setCurrentPhase(preset.potsFinalized ? "draw" : "setup");
@@ -886,6 +897,7 @@ export default function TournamentManager() {
         showSpotlight,
         matches,
         roundNotes,
+        roundTitles,
         projectorDisplayMode,
         matchesLayout,
         galaOrientation,
@@ -902,7 +914,7 @@ export default function TournamentManager() {
         // Ignore storage errors
       }
     }
-  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, matches, roundNotes, projectorDisplayMode, matchesLayout, galaOrientation, galaColorSwap, customLayout, broadcastEditLayout]);
+  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, matches, roundNotes, roundTitles, projectorDisplayMode, matchesLayout, galaOrientation, galaColorSwap, customLayout, broadcastEditLayout]);
 
   const handleCreatePot = (e: React.FormEvent) => {
     e.preventDefault();
@@ -953,6 +965,7 @@ export default function TournamentManager() {
   const handleResetTournament = () => {
     resetTournament();
     setRoundNotes({});
+    setRoundTitles({});
     setCurrentPairings([]);
     setPairingSlotA(null);
     setCurrentRound(1);
@@ -971,6 +984,7 @@ export default function TournamentManager() {
   const loadTestData = () => {
     resetTournament();
     setRoundNotes({});
+    setRoundTitles({});
     const testPots = [
       { name: "Pot 1", teams: ["Egypt", "Morocco", "Senegal", "Nigeria"], codes: ["EG", "MA", "SN", "NG"], flags: ["🇪🇬", "🇲🇦", "🇸🇳", "🇳🇬"] },
       { name: "Pot 2", teams: ["Cameroon", "Algeria", "Tunisia", "Ivory Coast"], codes: ["CM", "DZ", "TN", "CI"], flags: ["🇨🇲", "🇩🇿", "🇹🇳", "🇨🇮"] },
@@ -2212,7 +2226,7 @@ export default function TournamentManager() {
                         className={`matches-filter-tab ${matchesFilterRound === r ? "active" : ""}`}
                         onClick={() => setMatchesFilterRound(r)}
                       >
-                        Round {r}
+                        {getRoundLabel(r)}
                       </button>
                     ))}
                   </div>
@@ -3070,7 +3084,7 @@ export default function TournamentManager() {
                           setPairingSlotA(null);
                         }}
                       >
-                        Round {r}
+                        {getRoundLabel(r)}
                         {roundConfigs.some(rc => rc.round === r) && <span className="round-check">✓</span>}
                       </motion.button>
                     ));
@@ -3096,13 +3110,32 @@ export default function TournamentManager() {
               {groups.length > 0 && (
                 <div className="pairing-builder">
                   <div className="pairing-builder-header">
-                    <h3>Configure Round {currentRound} — Using {groups[0].name} as example</h3>
+                    <h3>Configure {getRoundLabel(currentRound)} — Using {groups[0].name} as example</h3>
                     <p className="pairing-builder-hint">
                       Click two slots to pair them. Each team must appear in exactly one match per round.
                     </p>
                     <div className="round-note-editor">
+                      <label htmlFor={`round-title-${currentRound}`} className="round-note-label">
+                        Round title (shown in Fixtures)
+                      </label>
+                      <input
+                        id={`round-title-${currentRound}`}
+                        className="round-note-input"
+                        type="text"
+                        placeholder={`Round ${currentRound}`}
+                        value={roundTitles[currentRound] ?? ""}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setRoundTitles((prev) => ({
+                            ...prev,
+                            [currentRound]: value,
+                          }));
+                        }}
+                      />
+                    </div>
+                    <div className="round-note-editor">
                       <label htmlFor={`round-note-${currentRound}`} className="round-note-label">
-                        Round {currentRound} note (shown in Matches view)
+                        {getRoundLabel(currentRound)} note (shown in Matches view)
                       </label>
                       <textarea
                         id={`round-note-${currentRound}`}
@@ -3164,7 +3197,7 @@ export default function TournamentManager() {
                   {/* Current Pairings */}
                   {currentPairings.length > 0 && (
                     <div className="pairing-result">
-                      <h4>Configured Pairings for Round {currentRound}:</h4>
+                      <h4>Configured Pairings for {getRoundLabel(currentRound)}:</h4>
                       <div className="pairing-list">
                         {currentPairings.map(([a, b], idx) => {
                           const groupLetter = groups[0].name.charAt(groups[0].name.length - 1);

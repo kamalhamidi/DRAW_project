@@ -132,6 +132,7 @@ export default function ProjectorView() {
   const [selectedTeamColors, setSelectedTeamColors] = useState<[string, string]>(["#ffffff", "#cccccc"]);
   const [matches, setMatches] = useState<Match[]>([]);
   const [roundNotes, setRoundNotes] = useState<Record<number, string>>({});
+  const [roundTitles, setRoundTitles] = useState<Record<number, string>>({});
   const [projectorDisplayMode, setProjectorDisplayMode] = useState<"groups" | "matches">("groups");
   const [matchesLayout, setMatchesLayout] = useState<"default" | "gala" | "ultra" | "broadcast">("default");
   const [galaOrientation, setGalaOrientation] = useState<"horizontal" | "vertical">("horizontal");
@@ -222,7 +223,7 @@ export default function ProjectorView() {
     const channel = new BroadcastChannel("draw_sync");
 
     const applyIncomingState = (data: any) => {
-      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale: incomingPotFontScale, broadcastPotRows: incomingBroadcastPotRows, showSpotlight, matches: incomingMatches, roundNotes: incomingRoundNotes, projectorDisplayMode: incomingDisplayMode, matchesLayout: incomingMatchesLayout, galaOrientation: incomingGalaOrientation, galaColorSwap: incomingGalaColorSwap, customLayout: incomingCustomLayout, broadcastEditLayout: incomingBroadcastEditLayout } = data;
+      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale: incomingPotFontScale, broadcastPotRows: incomingBroadcastPotRows, showSpotlight, matches: incomingMatches, roundNotes: incomingRoundNotes, roundTitles: incomingRoundTitles, projectorDisplayMode: incomingDisplayMode, matchesLayout: incomingMatchesLayout, galaOrientation: incomingGalaOrientation, galaColorSwap: incomingGalaColorSwap, customLayout: incomingCustomLayout, broadcastEditLayout: incomingBroadcastEditLayout } = data;
       setDrawState({
         pots: pots || [],
         groups: groups || [],
@@ -270,6 +271,9 @@ export default function ProjectorView() {
       }
       if (incomingRoundNotes !== undefined) {
         setRoundNotes(incomingRoundNotes);
+      }
+      if (incomingRoundTitles !== undefined) {
+        setRoundTitles(incomingRoundTitles);
       }
       if (incomingDisplayMode !== undefined) {
         setProjectorDisplayMode(incomingDisplayMode);
@@ -1708,6 +1712,7 @@ export default function ProjectorView() {
   const renderMatchesView = () => {
     const rounds = [...new Set(matches.map(m => m.round))].sort();
     const groupLetters = [...new Set(matches.map(m => m.group))].sort();
+    const getRoundLabel = (round: number) => roundTitles[round]?.trim() || `Round ${round}`;
 
     return (
       <div className="pm-wrapper">
@@ -1759,7 +1764,7 @@ export default function ProjectorView() {
                 <div className="pm-round-line" />
                 <span className="pm-round-label">
                   {/* <span className="pm-round-icon"></span> */}
-                  Round {round}
+                  {getRoundLabel(round)}
                 </span>
                 <div className="pm-round-line" />
               </div>
@@ -1867,6 +1872,7 @@ export default function ProjectorView() {
   const renderMatchesGalaView = () => {
     const rounds = [...new Set(matches.map(m => m.round))].sort();
     const groupLetters = [...new Set(matches.map(m => m.group))].sort();
+    const getRoundLabel = (round: number) => roundTitles[round]?.trim() || `Round ${round}`;
 
     return (
       <div className="pmg-wrapper">
@@ -1913,7 +1919,7 @@ export default function ProjectorView() {
               transition={{ delay: roundIdx * 0.2, duration: 0.5 }}
             >
               <div className="pmg-round-badge">
-                <span className="pmg-round-text">Round {round}</span>
+                <span className="pmg-round-text">{getRoundLabel(round)}</span>
               </div>
               
 
@@ -2009,6 +2015,7 @@ export default function ProjectorView() {
   const renderMatchesUltraView = () => {
     const rounds = [...new Set(matches.map(m => m.round))].sort();
     const groupLetters = [...new Set(matches.map(m => m.group))].sort();
+    const getRoundLabel = (round: number) => roundTitles[round]?.trim() || `Round ${round}`;
 
     return (
       <div className="pmu-wrapper">
@@ -2045,7 +2052,7 @@ export default function ProjectorView() {
               transition={{ duration: 0.4, delay: roundIdx * 0.12 }}
             >
               <div className="pmu-round-head">
-                <span className="pmu-round-pill">ROUND {round}</span>
+                <span className="pmu-round-pill">{getRoundLabel(round).toUpperCase()}</span>
               </div>
 
               {roundNotes[round]?.trim() && (
@@ -2148,6 +2155,7 @@ export default function ProjectorView() {
 
     const rounds = [...new Set(matches.map(m => m.round))].sort();
     const groupLetters = [...new Set(matches.map(m => m.group))].sort();
+    const getRoundLabel = (round: number) => roundTitles[round]?.trim() || `Round ${round}`;
 
     return (
       <div className="broadcast-matches-wrapper">
@@ -2167,7 +2175,7 @@ export default function ProjectorView() {
           >
             <div className="broadcast-matches-round-title-wrap">
               <div className="broadcast-card-header red broadcast-matches-round-title">
-                <h3>Round {round}</h3>
+                <h3>{getRoundLabel(round)}</h3>
               </div>
             </div>
 
@@ -2219,7 +2227,7 @@ export default function ProjectorView() {
 
                             <div className="broadcast-match-mid">
                               <span className="broadcast-match-vs">VS</span>
-                              <span className="broadcast-match-number">#{match.matchNumber}</span>
+                              {/* <span className="broadcast-match-number">#{match.matchNumber}</span> */}
                             </div>
 
                             <div className="broadcast-match-team away">

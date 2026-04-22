@@ -7559,7 +7559,7 @@ body.bg-none::before {
 }
 
 .broadcast-match-vs {
-  font-size: 0.72rem;
+  font-size: 1rem;
   font-weight: 900;
   color: var(--color-accent-1);
   letter-spacing: 0.08em;
