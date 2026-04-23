@@ -35,6 +35,7 @@ interface SavedTournament {
   roundTitles?: Record<number, string>;
   customLayout?: CustomLayoutConfig;
   broadcastEditLayout?: CustomLayoutConfig;
+  liveVideoUrl?: string;
 }
 
 type CustomLayoutElementKey = "header" | "pots" | "groups" | "footer";
@@ -268,7 +269,8 @@ export default function TournamentManager() {
   const [hydrated, setHydrated] = useState(false);
   const [showProjectorPots, setShowProjectorPots] = useState(true);
   const [bgAnimation, setBgAnimation] = useState<"none" | "slide" | "zoom" | "fade" | "rotate">("zoom");
-  const [projectorLayout, setProjectorLayout] = useState<"stadium" | "broadcast" | "gala" | "minimal" | "cinematic" | "custom">("broadcast");
+  const [projectorLayout, setProjectorLayout] = useState<"stadium" | "broadcast" | "gala" | "minimal" | "cinematic" | "custom" | "lshape">("broadcast");
+  const [liveVideoUrl, setLiveVideoUrl] = useState<string>("");
   const [projectorTitle, setProjectorTitle] = useState("Tournament Draw");
   const [showProjectorSettings, setShowProjectorSettings] = useState(false);
   const [activeSettingsSection, setActiveSettingsSection] = useState<"general" | "branding" | "visual" | "colors" | "behavior">("general");
@@ -634,6 +636,7 @@ export default function TournamentManager() {
         if (s.showProjectorPots !== undefined) setShowProjectorPots(s.showProjectorPots);
         if (s.bgAnimation) setBgAnimation(s.bgAnimation);
         if (s.projectorLayout) setProjectorLayout(s.projectorLayout === "classic" ? "broadcast" : s.projectorLayout);
+        if (s.liveVideoUrl !== undefined) setLiveVideoUrl(s.liveVideoUrl);
         if (s.projectorTitle !== undefined) setProjectorTitle(s.projectorTitle);
         if (s.bgImage) setBgImage(s.bgImage);
         if (s.competitionLogo !== undefined) setCompetitionLogo(s.competitionLogo);
@@ -687,9 +690,10 @@ export default function TournamentManager() {
       roundTitles,
       customLayout,
       broadcastEditLayout,
+      liveVideoUrl,
     };
     localStorage.setItem("tournament-settings", JSON.stringify(settings));
-  }, [hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, colorMode, manualPalette, currentPhase, projectorDisplayMode, matchesLayout, galaOrientation, galaColorSwap, roundNotes, roundTitles, customLayout, broadcastEditLayout]);
+  }, [hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, colorMode, manualPalette, currentPhase, projectorDisplayMode, matchesLayout, galaOrientation, galaColorSwap, roundNotes, roundTitles, customLayout, broadcastEditLayout, liveVideoUrl]);
 
   const saveTournament = useCallback(() => {
     if (!saveName.trim()) return;
@@ -723,12 +727,13 @@ export default function TournamentManager() {
       roundTitles,
       customLayout,
       broadcastEditLayout,
+      liveVideoUrl,
     };
     const updated = [...savedTournaments, preset];
     setSavedTournaments(updated);
     localStorage.setItem("saved-tournaments", JSON.stringify(updated));
     setSaveName("");
-  }, [saveName, pots, groups, potsFinalized, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, showProjectorPots, colorMode, manualPalette, numberOfGroups, teamsPerGroup, galaOrientation, galaColorSwap, roundNotes, roundTitles, customLayout, broadcastEditLayout, savedTournaments]);
+  }, [saveName, pots, groups, potsFinalized, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, showProjectorPots, colorMode, manualPalette, numberOfGroups, teamsPerGroup, galaOrientation, galaColorSwap, roundNotes, roundTitles, customLayout, broadcastEditLayout, liveVideoUrl, savedTournaments]);
 
   const loadTournament = useCallback((preset: SavedTournament) => {
     showConfirm(
@@ -767,6 +772,7 @@ export default function TournamentManager() {
         setRoundTitles(preset.roundTitles ?? {});
         setCustomLayout(normalizeCustomLayout(preset.customLayout));
         setBroadcastEditLayout(normalizeCustomLayout(preset.broadcastEditLayout));
+        setLiveVideoUrl(preset.liveVideoUrl ?? "");
         setCurrentPhase(preset.potsFinalized ? "draw" : "setup");
         setShowSavePanel(false);
       }
@@ -994,6 +1000,7 @@ export default function TournamentManager() {
         galaColorSwap,
         customLayout,
         broadcastEditLayout,
+        liveVideoUrl,
       };
 
       broadcastChannelRef.current.postMessage(syncPayload);
@@ -1004,7 +1011,7 @@ export default function TournamentManager() {
         // Ignore storage errors
       }
     }
-  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, matches, roundNotes, roundTitles, projectorDisplayMode, matchesLayout, galaOrientation, galaColorSwap, customLayout, broadcastEditLayout]);
+  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, matches, roundNotes, roundTitles, projectorDisplayMode, matchesLayout, galaOrientation, galaColorSwap, customLayout, broadcastEditLayout, liveVideoUrl]);
 
   const handleCreatePot = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1492,6 +1499,7 @@ export default function TournamentManager() {
                                 { key: "minimal", icon: "◈", label: "Minimal" },
                                 { key: "cinematic", icon: "🎬", label: "Cinematic" },
                                 { key: "custom", icon: "🧩", label: "Custom" },
+                                { key: "lshape", icon: "📐", label: "L-Shape" },
                               ] as const).map((layout) => (
                                 <motion.button
                                   key={layout.key}
@@ -1971,6 +1979,33 @@ export default function TournamentManager() {
                                   })()}
                                 </div>
                               </div>
+                            </div>
+                          )}
+
+                          {projectorLayout === "lshape" && (
+                            <div className="settings-group settings-layout-option-card">
+                              <label className="settings-label">L-Shape Layout — Live Video URL</label>
+                              <input
+                                type="text"
+                                className="settings-input"
+                                placeholder="Paste YouTube, Vimeo, Twitch, or embed URL..."
+                                value={liveVideoUrl}
+                                onChange={(e) => setLiveVideoUrl(e.target.value)}
+                                style={{ minWidth: "100%" }}
+                              />
+                              <p className="settings-inline-help">
+                                Supports YouTube, Vimeo, Twitch links, or any direct embed URL. The video fills the top-right zone while pots and groups form an L-shape around it.
+                              </p>
+                              {liveVideoUrl && (
+                                <motion.button
+                                  className="settings-layout-btn"
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={() => setLiveVideoUrl("")}
+                                >
+                                  ✕ Clear Video URL
+                                </motion.button>
+                              )}
                             </div>
                           )}
 

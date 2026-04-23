@@ -118,7 +118,7 @@ export default function ProjectorView() {
 
   const [hydrated, setHydrated] = useState(false);
   const [bgAnimation, setBgAnimation] = useState<"none" | "slide" | "zoom" | "fade" | "rotate">("zoom");
-  const [projectorLayout, setProjectorLayout] = useState<"classic" | "stadium" | "broadcast" | "gala" | "minimal" | "cinematic" | "custom">("broadcast");
+  const [projectorLayout, setProjectorLayout] = useState<"classic" | "stadium" | "broadcast" | "gala" | "minimal" | "cinematic" | "custom" | "lshape">("broadcast");
   const [projectorTitle, setProjectorTitle] = useState("Tournament Draw");
   const [bgImage, setBgImage] = useState<string>("/bg.png");
   const [competitionLogo, setCompetitionLogo] = useState<string>("");
@@ -139,6 +139,7 @@ export default function ProjectorView() {
   const [galaColorSwap, setGalaColorSwap] = useState(false);
   const [customLayout, setCustomLayout] = useState<CustomLayoutConfig>(() => createDefaultCustomLayout());
   const [broadcastEditLayout, setBroadcastEditLayout] = useState<CustomLayoutConfig>(() => createDefaultBroadcastEditLayout());
+  const [liveVideoUrl, setLiveVideoUrl] = useState<string>("");
 
   const getGroupSlotPrefix = (groupName: string) =>
     (groupName.match(/[A-Za-z]+$/)?.[0] ?? groupName.match(/[A-Za-z]/)?.[0] ?? "G").toUpperCase();
@@ -223,7 +224,7 @@ export default function ProjectorView() {
     const channel = new BroadcastChannel("draw_sync");
 
     const applyIncomingState = (data: any) => {
-      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale: incomingPotFontScale, broadcastPotRows: incomingBroadcastPotRows, showSpotlight, matches: incomingMatches, roundNotes: incomingRoundNotes, roundTitles: incomingRoundTitles, projectorDisplayMode: incomingDisplayMode, matchesLayout: incomingMatchesLayout, galaOrientation: incomingGalaOrientation, galaColorSwap: incomingGalaColorSwap, customLayout: incomingCustomLayout, broadcastEditLayout: incomingBroadcastEditLayout } = data;
+      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale: incomingPotFontScale, broadcastPotRows: incomingBroadcastPotRows, showSpotlight, matches: incomingMatches, roundNotes: incomingRoundNotes, roundTitles: incomingRoundTitles, projectorDisplayMode: incomingDisplayMode, matchesLayout: incomingMatchesLayout, galaOrientation: incomingGalaOrientation, galaColorSwap: incomingGalaColorSwap, customLayout: incomingCustomLayout, broadcastEditLayout: incomingBroadcastEditLayout, liveVideoUrl: incomingLiveVideoUrl } = data;
       setDrawState({
         pots: pots || [],
         groups: groups || [],
@@ -292,6 +293,9 @@ export default function ProjectorView() {
       }
       if (incomingBroadcastEditLayout) {
         setBroadcastEditLayout(normalizeCustomLayout(incomingBroadcastEditLayout));
+      }
+      if (incomingLiveVideoUrl !== undefined) {
+        setLiveVideoUrl(incomingLiveVideoUrl);
       }
       // Apply color palette from the home page
       if (colorPalette) {
@@ -2536,6 +2540,285 @@ export default function ProjectorView() {
     );
   };
 
+  // ============ L-SHAPE LAYOUT ============
+  const renderLShapeLayout = () => {
+    const groupPrefix = (name: string) =>
+      (name.match(/[A-Za-z]+$/)?.[0] ?? name.match(/[A-Za-z]/)?.[0] ?? "G").toUpperCase();
+    const progressPercent = totalTeams > 0 ? Math.round((assignedTeams / totalTeams) * 100) : 0;
+
+    // Build iframe src from URL — support YouTube, Vimeo, Twitch, or raw
+    const buildEmbedSrc = (url: string): string | null => {
+      if (!url.trim()) return null;
+      try {
+        const u = new URL(url);
+        // YouTube
+        if (u.hostname.includes("youtube.com") || u.hostname.includes("youtu.be")) {
+          const vid = u.hostname.includes("youtu.be")
+            ? u.pathname.slice(1)
+            : u.searchParams.get("v");
+          if (vid) return `https://www.youtube.com/embed/${vid}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0`;
+        }
+        // Vimeo
+        if (u.hostname.includes("vimeo.com")) {
+          const id = u.pathname.split("/").filter(Boolean).pop();
+          if (id) return `https://player.vimeo.com/video/${id}?autoplay=1&muted=1&background=1`;
+        }
+        // Twitch
+        if (u.hostname.includes("twitch.tv")) {
+          const channel = u.pathname.split("/").filter(Boolean).pop();
+          if (channel) return `https://player.twitch.tv/?channel=${channel}&parent=${window.location.hostname}&muted=true`;
+        }
+        // Already an embed or direct URL
+        return url;
+      } catch {
+        return url; // fallback: use as-is
+      }
+    };
+
+    const embedSrc = buildEmbedSrc(liveVideoUrl);
+
+    return (
+      <div className="lshape-stage">
+        {/* ── Header Ticker ── */}
+        <motion.div
+          className="lshape-ticker"
+          initial={{ opacity: 0, y: -30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="lshape-ticker-brand">
+            {competitionLogo && (
+              <img src={competitionLogo} alt="" className="lshape-ticker-logo" style={{ height: `${Math.min(logoSize, 42)}px` }} />
+            )}
+            <span className="lshape-ticker-title">{projectorTitle || "Tournament Draw"}</span>
+          </div>
+          <div className="lshape-ticker-center">
+            <AnimatePresence mode="wait">
+              {selectedTeam && showSpotlight ? (() => {
+                const [tc1] = selectedTeamColors;
+                return (
+                  <motion.div
+                    key={`sel-${selectedTeam.id}`}
+                    className="lshape-ticker-selected"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    style={{ "--ls-team-c": tc1 } as React.CSSProperties}
+                  >
+                    <FlagImg src={selectedTeam.customFlagImage} code={selectedTeam.countryCode} size="sm" className="lshape-ticker-flag" />
+                    <span className="lshape-ticker-team-name">{selectedTeam.name}</span>
+                  </motion.div>
+                );
+              })() : (
+                <motion.span
+                  key="progress"
+                  className="lshape-ticker-progress-text"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  {allTeamsAssigned ? "✅ Draw Complete" : `${assignedTeams}/${totalTeams} teams drawn`}
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </div>
+          <div className="lshape-ticker-bar-wrap">
+            <motion.div
+              className="lshape-ticker-bar-fill"
+              initial={{ width: 0 }}
+              animate={{ width: `${progressPercent}%` }}
+              transition={{ type: "spring", stiffness: 50, damping: 18 }}
+            />
+          </div>
+        </motion.div>
+
+        {/* ── Main L-Shape Body ── */}
+        <div className="lshape-body">
+          {/* LEFT — Pots (vertical column) */}
+          {drawState.showProjectorPots && pots.length > 0 && (
+            <motion.div
+              className="lshape-pots"
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              <div className="lshape-pots-scroll">
+                {pots.map((pot, pi) => {
+                  const potAssigned = pot.teams.filter((t) => t.assigned || assignedTeamIds.has(t.id)).length;
+                  const potDone = potAssigned === pot.teams.length && pot.teams.length > 0;
+                  return (
+                    <motion.div
+                      key={pot.id}
+                      className={`lshape-pot-card ${potDone ? "done" : ""}`}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: pi * 0.06 }}
+                    >
+                      <div className="lshape-pot-head">
+                        <span className="lshape-pot-name">{pot.name}</span>
+                        <span className="lshape-pot-badge">{potAssigned}/{pot.teams.length}</span>
+                      </div>
+                      <div className="lshape-pot-teams">
+                        <AnimatePresence>
+                          {pot.teams.map((team) => {
+                            const isAssigned = team.assigned || assignedTeamIds.has(team.id);
+                            const isSelected = selectedTeam?.id === team.id;
+                            return (
+                              <motion.div
+                                key={team.id}
+                                className={`lshape-pot-pill ${isAssigned ? "assigned" : ""} ${isSelected ? "selected" : ""}`}
+                                layout
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.2 } }}
+                              >
+                                <FlagImg src={team.customFlagImage} code={team.countryCode} size="xs" className="lshape-pill-flag" />
+                                <span className="lshape-pill-name">{team.name}</span>
+                              </motion.div>
+                            );
+                          })}
+                        </AnimatePresence>
+                        {pot.teams.length === 0 && <span className="lshape-pot-empty">All assigned ✓</span>}
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
+
+          {/* TOP-RIGHT — Video Zone */}
+          <motion.div
+            className="lshape-video-zone"
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+          >
+            {embedSrc ? (
+              <iframe
+                className="lshape-video-iframe"
+                src={embedSrc}
+                title="Live Draw"
+                allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                allowFullScreen
+                frameBorder="0"
+              />
+            ) : (
+              <div className="lshape-video-placeholder">
+                {competitionLogo && (
+                  <motion.img
+                    src={competitionLogo}
+                    alt=""
+                    className="lshape-video-ph-logo"
+                    style={{ height: `${logoSize * 1.5}px` }}
+                    animate={{ scale: [1, 1.04, 1] }}
+                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                )}
+                <div className="lshape-video-ph-text">
+                  <span className="lshape-video-ph-icon">📡</span>
+                  <h3>Live Video Zone</h3>
+                  <p>Add a video URL from the settings panel</p>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        </div>
+
+        {/* BOTTOM — Groups (horizontal row) */}
+        {groups.length > 0 && (
+          <motion.div
+            className="lshape-groups"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, delay: 0.2 }}
+          >
+            <div className="lshape-groups-row">
+              {groups.map((group, gi) => {
+                const filled = group.teams.filter((t) => t !== null).length;
+                const complete = filled === group.capacity;
+                const gp = groupPrefix(group.name);
+
+                return (
+                  <motion.div
+                    key={group.id}
+                    className={`lshape-group-card ${complete ? "complete" : ""}`}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: gi * 0.05 }}
+                  >
+                    <div className="lshape-group-head">
+                      <span className="lshape-group-name">{group.name}</span>
+                      <span className={`lshape-group-badge ${complete ? "full" : ""}`}>{filled}/{group.capacity}</span>
+                    </div>
+                    <div className="lshape-group-slots">
+                      {group.teams.map((team, si) => (
+                        <motion.div
+                          key={si}
+                          className={`lshape-slot ${team ? "filled" : "empty"}`}
+                          layout
+                        >
+                          {team ? (
+                            <motion.div
+                              className="lshape-slot-inner"
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ type: "spring", stiffness: 300, damping: 18 }}
+                            >
+                              <FlagImg src={team.customFlagImage} code={team.countryCode} size="xs" className="lshape-slot-flag" />
+                              <span className="lshape-slot-name">{team.name}</span>
+                            </motion.div>
+                          ) : (
+                            <span className="lshape-slot-ph">{`${gp}${si + 1}`}</span>
+                          )}
+                        </motion.div>
+                      ))}
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Footer */}
+        {footerText && (
+          <motion.div
+            className="lshape-footer"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+          >
+            <span style={{ fontSize: `${footerSize}rem` }}>{footerText}</span>
+          </motion.div>
+        )}
+
+        {/* Empty state — no data at all */}
+        {pots.length === 0 && groups.length === 0 && (
+          <motion.div
+            className="lshape-empty"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, type: "spring" }}
+          >
+            {competitionLogo && (
+              <motion.img
+                src={competitionLogo} alt=""
+                className="lshape-empty-logo"
+                style={{ height: `${logoSize * 1.6}px` }}
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              />
+            )}
+            <h2 className="lshape-empty-title">{projectorTitle || "Tournament Draw"}</h2>
+            <p className="lshape-empty-sub">Waiting for the draw to begin</p>
+          </motion.div>
+        )}
+      </div>
+    );
+  };
+
   // Determine container class
   const containerClass = [
     "projector-container",
@@ -2546,6 +2829,7 @@ export default function ProjectorView() {
     projectorLayout === "minimal" ? "minimal-mode" : "",
     projectorLayout === "cinematic" ? "cinematic-mode" : "",
     projectorLayout === "custom" ? "custom-mode" : "",
+    projectorLayout === "lshape" ? "lshape-mode" : "",
     projectorDisplayMode === "matches" ? "matches-mode" : "",
   ].filter(Boolean).join(" ");
 
@@ -2654,6 +2938,17 @@ export default function ProjectorView() {
                 transition={{ duration: 0.4 }}
               >
                 {renderCustomLayout()}
+              </motion.div>
+            )}
+            {projectorLayout === "lshape" && (
+              <motion.div
+                key="lshape"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                {renderLShapeLayout()}
               </motion.div>
             )}
           </>
