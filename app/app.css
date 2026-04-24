@@ -5348,8 +5348,13 @@ body.bg-none::before {
 }
 
 .gala-content.pots-hidden .gala-groups-panel {
-  max-width: 1200px;
+  max-width: 1480px;
   width: 100%;
+}
+
+.gala-content.pots-hidden .gala-groups-list {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.75rem;
 }
 
 /* Vertical: pots on top, groups below */
