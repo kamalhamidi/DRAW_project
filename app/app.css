@@ -3429,15 +3429,30 @@ body.bg-none::before {
 }
 
 .lshape-pot-pill.assigned {
-  opacity: 0.35;
-  text-decoration: line-through;
-  text-decoration-color: rgba(255, 255, 255, 0.25);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .lshape-pot-pill.selected {
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.22), rgba(56, 189, 248, 0.08));
-  border-color: rgba(56, 189, 248, 0.45);
-  box-shadow: 0 0 8px rgba(56, 189, 248, 0.18);
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.32), rgba(56, 189, 248, 0.1));
+  border-color: rgba(56, 189, 248, 0.75);
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.35);
+  outline: 1px solid rgba(125, 220, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+.lshape-pot-pill.assigned .lshape-pill-flag,
+.lshape-pot-pill.assigned .lshape-pill-name {
+  opacity: 0.35;
+}
+
+.lshape-pot-pill.assigned .lshape-pill-name {
+  text-decoration: line-through;
+  text-decoration-color: rgba(255, 255, 255, 0.35);
+}
+
+.lshape-pot-pill.selected .lshape-pill-name {
+  color: #ffffff;
 }
 
 .lshape-pill-flag {
