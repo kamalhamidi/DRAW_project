@@ -137,6 +137,7 @@ export default function ProjectorView() {
   const [matchesLayout, setMatchesLayout] = useState<"default" | "gala" | "ultra" | "broadcast">("default");
   const [galaOrientation, setGalaOrientation] = useState<"horizontal" | "vertical">("horizontal");
   const [galaColorSwap, setGalaColorSwap] = useState(false);
+  const [galaBackgroundMode, setGalaBackgroundMode] = useState<"dimmed" | "clean">("dimmed");
   const [customLayout, setCustomLayout] = useState<CustomLayoutConfig>(() => createDefaultCustomLayout());
   const [broadcastEditLayout, setBroadcastEditLayout] = useState<CustomLayoutConfig>(() => createDefaultBroadcastEditLayout());
   const [liveVideoUrl, setLiveVideoUrl] = useState<string>("");
@@ -224,7 +225,7 @@ export default function ProjectorView() {
     const channel = new BroadcastChannel("draw_sync");
 
     const applyIncomingState = (data: any) => {
-      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale: incomingPotFontScale, broadcastPotRows: incomingBroadcastPotRows, showSpotlight, matches: incomingMatches, roundNotes: incomingRoundNotes, roundTitles: incomingRoundTitles, projectorDisplayMode: incomingDisplayMode, matchesLayout: incomingMatchesLayout, galaOrientation: incomingGalaOrientation, galaColorSwap: incomingGalaColorSwap, customLayout: incomingCustomLayout, broadcastEditLayout: incomingBroadcastEditLayout, liveVideoUrl: incomingLiveVideoUrl } = data;
+        const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale: incomingPotFontScale, broadcastPotRows: incomingBroadcastPotRows, showSpotlight, matches: incomingMatches, roundNotes: incomingRoundNotes, roundTitles: incomingRoundTitles, projectorDisplayMode: incomingDisplayMode, matchesLayout: incomingMatchesLayout, galaOrientation: incomingGalaOrientation, galaColorSwap: incomingGalaColorSwap, galaBackgroundMode: incomingGalaBackgroundMode, customLayout: incomingCustomLayout, broadcastEditLayout: incomingBroadcastEditLayout, liveVideoUrl: incomingLiveVideoUrl } = data;
       setDrawState({
         pots: pots || [],
         groups: groups || [],
@@ -287,6 +288,9 @@ export default function ProjectorView() {
       }
       if (incomingGalaColorSwap !== undefined) {
         setGalaColorSwap(Boolean(incomingGalaColorSwap));
+      }
+      if (incomingGalaBackgroundMode !== undefined) {
+        setGalaBackgroundMode(incomingGalaBackgroundMode);
       }
       if (incomingCustomLayout) {
         setCustomLayout(normalizeCustomLayout(incomingCustomLayout));
@@ -2826,6 +2830,7 @@ export default function ProjectorView() {
     projectorLayout === "broadcast" ? "broadcast-mode" : "",
     projectorLayout === "gala" ? "gala-mode" : "",
     projectorLayout === "gala" && galaColorSwap ? "gala-colors-swapped" : "",
+    projectorLayout === "gala" && galaBackgroundMode === "clean" ? "gala-background-clean" : "",
     projectorLayout === "minimal" ? "minimal-mode" : "",
     projectorLayout === "cinematic" ? "cinematic-mode" : "",
     projectorLayout === "custom" ? "custom-mode" : "",
