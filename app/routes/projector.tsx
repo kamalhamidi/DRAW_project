@@ -2832,6 +2832,7 @@ export default function ProjectorView() {
     "projector-container",
     projectorLayout === "stadium" ? "stadium-mode" : "",
     projectorLayout === "broadcast" || projectorLayout === "broadcast2" ? "broadcast-mode" : "",
+    projectorLayout === "broadcast2" ? "broadcast2-mode" : "",
     projectorLayout === "gala" ? "gala-mode" : "",
     projectorLayout === "gala" && galaColorSwap ? "gala-colors-swapped" : "",
     projectorLayout === "gala" && galaBackgroundMode === "clean" ? "gala-background-clean" : "",

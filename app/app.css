@@ -5104,6 +5104,90 @@ body.bg-none::before {
   }
 }
 
+/* ===== BROADCAST 2 — GROUPS STYLE ===== */
+.projector-container.broadcast2-mode .broadcast-groups-section {
+  align-items: stretch;
+}
+
+.projector-container.broadcast2-mode .broadcast-groups-section .broadcast-card {
+  background: transparent;
+  box-shadow: none;
+  border: none;
+  padding: 0;
+  margin-top: 0;
+  border-radius: 0;
+  flex: 1 1 360px;
+  min-width: min(100%, 340px);
+}
+
+.projector-container.broadcast2-mode .broadcast-groups-section .broadcast-card-header {
+  position: static;
+  transform: none;
+  left: auto;
+  top: auto;
+  width: 100%;
+  text-align: center;
+  border-radius: 999px;
+  padding: 0.95rem 1.5rem;
+  margin-bottom: 0.9rem;
+  background: var(--color-accent-2);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--color-accent-2) 30%, transparent);
+}
+
+.projector-container.broadcast2-mode .broadcast-groups-section .broadcast-card-header h3 {
+  color: #0a1a52;
+  font-size: clamp(1.1rem, 1.6vw, 1.7rem);
+  letter-spacing: 0.06em;
+}
+
+.projector-container.broadcast2-mode .broadcast-groups-section .broadcast-card-body {
+  gap: 0.7rem;
+}
+
+.projector-container.broadcast2-mode .broadcast-groups-section .broadcast-team-row {
+  background: #ffffff;
+  border-radius: 999px;
+  min-height: 72px;
+  padding: 0.75rem 1.35rem;
+  opacity: 1;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.16);
+}
+
+.projector-container.broadcast2-mode .broadcast-groups-section .broadcast-team-row.empty-slot {
+  background: #ffffff;
+  opacity: 1;
+}
+
+.projector-container.broadcast2-mode .broadcast-groups-section .broadcast-slot-filled {
+  width: 100%;
+  gap: 0.9rem;
+}
+
+.projector-container.broadcast2-mode .broadcast-groups-section .broadcast-team-name {
+  color: #111948;
+  font-size: calc(1.2rem * var(--projector-team-font-scale));
+  letter-spacing: 0.01em;
+}
+
+.projector-container.broadcast2-mode .broadcast-groups-section .broadcast-slot-label {
+  color: #1a2259;
+  opacity: 0.9;
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 1024px) {
+  .projector-container.broadcast2-mode .broadcast-groups-section .broadcast-team-row {
+    min-height: 62px;
+    padding: 0.65rem 1.05rem;
+  }
+
+  .projector-container.broadcast2-mode .broadcast-groups-section .broadcast-slot-label {
+    font-size: 1.6rem;
+  }
+}
+
 /* ===== GALA LAYOUT STYLES ===== */
 
 .projector-container.gala-mode {
