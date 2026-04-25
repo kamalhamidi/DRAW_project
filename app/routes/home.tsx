@@ -39,6 +39,7 @@ interface SavedTournament {
   broadcastEditLayout?: CustomLayoutConfig;
   liveVideoUrl?: string;
   lshapeCornerPhoto?: string;
+  lshapeSelectedPotId?: number | null;
 }
 
 type CustomLayoutElementKey = "header" | "pots" | "groups" | "footer";
@@ -275,6 +276,7 @@ export default function TournamentManager() {
   const [projectorLayout, setProjectorLayout] = useState<"stadium" | "broadcast" | "broadcast2" | "gala" | "minimal" | "cinematic" | "custom" | "lshape">("broadcast");
   const [liveVideoUrl, setLiveVideoUrl] = useState<string>("");
   const [lshapeCornerPhoto, setLshapeCornerPhoto] = useState<string>("");
+  const [lshapeSelectedPotId, setLshapeSelectedPotId] = useState<number | null>(null);
   const [projectorTitle, setProjectorTitle] = useState("Tournament Draw");
   const [showProjectorSettings, setShowProjectorSettings] = useState(false);
   const [activeSettingsSection, setActiveSettingsSection] = useState<"general" | "branding" | "visual" | "colors" | "behavior">("general");
@@ -644,6 +646,7 @@ export default function TournamentManager() {
         if (s.projectorLayout) setProjectorLayout(s.projectorLayout === "classic" ? "broadcast" : s.projectorLayout);
         if (s.liveVideoUrl !== undefined) setLiveVideoUrl(s.liveVideoUrl);
         if (s.lshapeCornerPhoto !== undefined) setLshapeCornerPhoto(s.lshapeCornerPhoto);
+        if (s.lshapeSelectedPotId !== undefined) setLshapeSelectedPotId(s.lshapeSelectedPotId);
         if (s.projectorTitle !== undefined) setProjectorTitle(s.projectorTitle);
         if (s.bgImage) setBgImage(s.bgImage);
         if (s.competitionLogo !== undefined) setCompetitionLogo(s.competitionLogo);
@@ -703,9 +706,10 @@ export default function TournamentManager() {
       broadcastEditLayout,
       liveVideoUrl,
       lshapeCornerPhoto,
+      lshapeSelectedPotId,
     };
     localStorage.setItem("tournament-settings", JSON.stringify(settings));
-  }, [hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, colorMode, manualPalette, currentPhase, projectorDisplayMode, matchesLayout, stadiumOrientation, galaOrientation, galaColorSwap, galaBackgroundMode, roundNotes, roundTitles, customLayout, broadcastEditLayout, liveVideoUrl, lshapeCornerPhoto]);
+  }, [hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, colorMode, manualPalette, currentPhase, projectorDisplayMode, matchesLayout, stadiumOrientation, galaOrientation, galaColorSwap, galaBackgroundMode, roundNotes, roundTitles, customLayout, broadcastEditLayout, liveVideoUrl, lshapeCornerPhoto, lshapeSelectedPotId]);
 
   const saveTournament = useCallback(() => {
     if (!saveName.trim()) return;
@@ -743,12 +747,13 @@ export default function TournamentManager() {
       broadcastEditLayout,
       liveVideoUrl,
       lshapeCornerPhoto,
+      lshapeSelectedPotId,
     };
     const updated = [...savedTournaments, preset];
     setSavedTournaments(updated);
     localStorage.setItem("saved-tournaments", JSON.stringify(updated));
     setSaveName("");
-  }, [saveName, pots, groups, potsFinalized, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, showProjectorPots, colorMode, manualPalette, numberOfGroups, teamsPerGroup, stadiumOrientation, galaOrientation, galaColorSwap, galaBackgroundMode, roundNotes, roundTitles, customLayout, broadcastEditLayout, liveVideoUrl, lshapeCornerPhoto, savedTournaments]);
+  }, [saveName, pots, groups, potsFinalized, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, showProjectorPots, colorMode, manualPalette, numberOfGroups, teamsPerGroup, stadiumOrientation, galaOrientation, galaColorSwap, galaBackgroundMode, roundNotes, roundTitles, customLayout, broadcastEditLayout, liveVideoUrl, lshapeCornerPhoto, lshapeSelectedPotId, savedTournaments]);
 
   const loadTournament = useCallback((preset: SavedTournament) => {
     showConfirm(
@@ -791,6 +796,7 @@ export default function TournamentManager() {
         setBroadcastEditLayout(normalizeCustomLayout(preset.broadcastEditLayout));
         setLiveVideoUrl(preset.liveVideoUrl ?? "");
         setLshapeCornerPhoto(preset.lshapeCornerPhoto ?? "");
+        setLshapeSelectedPotId(preset.lshapeSelectedPotId ?? null);
         setCurrentPhase(preset.potsFinalized ? "draw" : "setup");
         setShowSavePanel(false);
       }
@@ -990,6 +996,12 @@ export default function TournamentManager() {
 
   // Broadcast state changes to projector
   useEffect(() => {
+    if (lshapeSelectedPotId !== null && !pots.some((pot) => pot.id === lshapeSelectedPotId)) {
+      setLshapeSelectedPotId(null);
+    }
+  }, [pots, lshapeSelectedPotId]);
+
+  useEffect(() => {
     if (broadcastChannelRef.current && hydrated) {
       const syncPayload = {
         pots,
@@ -1022,6 +1034,7 @@ export default function TournamentManager() {
         broadcastEditLayout,
         liveVideoUrl,
         lshapeCornerPhoto,
+        lshapeSelectedPotId,
       };
 
       broadcastChannelRef.current.postMessage(syncPayload);
@@ -1032,7 +1045,7 @@ export default function TournamentManager() {
         // Ignore storage errors
       }
     }
-  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, matches, roundNotes, roundTitles, projectorDisplayMode, matchesLayout, stadiumOrientation, galaOrientation, galaColorSwap, galaBackgroundMode, customLayout, broadcastEditLayout, liveVideoUrl, lshapeCornerPhoto]);
+  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, matches, roundNotes, roundTitles, projectorDisplayMode, matchesLayout, stadiumOrientation, galaOrientation, galaColorSwap, galaBackgroundMode, customLayout, broadcastEditLayout, liveVideoUrl, lshapeCornerPhoto, lshapeSelectedPotId]);
 
   const handleCreatePot = (e: React.FormEvent) => {
     e.preventDefault();
@@ -2119,6 +2132,29 @@ export default function TournamentManager() {
                               </div>
                               <p className="settings-inline-help">
                                 This image is shown in the bottom-left L-shape rectangle.
+                              </p>
+
+                              <label className="settings-label" style={{ marginTop: "0.85rem" }}>
+                                L-Shape Pots Display
+                              </label>
+                              <select
+                                className="settings-input"
+                                value={lshapeSelectedPotId === null ? "all" : String(lshapeSelectedPotId)}
+                                onChange={(e) => {
+                                  const nextValue = e.target.value;
+                                  setLshapeSelectedPotId(nextValue === "all" ? null : Number(nextValue));
+                                }}
+                                style={{ minWidth: "100%" }}
+                              >
+                                <option value="all">Show all pots</option>
+                                {pots.map((pot) => (
+                                  <option key={pot.id} value={pot.id}>
+                                    {pot.name}
+                                  </option>
+                                ))}
+                              </select>
+                              <p className="settings-inline-help">
+                                Choose one pot to display in projector L-shape mode, or keep all pots visible.
                               </p>
                             </div>
                           )}

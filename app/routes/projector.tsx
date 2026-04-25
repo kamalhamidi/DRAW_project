@@ -45,6 +45,7 @@ interface DrawState {
   groups: Group[];
   selectedTeam: Team | null;
   showProjectorPots: boolean;
+  lshapeSelectedPotId: number | null;
 }
 
 type CustomLayoutElementKey = "header" | "pots" | "groups" | "footer";
@@ -114,6 +115,7 @@ export default function ProjectorView() {
     groups: [],
     selectedTeam: null,
     showProjectorPots: true,
+    lshapeSelectedPotId: null,
   });
 
   const [hydrated, setHydrated] = useState(false);
@@ -227,12 +229,13 @@ export default function ProjectorView() {
     const channel = new BroadcastChannel("draw_sync");
 
     const applyIncomingState = (data: any) => {
-      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale: incomingPotFontScale, broadcastPotRows: incomingBroadcastPotRows, showSpotlight, matches: incomingMatches, roundNotes: incomingRoundNotes, roundTitles: incomingRoundTitles, projectorDisplayMode: incomingDisplayMode, matchesLayout: incomingMatchesLayout, stadiumOrientation: incomingStadiumOrientation, galaOrientation: incomingGalaOrientation, galaColorSwap: incomingGalaColorSwap, galaBackgroundMode: incomingGalaBackgroundMode, customLayout: incomingCustomLayout, broadcastEditLayout: incomingBroadcastEditLayout, liveVideoUrl: incomingLiveVideoUrl, lshapeCornerPhoto: incomingLshapeCornerPhoto } = data;
+      const { pots, groups, selectedTeam, showProjectorPots, lshapeSelectedPotId: incomingLshapeSelectedPotId, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale: incomingPotFontScale, broadcastPotRows: incomingBroadcastPotRows, showSpotlight, matches: incomingMatches, roundNotes: incomingRoundNotes, roundTitles: incomingRoundTitles, projectorDisplayMode: incomingDisplayMode, matchesLayout: incomingMatchesLayout, stadiumOrientation: incomingStadiumOrientation, galaOrientation: incomingGalaOrientation, galaColorSwap: incomingGalaColorSwap, galaBackgroundMode: incomingGalaBackgroundMode, customLayout: incomingCustomLayout, broadcastEditLayout: incomingBroadcastEditLayout, liveVideoUrl: incomingLiveVideoUrl, lshapeCornerPhoto: incomingLshapeCornerPhoto } = data;
       setDrawState({
         pots: pots || [],
         groups: groups || [],
         selectedTeam: selectedTeam || null,
         showProjectorPots: showProjectorPots !== undefined ? showProjectorPots : true,
+        lshapeSelectedPotId: incomingLshapeSelectedPotId !== undefined ? incomingLshapeSelectedPotId : null,
       });
       if (bgAnimation !== undefined) {
         setBgAnimation(bgAnimation);
@@ -2588,6 +2591,11 @@ export default function ProjectorView() {
     };
 
     const embedSrc = buildEmbedSrc(liveVideoUrl);
+    const lshapePots = drawState.lshapeSelectedPotId !== null
+      ? pots.filter((pot) => pot.id === drawState.lshapeSelectedPotId)
+      : pots;
+    const visibleLshapePots = lshapePots.length > 0 ? lshapePots : pots;
+    const isSinglePotFocus = drawState.lshapeSelectedPotId !== null && visibleLshapePots.length === 1;
 
     return (
       <div className="lshape-stage">
@@ -2648,21 +2656,21 @@ export default function ProjectorView() {
         {/* ── Main L-Shape Body ── */}
         <div className="lshape-body">
           {/* LEFT — Pots (vertical column) */}
-          {drawState.showProjectorPots && pots.length > 0 && (
+          {drawState.showProjectorPots && visibleLshapePots.length > 0 && (
             <motion.div
-              className="lshape-pots"
+              className={`lshape-pots ${isSinglePotFocus ? "single-pot-mode" : ""}`}
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
               <div className="lshape-pots-scroll">
-                {pots.map((pot, pi) => {
+                {visibleLshapePots.map((pot, pi) => {
                   const potAssigned = pot.teams.filter((t) => t.assigned || assignedTeamIds.has(t.id)).length;
                   const potDone = potAssigned === pot.teams.length && pot.teams.length > 0;
                   return (
                     <motion.div
                       key={pot.id}
-                      className={`lshape-pot-card ${potDone ? "done" : ""}`}
+                      className={`lshape-pot-card ${potDone ? "done" : ""} ${isSinglePotFocus ? "single" : ""}`}
                       initial={{ opacity: 0, y: 12 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: pi * 0.06 }}
@@ -2671,7 +2679,7 @@ export default function ProjectorView() {
                         <span className="lshape-pot-name">{pot.name}</span>
                         <span className="lshape-pot-badge">{potAssigned}/{pot.teams.length}</span>
                       </div>
-                      <div className="lshape-pot-teams">
+                      <div className={`lshape-pot-teams ${isSinglePotFocus ? "single" : ""}`}>
                         <AnimatePresence>
                           {pot.teams.map((team) => {
                             const isAssigned = team.assigned || assignedTeamIds.has(team.id);
