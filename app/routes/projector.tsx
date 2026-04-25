@@ -142,6 +142,7 @@ export default function ProjectorView() {
   const [customLayout, setCustomLayout] = useState<CustomLayoutConfig>(() => createDefaultCustomLayout());
   const [broadcastEditLayout, setBroadcastEditLayout] = useState<CustomLayoutConfig>(() => createDefaultBroadcastEditLayout());
   const [liveVideoUrl, setLiveVideoUrl] = useState<string>("");
+  const [lshapeCornerPhoto, setLshapeCornerPhoto] = useState<string>("");
 
   const getGroupSlotPrefix = (groupName: string) =>
     (groupName.match(/[A-Za-z]+$/)?.[0] ?? groupName.match(/[A-Za-z]/)?.[0] ?? "G").toUpperCase();
@@ -226,7 +227,7 @@ export default function ProjectorView() {
     const channel = new BroadcastChannel("draw_sync");
 
     const applyIncomingState = (data: any) => {
-      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale: incomingPotFontScale, broadcastPotRows: incomingBroadcastPotRows, showSpotlight, matches: incomingMatches, roundNotes: incomingRoundNotes, roundTitles: incomingRoundTitles, projectorDisplayMode: incomingDisplayMode, matchesLayout: incomingMatchesLayout, stadiumOrientation: incomingStadiumOrientation, galaOrientation: incomingGalaOrientation, galaColorSwap: incomingGalaColorSwap, galaBackgroundMode: incomingGalaBackgroundMode, customLayout: incomingCustomLayout, broadcastEditLayout: incomingBroadcastEditLayout, liveVideoUrl: incomingLiveVideoUrl } = data;
+      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale: incomingPotFontScale, broadcastPotRows: incomingBroadcastPotRows, showSpotlight, matches: incomingMatches, roundNotes: incomingRoundNotes, roundTitles: incomingRoundTitles, projectorDisplayMode: incomingDisplayMode, matchesLayout: incomingMatchesLayout, stadiumOrientation: incomingStadiumOrientation, galaOrientation: incomingGalaOrientation, galaColorSwap: incomingGalaColorSwap, galaBackgroundMode: incomingGalaBackgroundMode, customLayout: incomingCustomLayout, broadcastEditLayout: incomingBroadcastEditLayout, liveVideoUrl: incomingLiveVideoUrl, lshapeCornerPhoto: incomingLshapeCornerPhoto } = data;
       setDrawState({
         pots: pots || [],
         groups: groups || [],
@@ -304,6 +305,9 @@ export default function ProjectorView() {
       }
       if (incomingLiveVideoUrl !== undefined) {
         setLiveVideoUrl(incomingLiveVideoUrl);
+      }
+      if (incomingLshapeCornerPhoto !== undefined) {
+        setLshapeCornerPhoto(incomingLshapeCornerPhoto);
       }
       // Apply color palette from the home page
       if (colorPalette) {
@@ -1149,10 +1153,10 @@ export default function ProjectorView() {
                 <div className="gala-spotlight-inner">
                   <FlagImg src={selectedTeam.customFlagImage} code={selectedTeam.countryCode} size="xl" className="gala-spotlight-flag" />
                   <div className="gala-spotlight-text">
-                    <span className="gala-spotlight-sub">SELECTED</span>
+                    {/* <span className="gala-spotlight-sub">SELECTED</span> */}
                     <span className="gala-spotlight-name">{selectedTeam.name}</span>
                   </div>
-                  <FlagImg src={selectedTeam.customFlagImage} code={selectedTeam.countryCode} size="xl" className="gala-spotlight-flag" />
+                  {/* <FlagImg src={selectedTeam.customFlagImage} code={selectedTeam.countryCode} size="xl" className="gala-spotlight-flag" /> */}
                 </div>
               </motion.div>
             </motion.div>
@@ -2734,58 +2738,64 @@ export default function ProjectorView() {
           </motion.div>
         </div>
 
-        {/* BOTTOM — Groups (horizontal row) */}
+        {/* BOTTOM — Photo (left) + Groups (right) */}
         {groups.length > 0 && (
           <motion.div
-            className="lshape-groups"
+            className="lshape-bottom"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45, delay: 0.2 }}
           >
-            <div className="lshape-groups-row">
-              {groups.map((group, gi) => {
-                const filled = group.teams.filter((t) => t !== null).length;
-                const complete = filled === group.capacity;
-                const gp = groupPrefix(group.name);
+            <div className={`lshape-corner-photo ${lshapeCornerPhoto ? "has-image" : "empty"}`}>
+              {lshapeCornerPhoto && <img src={lshapeCornerPhoto} alt="L-Shape corner" className="lshape-corner-photo-img" />}
+            </div>
 
-                return (
-                  <motion.div
-                    key={group.id}
-                    className={`lshape-group-card ${complete ? "complete" : ""}`}
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: gi * 0.05 }}
-                  >
-                    <div className="lshape-group-head">
-                      <span className="lshape-group-name">{group.name}</span>
-                      <span className={`lshape-group-badge ${complete ? "full" : ""}`}>{filled}/{group.capacity}</span>
-                    </div>
-                    <div className="lshape-group-slots">
-                      {group.teams.map((team, si) => (
-                        <motion.div
-                          key={si}
-                          className={`lshape-slot ${team ? "filled" : "empty"}`}
-                          layout
-                        >
-                          {team ? (
-                            <motion.div
-                              className="lshape-slot-inner"
-                              initial={{ opacity: 0, x: -10 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ type: "spring", stiffness: 300, damping: 18 }}
-                            >
-                              <FlagImg src={team.customFlagImage} code={team.countryCode} size="xs" className="lshape-slot-flag" />
-                              <span className="lshape-slot-name">{team.name}</span>
-                            </motion.div>
-                          ) : (
-                            <span className="lshape-slot-ph">{`${gp}${si + 1}`}</span>
-                          )}
-                        </motion.div>
-                      ))}
-                    </div>
-                  </motion.div>
-                );
-              })}
+            <div className="lshape-groups">
+              <div className="lshape-groups-row">
+                {groups.map((group, gi) => {
+                  const filled = group.teams.filter((t) => t !== null).length;
+                  const complete = filled === group.capacity;
+                  const gp = groupPrefix(group.name);
+
+                  return (
+                    <motion.div
+                      key={group.id}
+                      className={`lshape-group-card ${complete ? "complete" : ""}`}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: gi * 0.05 }}
+                    >
+                      <div className="lshape-group-head">
+                        <span className="lshape-group-name">{group.name}</span>
+                        <span className={`lshape-group-badge ${complete ? "full" : ""}`}>{filled}/{group.capacity}</span>
+                      </div>
+                      <div className="lshape-group-slots">
+                        {group.teams.map((team, si) => (
+                          <motion.div
+                            key={si}
+                            className={`lshape-slot ${team ? "filled" : "empty"}`}
+                            layout
+                          >
+                            {team ? (
+                              <motion.div
+                                className="lshape-slot-inner"
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ type: "spring", stiffness: 300, damping: 18 }}
+                              >
+                                <FlagImg src={team.customFlagImage} code={team.countryCode} size="xs" className="lshape-slot-flag" />
+                                <span className="lshape-slot-name">{team.name}</span>
+                              </motion.div>
+                            ) : (
+                              <span className="lshape-slot-ph">{`${gp}${si + 1}`}</span>
+                            )}
+                          </motion.div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
             </div>
           </motion.div>
         )}

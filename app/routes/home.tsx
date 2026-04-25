@@ -38,6 +38,7 @@ interface SavedTournament {
   customLayout?: CustomLayoutConfig;
   broadcastEditLayout?: CustomLayoutConfig;
   liveVideoUrl?: string;
+  lshapeCornerPhoto?: string;
 }
 
 type CustomLayoutElementKey = "header" | "pots" | "groups" | "footer";
@@ -273,6 +274,7 @@ export default function TournamentManager() {
   const [bgAnimation, setBgAnimation] = useState<"none" | "slide" | "zoom" | "fade" | "rotate">("zoom");
   const [projectorLayout, setProjectorLayout] = useState<"stadium" | "broadcast" | "broadcast2" | "gala" | "minimal" | "cinematic" | "custom" | "lshape">("broadcast");
   const [liveVideoUrl, setLiveVideoUrl] = useState<string>("");
+  const [lshapeCornerPhoto, setLshapeCornerPhoto] = useState<string>("");
   const [projectorTitle, setProjectorTitle] = useState("Tournament Draw");
   const [showProjectorSettings, setShowProjectorSettings] = useState(false);
   const [activeSettingsSection, setActiveSettingsSection] = useState<"general" | "branding" | "visual" | "colors" | "behavior">("general");
@@ -641,6 +643,7 @@ export default function TournamentManager() {
         if (s.bgAnimation) setBgAnimation(s.bgAnimation);
         if (s.projectorLayout) setProjectorLayout(s.projectorLayout === "classic" ? "broadcast" : s.projectorLayout);
         if (s.liveVideoUrl !== undefined) setLiveVideoUrl(s.liveVideoUrl);
+        if (s.lshapeCornerPhoto !== undefined) setLshapeCornerPhoto(s.lshapeCornerPhoto);
         if (s.projectorTitle !== undefined) setProjectorTitle(s.projectorTitle);
         if (s.bgImage) setBgImage(s.bgImage);
         if (s.competitionLogo !== undefined) setCompetitionLogo(s.competitionLogo);
@@ -699,9 +702,10 @@ export default function TournamentManager() {
       customLayout,
       broadcastEditLayout,
       liveVideoUrl,
+      lshapeCornerPhoto,
     };
     localStorage.setItem("tournament-settings", JSON.stringify(settings));
-  }, [hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, colorMode, manualPalette, currentPhase, projectorDisplayMode, matchesLayout, stadiumOrientation, galaOrientation, galaColorSwap, galaBackgroundMode, roundNotes, roundTitles, customLayout, broadcastEditLayout, liveVideoUrl]);
+  }, [hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, colorMode, manualPalette, currentPhase, projectorDisplayMode, matchesLayout, stadiumOrientation, galaOrientation, galaColorSwap, galaBackgroundMode, roundNotes, roundTitles, customLayout, broadcastEditLayout, liveVideoUrl, lshapeCornerPhoto]);
 
   const saveTournament = useCallback(() => {
     if (!saveName.trim()) return;
@@ -738,12 +742,13 @@ export default function TournamentManager() {
       customLayout,
       broadcastEditLayout,
       liveVideoUrl,
+      lshapeCornerPhoto,
     };
     const updated = [...savedTournaments, preset];
     setSavedTournaments(updated);
     localStorage.setItem("saved-tournaments", JSON.stringify(updated));
     setSaveName("");
-  }, [saveName, pots, groups, potsFinalized, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, showProjectorPots, colorMode, manualPalette, numberOfGroups, teamsPerGroup, stadiumOrientation, galaOrientation, galaColorSwap, galaBackgroundMode, roundNotes, roundTitles, customLayout, broadcastEditLayout, liveVideoUrl, savedTournaments]);
+  }, [saveName, pots, groups, potsFinalized, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, showProjectorPots, colorMode, manualPalette, numberOfGroups, teamsPerGroup, stadiumOrientation, galaOrientation, galaColorSwap, galaBackgroundMode, roundNotes, roundTitles, customLayout, broadcastEditLayout, liveVideoUrl, lshapeCornerPhoto, savedTournaments]);
 
   const loadTournament = useCallback((preset: SavedTournament) => {
     showConfirm(
@@ -785,6 +790,7 @@ export default function TournamentManager() {
         setCustomLayout(normalizeCustomLayout(preset.customLayout));
         setBroadcastEditLayout(normalizeCustomLayout(preset.broadcastEditLayout));
         setLiveVideoUrl(preset.liveVideoUrl ?? "");
+        setLshapeCornerPhoto(preset.lshapeCornerPhoto ?? "");
         setCurrentPhase(preset.potsFinalized ? "draw" : "setup");
         setShowSavePanel(false);
       }
@@ -1015,6 +1021,7 @@ export default function TournamentManager() {
         customLayout,
         broadcastEditLayout,
         liveVideoUrl,
+        lshapeCornerPhoto,
       };
 
       broadcastChannelRef.current.postMessage(syncPayload);
@@ -1025,7 +1032,7 @@ export default function TournamentManager() {
         // Ignore storage errors
       }
     }
-  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, matches, roundNotes, roundTitles, projectorDisplayMode, matchesLayout, stadiumOrientation, galaOrientation, galaColorSwap, galaBackgroundMode, customLayout, broadcastEditLayout, liveVideoUrl]);
+  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, matches, roundNotes, roundTitles, projectorDisplayMode, matchesLayout, stadiumOrientation, galaOrientation, galaColorSwap, galaBackgroundMode, customLayout, broadcastEditLayout, liveVideoUrl, lshapeCornerPhoto]);
 
   const handleCreatePot = (e: React.FormEvent) => {
     e.preventDefault();
@@ -2073,6 +2080,46 @@ export default function TournamentManager() {
                                   ✕ Clear Video URL
                                 </motion.button>
                               )}
+
+                              <label className="settings-label" style={{ marginTop: "0.85rem" }}>
+                                L-Shape Bottom-Left Photo
+                              </label>
+                              <div className="settings-bg-picker">
+                                {lshapeCornerPhoto && (
+                                  <img src={lshapeCornerPhoto} alt="L-Shape corner" className="settings-logo-preview" />
+                                )}
+                                <label className="settings-file-btn">
+                                  🖼️ {lshapeCornerPhoto ? "Change Photo" : "Upload Photo"}
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    style={{ display: "none" }}
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (!file) return;
+                                      const reader = new FileReader();
+                                      reader.onload = (ev) => {
+                                        const dataUrl = ev.target?.result as string;
+                                        if (dataUrl) setLshapeCornerPhoto(dataUrl);
+                                      };
+                                      reader.readAsDataURL(file);
+                                    }}
+                                  />
+                                </label>
+                                {lshapeCornerPhoto && (
+                                  <motion.button
+                                    className="settings-layout-btn"
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => setLshapeCornerPhoto("")}
+                                  >
+                                    ✕ Remove Photo
+                                  </motion.button>
+                                )}
+                              </div>
+                              <p className="settings-inline-help">
+                                This image is shown in the bottom-left L-shape rectangle.
+                              </p>
                             </div>
                           )}
 
