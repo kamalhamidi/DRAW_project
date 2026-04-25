@@ -3333,6 +3333,7 @@ body.bg-none::before {
 
 /* ── Pots column (left) ── */
 .lshape-pots {
+  grid-column: 1;
   border-right: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(8, 10, 22, 0.65);
   backdrop-filter: blur(18px);
@@ -3453,6 +3454,7 @@ body.bg-none::before {
 
 /* ── Video Zone (top-right) ── */
 .lshape-video-zone {
+  grid-column: 2;
   position: relative;
   overflow: hidden;
   background: rgba(0, 0, 0, 0.3);
