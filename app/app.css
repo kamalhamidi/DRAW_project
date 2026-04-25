@@ -4405,8 +4405,32 @@ body.bg-none::before {
 }
 
 .stadium-content.pots-hidden .stadium-groups-panel {
-  max-width: 1200px;
+  max-width: 1480px;
   width: 100%;
+}
+
+.stadium-content.pots-hidden .stadium-groups-grid {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.stadium-content.vertical {
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+.stadium-content.vertical .stadium-pots-panel {
+  order: 1;
+}
+
+.stadium-content.vertical .stadium-pots-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.stadium-content.vertical .stadium-groups-panel {
+  order: 2;
 }
 
 .stadium-groups-grid {

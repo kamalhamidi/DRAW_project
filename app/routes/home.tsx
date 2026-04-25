@@ -29,6 +29,7 @@ interface SavedTournament {
   manualPalette: ColorPalette;
   numberOfGroups: number;
   teamsPerGroup: number;
+  stadiumOrientation?: "horizontal" | "vertical";
   galaOrientation?: "horizontal" | "vertical";
   galaColorSwap?: boolean;
   galaBackgroundMode?: "dimmed" | "clean";
@@ -270,7 +271,7 @@ export default function TournamentManager() {
   const [hydrated, setHydrated] = useState(false);
   const [showProjectorPots, setShowProjectorPots] = useState(true);
   const [bgAnimation, setBgAnimation] = useState<"none" | "slide" | "zoom" | "fade" | "rotate">("zoom");
-  const [projectorLayout, setProjectorLayout] = useState<"stadium" | "broadcast" | "gala" | "minimal" | "cinematic" | "custom" | "lshape">("broadcast");
+  const [projectorLayout, setProjectorLayout] = useState<"stadium" | "broadcast" | "broadcast2" | "gala" | "minimal" | "cinematic" | "custom" | "lshape">("broadcast");
   const [liveVideoUrl, setLiveVideoUrl] = useState<string>("");
   const [projectorTitle, setProjectorTitle] = useState("Tournament Draw");
   const [showProjectorSettings, setShowProjectorSettings] = useState(false);
@@ -296,6 +297,7 @@ export default function TournamentManager() {
   const [matchesFilterRound, setMatchesFilterRound] = useState<number | "all">("all");
   const [projectorDisplayMode, setProjectorDisplayMode] = useState<"groups" | "matches">("groups");
   const [matchesLayout, setMatchesLayout] = useState<"default" | "gala" | "ultra" | "broadcast">("default");
+  const [stadiumOrientation, setStadiumOrientation] = useState<"horizontal" | "vertical">("horizontal");
   const [galaOrientation, setGalaOrientation] = useState<"horizontal" | "vertical">("horizontal");
   const [galaColorSwap, setGalaColorSwap] = useState(false);
   const [galaBackgroundMode, setGalaBackgroundMode] = useState<"dimmed" | "clean">("dimmed");
@@ -654,6 +656,7 @@ export default function TournamentManager() {
         if (s.currentPhase) setCurrentPhase(s.currentPhase);
         if (s.projectorDisplayMode) setProjectorDisplayMode(s.projectorDisplayMode);
         if (s.matchesLayout) setMatchesLayout(s.matchesLayout);
+        if (s.stadiumOrientation) setStadiumOrientation(s.stadiumOrientation);
         if (s.galaOrientation) setGalaOrientation(s.galaOrientation);
         if (s.galaColorSwap !== undefined) setGalaColorSwap(Boolean(s.galaColorSwap));
         if (s.galaBackgroundMode) setGalaBackgroundMode(s.galaBackgroundMode);
@@ -687,6 +690,7 @@ export default function TournamentManager() {
       currentPhase,
       projectorDisplayMode,
       matchesLayout,
+      stadiumOrientation,
       galaOrientation,
       galaColorSwap,
       galaBackgroundMode,
@@ -697,7 +701,7 @@ export default function TournamentManager() {
       liveVideoUrl,
     };
     localStorage.setItem("tournament-settings", JSON.stringify(settings));
-  }, [hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, colorMode, manualPalette, currentPhase, projectorDisplayMode, matchesLayout, galaOrientation, galaColorSwap, galaBackgroundMode, roundNotes, roundTitles, customLayout, broadcastEditLayout, liveVideoUrl]);
+  }, [hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, colorMode, manualPalette, currentPhase, projectorDisplayMode, matchesLayout, stadiumOrientation, galaOrientation, galaColorSwap, galaBackgroundMode, roundNotes, roundTitles, customLayout, broadcastEditLayout, liveVideoUrl]);
 
   const saveTournament = useCallback(() => {
     if (!saveName.trim()) return;
@@ -725,6 +729,7 @@ export default function TournamentManager() {
       manualPalette,
       numberOfGroups,
       teamsPerGroup,
+      stadiumOrientation,
       galaOrientation,
       galaColorSwap,
       galaBackgroundMode,
@@ -738,7 +743,7 @@ export default function TournamentManager() {
     setSavedTournaments(updated);
     localStorage.setItem("saved-tournaments", JSON.stringify(updated));
     setSaveName("");
-  }, [saveName, pots, groups, potsFinalized, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, showProjectorPots, colorMode, manualPalette, numberOfGroups, teamsPerGroup, galaOrientation, galaColorSwap, galaBackgroundMode, roundNotes, roundTitles, customLayout, broadcastEditLayout, liveVideoUrl, savedTournaments]);
+  }, [saveName, pots, groups, potsFinalized, bgAnimation, projectorLayout, projectorTitle, bgImage, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, showProjectorPots, colorMode, manualPalette, numberOfGroups, teamsPerGroup, stadiumOrientation, galaOrientation, galaColorSwap, galaBackgroundMode, roundNotes, roundTitles, customLayout, broadcastEditLayout, liveVideoUrl, savedTournaments]);
 
   const loadTournament = useCallback((preset: SavedTournament) => {
     showConfirm(
@@ -771,6 +776,7 @@ export default function TournamentManager() {
         setManualPalette(preset.manualPalette);
         setNumberOfGroups(preset.numberOfGroups);
         setTeamsPerGroup(preset.teamsPerGroup);
+        setStadiumOrientation(preset.stadiumOrientation ?? "horizontal");
         setGalaOrientation(preset.galaOrientation ?? "horizontal");
         setGalaColorSwap(preset.galaColorSwap ?? false);
         setGalaBackgroundMode(preset.galaBackgroundMode ?? "dimmed");
@@ -1002,6 +1008,7 @@ export default function TournamentManager() {
         roundTitles,
         projectorDisplayMode,
         matchesLayout,
+        stadiumOrientation,
         galaOrientation,
         galaColorSwap,
         galaBackgroundMode,
@@ -1018,7 +1025,7 @@ export default function TournamentManager() {
         // Ignore storage errors
       }
     }
-  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, matches, roundNotes, roundTitles, projectorDisplayMode, matchesLayout, galaOrientation, galaColorSwap, galaBackgroundMode, customLayout, broadcastEditLayout, liveVideoUrl]);
+  }, [pots, groups, selectedTeam, hydrated, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale, broadcastPotRows, showSpotlight, matches, roundNotes, roundTitles, projectorDisplayMode, matchesLayout, stadiumOrientation, galaOrientation, galaColorSwap, galaBackgroundMode, customLayout, broadcastEditLayout, liveVideoUrl]);
 
   const handleCreatePot = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1502,6 +1509,7 @@ export default function TournamentManager() {
                               {([
                                 { key: "stadium", icon: "🏟", label: "Stadium" },
                                 { key: "broadcast", icon: "📺", label: "Broadcast" },
+                                { key: "broadcast2", icon: "📡", label: "Broadcast 2" },
                                 { key: "gala", icon: "✨", label: "Gala" },
                                 { key: "minimal", icon: "◈", label: "Minimal" },
                                 { key: "cinematic", icon: "🎬", label: "Cinematic" },
@@ -1521,6 +1529,33 @@ export default function TournamentManager() {
                               ))}
                             </div>
                           </div>
+
+                          {projectorLayout === "stadium" && (
+                            <div className="settings-group settings-layout-option-card">
+                              <label className="settings-label">Stadium Orientation</label>
+                              <div className="settings-layout-btns">
+                                <motion.button
+                                  className={`settings-layout-btn ${stadiumOrientation === "horizontal" ? "active" : ""}`}
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={() => setStadiumOrientation("horizontal")}
+                                >
+                                  ↔️ Horizontal
+                                </motion.button>
+                                <motion.button
+                                  className={`settings-layout-btn ${stadiumOrientation === "vertical" ? "active" : ""}`}
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={() => setStadiumOrientation("vertical")}
+                                >
+                                  ↕️ Vertical
+                                </motion.button>
+                              </div>
+                              <p className="settings-inline-help">
+                                Vertical mode places pots on top and groups below.
+                              </p>
+                            </div>
+                          )}
 
                           {projectorLayout === "gala" && (
                             <>
@@ -1601,7 +1636,7 @@ export default function TournamentManager() {
                             </>
                           )}
 
-                          {projectorLayout === "broadcast" && (
+                          {(projectorLayout === "broadcast" || projectorLayout === "broadcast2") && (
                             <div className="settings-group settings-layout-option-card custom-layout-editor-card broadcast-settings-card">
                               <label className="settings-label">Broadcast Layout Options</label>
                               <div className="broadcast-settings-scroll">

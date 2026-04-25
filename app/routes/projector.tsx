@@ -118,7 +118,7 @@ export default function ProjectorView() {
 
   const [hydrated, setHydrated] = useState(false);
   const [bgAnimation, setBgAnimation] = useState<"none" | "slide" | "zoom" | "fade" | "rotate">("zoom");
-  const [projectorLayout, setProjectorLayout] = useState<"classic" | "stadium" | "broadcast" | "gala" | "minimal" | "cinematic" | "custom" | "lshape">("broadcast");
+  const [projectorLayout, setProjectorLayout] = useState<"classic" | "stadium" | "broadcast" | "broadcast2" | "gala" | "minimal" | "cinematic" | "custom" | "lshape">("broadcast");
   const [projectorTitle, setProjectorTitle] = useState("Tournament Draw");
   const [bgImage, setBgImage] = useState<string>("/bg.png");
   const [competitionLogo, setCompetitionLogo] = useState<string>("");
@@ -135,6 +135,7 @@ export default function ProjectorView() {
   const [roundTitles, setRoundTitles] = useState<Record<number, string>>({});
   const [projectorDisplayMode, setProjectorDisplayMode] = useState<"groups" | "matches">("groups");
   const [matchesLayout, setMatchesLayout] = useState<"default" | "gala" | "ultra" | "broadcast">("default");
+  const [stadiumOrientation, setStadiumOrientation] = useState<"horizontal" | "vertical">("horizontal");
   const [galaOrientation, setGalaOrientation] = useState<"horizontal" | "vertical">("horizontal");
   const [galaColorSwap, setGalaColorSwap] = useState(false);
   const [galaBackgroundMode, setGalaBackgroundMode] = useState<"dimmed" | "clean">("dimmed");
@@ -225,7 +226,7 @@ export default function ProjectorView() {
     const channel = new BroadcastChannel("draw_sync");
 
     const applyIncomingState = (data: any) => {
-        const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale: incomingPotFontScale, broadcastPotRows: incomingBroadcastPotRows, showSpotlight, matches: incomingMatches, roundNotes: incomingRoundNotes, roundTitles: incomingRoundTitles, projectorDisplayMode: incomingDisplayMode, matchesLayout: incomingMatchesLayout, galaOrientation: incomingGalaOrientation, galaColorSwap: incomingGalaColorSwap, galaBackgroundMode: incomingGalaBackgroundMode, customLayout: incomingCustomLayout, broadcastEditLayout: incomingBroadcastEditLayout, liveVideoUrl: incomingLiveVideoUrl } = data;
+      const { pots, groups, selectedTeam, showProjectorPots, bgAnimation, projectorLayout, projectorTitle, bgImage, colorPalette, competitionLogo, logoSize, footerText, footerSize, teamFontScale, potFontScale: incomingPotFontScale, broadcastPotRows: incomingBroadcastPotRows, showSpotlight, matches: incomingMatches, roundNotes: incomingRoundNotes, roundTitles: incomingRoundTitles, projectorDisplayMode: incomingDisplayMode, matchesLayout: incomingMatchesLayout, stadiumOrientation: incomingStadiumOrientation, galaOrientation: incomingGalaOrientation, galaColorSwap: incomingGalaColorSwap, galaBackgroundMode: incomingGalaBackgroundMode, customLayout: incomingCustomLayout, broadcastEditLayout: incomingBroadcastEditLayout, liveVideoUrl: incomingLiveVideoUrl } = data;
       setDrawState({
         pots: pots || [],
         groups: groups || [],
@@ -282,6 +283,9 @@ export default function ProjectorView() {
       }
       if (incomingMatchesLayout !== undefined) {
         setMatchesLayout(incomingMatchesLayout);
+      }
+      if (incomingStadiumOrientation !== undefined) {
+        setStadiumOrientation(incomingStadiumOrientation);
       }
       if (incomingGalaOrientation !== undefined) {
         setGalaOrientation(incomingGalaOrientation);
@@ -718,7 +722,7 @@ export default function ProjectorView() {
         </AnimatePresence>
 
         {/* Main Content — Side by Side */}
-        <div className={`stadium-content ${!drawState.showProjectorPots ? 'pots-hidden' : ''}`}>
+        <div className={`stadium-content ${!drawState.showProjectorPots ? 'pots-hidden' : ''} ${stadiumOrientation === 'vertical' ? 'vertical' : ''}`}>
           {/* Left: Groups */}
           <motion.div
             className="stadium-groups-panel"
@@ -2827,7 +2831,7 @@ export default function ProjectorView() {
   const containerClass = [
     "projector-container",
     projectorLayout === "stadium" ? "stadium-mode" : "",
-    projectorLayout === "broadcast" ? "broadcast-mode" : "",
+    projectorLayout === "broadcast" || projectorLayout === "broadcast2" ? "broadcast-mode" : "",
     projectorLayout === "gala" ? "gala-mode" : "",
     projectorLayout === "gala" && galaColorSwap ? "gala-colors-swapped" : "",
     projectorLayout === "gala" && galaBackgroundMode === "clean" ? "gala-background-clean" : "",
@@ -2890,7 +2894,7 @@ export default function ProjectorView() {
                 {renderStadiumLayout()}
               </motion.div>
             )}
-            {projectorLayout === "broadcast" && (
+            {(projectorLayout === "broadcast" || projectorLayout === "broadcast2") && (
               <motion.div
                 key="broadcast"
                 initial={{ opacity: 0 }}
