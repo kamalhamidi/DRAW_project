@@ -906,8 +906,6 @@ export default function ProjectorView() {
         top: `${section.y}%`,
         width: `${section.width}%`,
         height: `${section.height}%`,
-        background: section.background,
-        borderColor: section.border,
         color: section.text,
       };
     };

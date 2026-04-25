@@ -4926,7 +4926,7 @@ body.bg-none::before {
 
 .broadcast-edit-title {
   margin: 0;
-  color: #fff;
+  color: inherit;
   font-size: clamp(1.1rem, 2.4vw, 2rem);
   font-weight: 900;
   letter-spacing: 0.04em;
@@ -4936,6 +4936,10 @@ body.bg-none::before {
 .broadcast-edit-footer {
   justify-content: center;
   align-items: center;
+}
+
+.broadcast-edit-footer .projector-footer-text {
+  color: inherit;
 }
 
 .broadcast-edit-empty {
@@ -5058,6 +5062,7 @@ body.bg-none::before {
   text-transform: uppercase;
   letter-spacing: 0.1em;
   margin: 0;
+  color: inherit;
 }
 
 .broadcast-card-header.red {
@@ -5066,7 +5071,7 @@ body.bg-none::before {
 }
 
 .broadcast-card-header.red h3 {
-  color: #fff;
+  color: inherit;
 }
 
 .broadcast-card-header.green {
@@ -5075,7 +5080,7 @@ body.bg-none::before {
 }
 
 .broadcast-card-header.green h3 {
-  color: #1a0b2e;
+  color: inherit;
   font-weight: 900;
 }
 
@@ -5131,7 +5136,7 @@ body.bg-none::before {
 }
 
 .broadcast-team-row.assigned .broadcast-team-name {
-  color: rgba(255, 255, 255, 0.35);
+  opacity: 0.35;
 }
 
 .broadcast-team-row.assigned .broadcast-team-flag {
@@ -5164,7 +5169,7 @@ body.bg-none::before {
   line-height: 1.2;
   font-size: calc(1.05rem * var(--projector-team-font-scale));
   font-weight: 800;
-  color: #fff;
+  color: inherit;
   text-transform: uppercase;
   letter-spacing: 0.02em;
 }
@@ -5172,14 +5177,15 @@ body.bg-none::before {
 .broadcast-slot-label {
   font-size: 1.05rem;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.45);
+  color: color-mix(in srgb, currentColor 55%, transparent);
   text-transform: uppercase;
   padding-left: 0.15rem;
 }
 
 .broadcast-empty-text {
   font-size: 0.9rem;
-  color: var(--color-accent-2);
+  color: inherit;
+  opacity: 0.85;
   font-weight: 600;
   text-align: center;
   padding: 1rem 0;
@@ -5287,7 +5293,7 @@ body.bg-none::before {
 }
 
 .projector-container.broadcast2-mode .broadcast-groups-section .broadcast-card-header h3 {
-  color: #0a1a52;
+  color: inherit;
   font-size: clamp(1.1rem, 1.6vw, 1.7rem);
   letter-spacing: 0.06em;
 }
@@ -5316,14 +5322,14 @@ body.bg-none::before {
 }
 
 .projector-container.broadcast2-mode .broadcast-groups-section .broadcast-team-name {
-  color: #111948;
+  color: inherit;
   font-size: calc(1.2rem * var(--projector-team-font-scale));
   letter-spacing: 0.01em;
 }
 
 .projector-container.broadcast2-mode .broadcast-groups-section .broadcast-slot-label {
-  color: #1a2259;
-  opacity: 0.9;
+  color: color-mix(in srgb, currentColor 70%, transparent);
+  opacity: 1;
   font-size: 2rem;
   font-weight: 900;
   letter-spacing: 0.02em;

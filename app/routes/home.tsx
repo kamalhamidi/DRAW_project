@@ -1829,43 +1829,17 @@ export default function TournamentManager() {
                                           </div>
                                         </div>
 
-                                        <div className="settings-group custom-color-grid">
-                                          <div>
-                                            <label className="settings-label">Background</label>
-                                            <input
-                                              type="color"
-                                              value={toHexColor(activeElement.background)}
-                                              onChange={(event) => updateBroadcastElement(activeElement.id, { background: hexToRgba(event.target.value, 0.18) })}
-                                              className="settings-color-input"
-                                            />
-                                          </div>
-                                          <div>
-                                            <label className="settings-label">Border</label>
-                                            <input
-                                              type="color"
-                                              value={toHexColor(activeElement.border)}
-                                              onChange={(event) => updateBroadcastElement(activeElement.id, { border: event.target.value })}
-                                              className="settings-color-input"
-                                            />
-                                          </div>
-                                          <div>
-                                            <label className="settings-label">Accent</label>
-                                            <input
-                                              type="color"
-                                              value={toHexColor(activeElement.accent)}
-                                              onChange={(event) => updateBroadcastElement(activeElement.id, { accent: event.target.value })}
-                                              className="settings-color-input"
-                                            />
-                                          </div>
-                                          <div>
-                                            <label className="settings-label">Text</label>
-                                            <input
-                                              type="color"
-                                              value={toHexColor(activeElement.text)}
-                                              onChange={(event) => updateBroadcastElement(activeElement.id, { text: event.target.value })}
-                                              className="settings-color-input"
-                                            />
-                                          </div>
+                                        <div className="settings-group">
+                                          <label className="settings-label">Text Color</label>
+                                          <input
+                                            type="color"
+                                            value={toHexColor(activeElement.text)}
+                                            onChange={(event) => updateBroadcastElement(activeElement.id, { text: event.target.value })}
+                                            className="settings-color-input"
+                                          />
+                                          <p className="settings-inline-help">
+                                            Broadcast layout now uses text color only.
+                                          </p>
                                         </div>
                                       </>
                                     );
