@@ -870,6 +870,30 @@ export default function TournamentManager() {
   }, [showProjectorSettings, showSavePanel, showMatchesPanel]);
 
   useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const tagName = target?.tagName?.toLowerCase();
+      const isTypingContext =
+        tagName === "input" ||
+        tagName === "textarea" ||
+        tagName === "select" ||
+        target?.isContentEditable;
+
+      if (isTypingContext) return;
+
+      if (event.metaKey && !event.ctrlKey && !event.altKey && !event.shiftKey && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        const next = !showProjectorSettings;
+        setShowProjectorSettings(next);
+        if (next) setActiveSettingsSection("general");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showProjectorSettings]);
+
+  useEffect(() => {
     document.body.classList.remove("bg-slide", "bg-zoom", "bg-fade", "bg-rotate", "bg-none");
     document.body.classList.add(`bg-${bgAnimation}`);
   }, [bgAnimation]);
@@ -1269,7 +1293,7 @@ export default function TournamentManager() {
                 setShowProjectorSettings(next);
                 if (next) setActiveSettingsSection("general");
               }}
-              title="Projector Settings"
+              title="Projector Settings (Cmd+K)"
             >
               ⚙️
             </motion.button>
