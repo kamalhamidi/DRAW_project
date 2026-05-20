@@ -4967,6 +4967,14 @@ body.bg-none::before {
   justify-content: flex-start;
 }
 
+.broadcast-pots-section.wrap-many-pots {
+  flex-wrap: wrap;
+  overflow-x: visible;
+  overflow-y: visible;
+  justify-content: center;
+  align-content: flex-start;
+}
+
 .broadcast-pots-section::after {
   content: "";
   flex: 0 0 12px;
@@ -5022,6 +5030,19 @@ body.bg-none::before {
   flex: 1 1 420px;
   min-width: 360px;
   max-width: 560px;
+}
+
+.broadcast-pots-section.wrap-many-pots .broadcast-pot-card {
+  flex: 1 1 280px;
+  min-width: min(100%, 280px);
+  max-width: min(100%, 320px);
+}
+
+.broadcast-pots-section.wrap-many-pots .broadcast-pot-card[data-pot-cols="1"],
+.broadcast-pots-section.wrap-many-pots .broadcast-pot-card[data-pot-cols="2"] {
+  flex: 1 1 280px;
+  min-width: min(100%, 280px);
+  max-width: min(100%, 320px);
 }
 
 .broadcast-pots-section.rows-one-cards {

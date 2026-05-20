@@ -408,6 +408,7 @@ export default function ProjectorView() {
     0
   );
   const allTeamsAssigned = totalTeams > 0 && totalTeams === assignedTeams;
+  const broadcastPotLayoutClass = pots.length > 5 ? "wrap-many-pots" : "";
 
   // Animation variants
   const slideInVariants = {
@@ -948,7 +949,7 @@ export default function ProjectorView() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45 }}
             >
-              <div className={`broadcast-section broadcast-pots-section ${broadcastPotRows === 1 ? "rows-one-cards" : ""}`}>
+              <div className={`broadcast-section broadcast-pots-section ${broadcastPotRows === 1 ? "rows-one-cards" : ""} ${broadcastPotLayoutClass}`}>
                 {pots.map((pot, index) => {
                   const safeRows = Math.max(1, Math.min(broadcastPotRows, Math.max(1, pot.teams.length)));
                   const safeCols = Math.max(1, Math.ceil(pot.teams.length / safeRows));
