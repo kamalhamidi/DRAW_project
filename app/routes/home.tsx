@@ -229,6 +229,8 @@ const hexToRgba = (hex: string, alpha: number) => {
 };
 
 export default function TournamentManager() {
+  const MAX_TEAMS_PER_POT = 50;
+
   const {
     pots,
     groups,
@@ -2653,10 +2655,18 @@ export default function TournamentManager() {
                               className="form-input"
                               type="number"
                               min="1"
-                              max="20"
+                              max={MAX_TEAMS_PER_POT}
                               value={numberOfTeams}
                               onChange={(e) =>
-                                setNumberOfTeams(parseInt(e.target.value) || 1)
+                                setNumberOfTeams(
+                                  Math.max(
+                                    1,
+                                    Math.min(
+                                      MAX_TEAMS_PER_POT,
+                                      parseInt(e.target.value) || 1
+                                    )
+                                  )
+                                )
                               }
                             />
                           </div>
