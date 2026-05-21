@@ -5045,6 +5045,21 @@ body.bg-none::before {
   max-width: min(100%, 320px);
 }
 
+/* Groups wrap for many groups */
+.broadcast-groups-section.wrap-many-groups {
+  flex-wrap: wrap;
+  overflow-x: visible;
+  overflow-y: visible;
+  justify-content: center;
+  align-content: flex-start;
+}
+
+.broadcast-groups-section.wrap-many-groups .broadcast-card {
+  flex: 1 1 240px;
+  min-width: min(100%, 220px);
+  max-width: min(100%, 320px);
+}
+
 .broadcast-pots-section.rows-one-cards {
   max-width: min(100%, calc(340px * 4 + 30px * 3));
   margin-inline: auto;

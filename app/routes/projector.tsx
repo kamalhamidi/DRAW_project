@@ -409,6 +409,7 @@ export default function ProjectorView() {
   );
   const allTeamsAssigned = totalTeams > 0 && totalTeams === assignedTeams;
   const broadcastPotLayoutClass = pots.length > 5 ? "wrap-many-pots" : "";
+  const broadcastGroupLayoutClass = groups.length > 5 ? "wrap-many-groups" : "";
 
   // Animation variants
   const slideInVariants = {
@@ -1012,7 +1013,7 @@ export default function ProjectorView() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, delay: 0.12 }}
             >
-              <div className="broadcast-section broadcast-groups-section">
+              <div className={`broadcast-section broadcast-groups-section ${broadcastGroupLayoutClass}`}>
                 {groups.map((group, index) => {
                   const filledSlots = group.teams.filter((t) => t !== null).length;
                   const isGroupComplete = filledSlots === group.capacity;
